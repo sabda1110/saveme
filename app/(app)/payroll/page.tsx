@@ -287,7 +287,7 @@ export default function PayrollPage() {
       return
     }
 
-    const targetPayrollWallet =
+    let targetPayrollWallet =
       wallets.find((w) => w.id === allocPrimaryWalletId) ||
       wallets.find((w) => w.id === userProfile?.primarySalaryWalletId) ||
       spendingWallets[0] ||
@@ -301,13 +301,20 @@ export default function PayrollPage() {
       savingsGoals.find((g) => g.id === selectedGoalId) ||
       (savingsGoals.length > 0 ? savingsGoals[0] : undefined)
 
-    if (!targetPayrollWallet) {
-      setAllocErrorMsg('Kamu belum memiliki rekening/dompet aktif. Silakan buat dompet di menu Kantong & Rekening terlebih dahulu.')
-      return
-    }
-
     setAllocating(true)
     try {
+      if (!targetPayrollWallet) {
+        // Auto-provision default cash wallet on-the-fly if user has 0 wallets
+        targetPayrollWallet = await walletService.createWallet(user.uid, {
+          name: 'Dompet Tunai (Kas)',
+          type: 'CASH',
+          balance: 0,
+          icon: '💵',
+          color: '#22c55e',
+          isLocked: false,
+        })
+      }
+
       const payload: SalaryAllocationInput = {
         incomeType,
         totalSalary: numAllocAmount,
@@ -873,6 +880,15 @@ export default function PayrollPage() {
 
               {/* 3 Allocation Output Cards */}
               <div className="space-y-3">
+                {wallets.length === 0 && !isAlreadyAllocatedThisMonth && (
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2.5">
+                    <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="leading-relaxed text-[11px]">
+                      <span className="font-bold">Belum ada kantong/rekening aktif:</span> Saat Anda menekan tombol eksekusi, SaveMe akan <strong>otomatis membuatkan &quot;Dompet Tunai (Kas)&quot;</strong> sebagai penampung alokasi gaji ini.
+                    </div>
+                  </div>
+                )}
+
                 {/* 1. Kas Belanja */}
                 <div className="p-3.5 rounded-2xl bg-[#21263a]/70 border border-green-500/30 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">

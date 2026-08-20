@@ -18,7 +18,7 @@ import { transactionService } from './transaction.firebase'
 export const walletService = {
   /**
    * Fetch all wallets for a user.
-   * Auto-initializes default "Dompet Tunai" seeded with user's initialBalance if user has no wallets yet.
+   * Returns empty array if user has no wallets yet.
    */
   async getUserWallets(userId: string): Promise<Wallet[]> {
     if (!userId) throw new Error('User ID is required')
@@ -27,27 +27,7 @@ export const walletService = {
     const snapshot = await getDocs(q)
 
     if (snapshot.empty) {
-      // Look up user's initial balance from profile
-      let initialBal = 0
-      try {
-        const userDoc = await getDoc(doc(db, 'users', userId))
-        if (userDoc.exists()) {
-          initialBal = Number(userDoc.data().initialBalance) || 0
-        }
-      } catch (err) {
-        console.warn('[wallet] Could not fetch user profile for initial balance:', err)
-      }
-
-      // Auto-initialize default cash wallet with initial balance
-      const defaultWallet = await this.createWallet(userId, {
-        name: 'Dompet Tunai (Kas)',
-        type: 'CASH',
-        balance: initialBal,
-        icon: '💵',
-        color: '#22c55e',
-        isLocked: false,
-      })
-      return [defaultWallet]
+      return []
     }
 
     const wallets = snapshot.docs.map((docSnap) => {
@@ -67,22 +47,6 @@ export const walletService = {
         updatedAt: data.updatedAt,
       } as Wallet
     })
-
-    // Self-healing: if user has 1 cash wallet with 0 balance, but user profile has initialBalance > 0
-    if (wallets.length === 1 && wallets[0].balance === 0) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', userId))
-        if (userDoc.exists()) {
-          const profileInitBal = Number(userDoc.data().initialBalance) || 0
-          if (profileInitBal > 0) {
-            await this.updateWallet(userId, wallets[0].id, { balance: profileInitBal })
-            wallets[0].balance = profileInitBal
-          }
-        }
-      } catch (err) {
-        console.warn('[wallet] Self-healing check error:', err)
-      }
-    }
 
     return wallets
   },

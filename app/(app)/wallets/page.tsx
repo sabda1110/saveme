@@ -676,7 +676,9 @@ export default function WalletsPage() {
         title="Hapus Kantong Rekening?"
         description={
           walletToDelete
-            ? `Apakah Anda yakin ingin menghapus "${walletToDelete.name}" (${formatRupiah(walletToDelete.balance)})?`
+            ? wallets.length === 1
+              ? `Apakah Anda yakin ingin menghapus "${walletToDelete.name}" (${formatRupiah(walletToDelete.balance)})? Ini adalah kantong terakhir Anda. Jika dihapus, Anda dapat membuat kantong baru kapan saja.`
+              : `Apakah Anda yakin ingin menghapus "${walletToDelete.name}" (${formatRupiah(walletToDelete.balance)})?`
             : ''
         }
         confirmText="Hapus Kantong"
