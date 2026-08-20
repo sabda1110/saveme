@@ -45,19 +45,26 @@ export const recurringService = {
       ? Number(data.amount) * totalTenor
       : undefined
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       userId,
-      ...data,
-      billType,
+      name: data.name.trim(),
       amount: Number(data.amount),
+      categoryId: data.categoryId,
+      categoryName: data.categoryName,
+      categoryIcon: data.categoryIcon,
       dueDay: Math.min(31, Math.max(1, Number(data.dueDay))),
       autoDeduct: Boolean(data.autoDeduct),
-      totalTenor,
+      billType,
       paidTenor,
-      totalPrincipal,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }
+
+    if (totalTenor !== undefined) payload.totalTenor = totalTenor
+    if (totalPrincipal !== undefined) payload.totalPrincipal = totalPrincipal
+    if (data.walletId) payload.walletId = data.walletId
+    if (data.walletName) payload.walletName = data.walletName
+    if (data.notes && data.notes.trim()) payload.notes = data.notes.trim()
 
     const docRef = await addDoc(collection(db, 'recurring_bills'), payload)
     return {
@@ -86,24 +93,23 @@ export const recurringService = {
     }
 
     const payload: Record<string, unknown> = {
-      ...data,
       updatedAt: serverTimestamp(),
     }
-    if (data.amount !== undefined) {
-      payload.amount = Number(data.amount)
-    }
-    if (data.dueDay !== undefined) {
-      payload.dueDay = Math.min(31, Math.max(1, Number(data.dueDay)))
-    }
-    if (data.totalTenor !== undefined) {
-      payload.totalTenor = Number(data.totalTenor)
-    }
-    if (data.paidTenor !== undefined) {
-      payload.paidTenor = Number(data.paidTenor)
-    }
-    if (data.totalPrincipal !== undefined) {
-      payload.totalPrincipal = Number(data.totalPrincipal)
-    }
+    if (data.name !== undefined) payload.name = data.name.trim()
+    if (data.amount !== undefined) payload.amount = Number(data.amount)
+    if (data.categoryId !== undefined) payload.categoryId = data.categoryId
+    if (data.categoryName !== undefined) payload.categoryName = data.categoryName
+    if (data.categoryIcon !== undefined) payload.categoryIcon = data.categoryIcon
+    if (data.dueDay !== undefined) payload.dueDay = Math.min(31, Math.max(1, Number(data.dueDay)))
+    if (data.autoDeduct !== undefined) payload.autoDeduct = Boolean(data.autoDeduct)
+    if (data.billType !== undefined) payload.billType = data.billType
+    if (data.totalTenor !== undefined) payload.totalTenor = Number(data.totalTenor)
+    if (data.paidTenor !== undefined) payload.paidTenor = Number(data.paidTenor)
+    if (data.totalPrincipal !== undefined) payload.totalPrincipal = Number(data.totalPrincipal)
+    if (data.walletId !== undefined) payload.walletId = data.walletId
+    if (data.walletName !== undefined) payload.walletName = data.walletName
+    if (data.notes !== undefined) payload.notes = data.notes
+    if (data.lastProcessedMonth !== undefined) payload.lastProcessedMonth = data.lastProcessedMonth
 
     await updateDoc(docRef, payload)
     return true
