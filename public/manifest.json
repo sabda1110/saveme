@@ -1,0 +1,26 @@
+{
+  "name": "SaveMe — Smart & Private Personal Finance Tracker",
+  "short_name": "SaveMe",
+  "description": "Kelola keuangan pribadi, pantau jatah belanja harian, dan raih kebebasan finansial tanpa ribet.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#131620",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/globe.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

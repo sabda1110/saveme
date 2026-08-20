@@ -1,6 +1,12 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+  type Firestore,
+} from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,4 +20,22 @@ const firebaseConfig = {
 // Prevent duplicate initialization in Next.js Fast Refresh
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+
+function getFirestoreInstance(): Firestore {
+  if (typeof window === 'undefined') {
+    return getFirestore(app)
+  }
+
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    })
+  } catch {
+    // Fallback if already initialized (e.g. during Hot Module Reload)
+    return getFirestore(app)
+  }
+}
+
+export const db = getFirestoreInstance()
