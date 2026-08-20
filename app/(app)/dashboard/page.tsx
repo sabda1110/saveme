@@ -85,8 +85,12 @@ export default function DashboardPage() {
       setLoading(true)
 
       try {
-        // 1. Process any due recurring bills automatically
-        await recurringService.processDueRecurringBills(user.uid)
+        // 1. Process any due recurring bills automatically (skip gracefully if offline)
+        try {
+          await recurringService.processDueRecurringBills(user.uid)
+        } catch {
+          // Graceful skip in offline mode
+        }
 
         const now = new Date()
         const todayStr = now.toISOString().split('T')[0]

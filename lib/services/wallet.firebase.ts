@@ -10,6 +10,7 @@ import {
   query,
   where,
   serverTimestamp,
+  increment,
 } from 'firebase/firestore'
 import type { Wallet, CreateWalletDto, UpdateWalletDto, TransferWalletDto } from '@/types'
 import { transactionService } from './transaction.firebase'
@@ -228,21 +229,17 @@ export const walletService = {
 
   /**
    * Adjust balance of a specific wallet (e.g. on transaction create or delete).
+   * Uses atomic Firestore increment to support 100% offline mutations without pre-reading.
    */
   async adjustWalletBalance(userId: string, walletId: string, deltaAmount: number): Promise<void> {
     if (!userId || !walletId || deltaAmount === 0) return
 
     try {
       const docRef = doc(db, 'wallets', walletId)
-      const snap = await getDoc(docRef)
-      if (snap.exists() && snap.data().userId === userId) {
-        const currentBal = Number(snap.data().balance) || 0
-        const newBal = currentBal + deltaAmount
-        await updateDoc(docRef, {
-          balance: newBal,
-          updatedAt: serverTimestamp(),
-        })
-      }
+      await updateDoc(docRef, {
+        balance: increment(deltaAmount),
+        updatedAt: serverTimestamp(),
+      })
     } catch (err) {
       console.error('[wallet] Error adjusting wallet balance:', err)
     }
@@ -272,21 +269,17 @@ export const walletService = {
     if (!toSnap.exists() || toSnap.data().userId !== userId) {
       throw new Error('Kantong tujuan tidak valid')
     }
-
     const fromData = fromSnap.data()
     const toData = toSnap.data()
 
-    const fromBal = Number(fromData.balance) || 0
-    const toBal = Number(toData.balance) || 0
-
-    // Update balances
+    // Update balances atomically
     await Promise.all([
       updateDoc(fromRef, {
-        balance: fromBal - payload.amount,
+        balance: increment(-payload.amount),
         updatedAt: serverTimestamp(),
       }),
       updateDoc(toRef, {
-        balance: toBal + payload.amount,
+        balance: increment(payload.amount),
         updatedAt: serverTimestamp(),
       }),
     ])

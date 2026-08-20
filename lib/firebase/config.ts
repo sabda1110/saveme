@@ -21,21 +21,29 @@ const firebaseConfig = {
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 
+let firestoreInstance: Firestore | null = null
+
 function getFirestoreInstance(): Firestore {
+  if (firestoreInstance) {
+    return firestoreInstance
+  }
+
   if (typeof window === 'undefined') {
-    return getFirestore(app)
+    firestoreInstance = getFirestore(app)
+    return firestoreInstance
   }
 
   try {
-    return initializeFirestore(app, {
+    firestoreInstance = initializeFirestore(app, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager(),
       }),
     })
   } catch {
-    // Fallback if already initialized (e.g. during Hot Module Reload)
-    return getFirestore(app)
+    firestoreInstance = getFirestore(app)
   }
+
+  return firestoreInstance
 }
 
 export const db = getFirestoreInstance()
