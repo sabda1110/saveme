@@ -17,7 +17,7 @@ import { transactionService } from './transaction.firebase'
 export const walletService = {
   /**
    * Fetch all wallets for a user.
-   * Auto-initializes default "Dompet Tunai" if user has no wallets yet.
+   * Auto-initializes default "Dompet Tunai" seeded with user's initialBalance if user has no wallets yet.
    */
   async getUserWallets(userId: string): Promise<Wallet[]> {
     if (!userId) throw new Error('User ID is required')
@@ -26,18 +26,30 @@ export const walletService = {
     const snapshot = await getDocs(q)
 
     if (snapshot.empty) {
-      // Auto-initialize default cash wallet
+      // Look up user's initial balance from profile
+      let initialBal = 0
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId))
+        if (userDoc.exists()) {
+          initialBal = Number(userDoc.data().initialBalance) || 0
+        }
+      } catch (err) {
+        console.warn('[wallet] Could not fetch user profile for initial balance:', err)
+      }
+
+      // Auto-initialize default cash wallet with initial balance
       const defaultWallet = await this.createWallet(userId, {
         name: 'Dompet Tunai (Kas)',
         type: 'CASH',
-        balance: 0,
+        balance: initialBal,
         icon: '💵',
         color: '#22c55e',
+        isLocked: false,
       })
       return [defaultWallet]
     }
 
-    return snapshot.docs.map((docSnap) => {
+    const wallets = snapshot.docs.map((docSnap) => {
       const data = docSnap.data()
       return {
         id: docSnap.id,
@@ -54,6 +66,88 @@ export const walletService = {
         updatedAt: data.updatedAt,
       } as Wallet
     })
+
+    // Self-healing: if user has 1 cash wallet with 0 balance, but user profile has initialBalance > 0
+    if (wallets.length === 1 && wallets[0].balance === 0) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId))
+        if (userDoc.exists()) {
+          const profileInitBal = Number(userDoc.data().initialBalance) || 0
+          if (profileInitBal > 0) {
+            await this.updateWallet(userId, wallets[0].id, { balance: profileInitBal })
+            wallets[0].balance = profileInitBal
+          }
+        }
+      } catch (err) {
+        console.warn('[wallet] Self-healing check error:', err)
+      }
+    }
+
+    return wallets
+  },
+
+  /**
+   * Sync initial balance from onboarding directly into the user's primary cash wallet
+   * and record the initial transaction.
+   */
+  async syncInitialBalanceWallet(userId: string, initialBalance: number): Promise<Wallet> {
+    if (!userId) throw new Error('User ID is required')
+
+    const wallets = await this.getUserWallets(userId)
+    const primaryCashWallet = wallets.find((w) => w.type === 'CASH' && !w.isLocked) || wallets[0]
+
+    if (primaryCashWallet) {
+      // Update primary wallet balance
+      await this.updateWallet(userId, primaryCashWallet.id, {
+        balance: initialBalance,
+      })
+      primaryCashWallet.balance = initialBalance
+
+      // Record initial transaction linked to this wallet
+      if (initialBalance > 0) {
+        const todayStr = new Date().toISOString().split('T')[0]
+        await transactionService.create(userId, {
+          type: 'INCOME',
+          amount: initialBalance,
+          categoryId: 'initial-balance',
+          categoryName: 'Saldo Awal / Tabungan',
+          categoryIcon: '💰',
+          description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
+          transactionDate: todayStr,
+          walletId: primaryCashWallet.id,
+          walletName: primaryCashWallet.name,
+        })
+      }
+
+      return primaryCashWallet
+    } else {
+      // Create new default wallet
+      const newWallet = await this.createWallet(userId, {
+        name: 'Dompet Tunai (Kas)',
+        type: 'CASH',
+        balance: initialBalance,
+        icon: '💵',
+        color: '#22c55e',
+        isLocked: false,
+      })
+
+      if (initialBalance > 0) {
+        const todayStr = new Date().toISOString().split('T')[0]
+        await transactionService.create(userId, {
+          type: 'INCOME',
+          amount: initialBalance,
+          categoryId: 'initial-balance',
+          categoryName: 'Saldo Awal / Tabungan',
+          categoryIcon: '💰',
+          description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
+          transactionDate: todayStr,
+          walletId: newWallet.id,
+          walletName: newWallet.name,
+        })
+      }
+
+      return newWallet
+    }
   },
 
   /**

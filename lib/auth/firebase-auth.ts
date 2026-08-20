@@ -14,7 +14,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import type { UserProfile, UserRole } from '@/types'
-import { transactionService } from '@/lib/services/transaction.firebase'
+import { walletService } from '@/lib/services/wallet.firebase'
 
 // Check if user is initial super admin
 function determineInitialRole(email: string): UserRole {
@@ -110,17 +110,8 @@ export async function completeUserOnboarding(uid: string, data: OnboardingData):
     updatedAt: serverTimestamp(),
   })
 
-  // If user sets a positive initial balance, record it as starting income transaction
+  // Sync initial balance directly into primary cash wallet & record linked transaction
   if (data.initialBalance > 0) {
-    const todayStr = new Date().toISOString().split('T')[0]
-    await transactionService.create(uid, {
-      type: 'INCOME',
-      amount: data.initialBalance,
-      categoryId: 'initial-balance',
-      categoryName: 'Saldo Awal / Tabungan',
-      categoryIcon: '💰',
-      description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
-      transactionDate: todayStr,
-    })
+    await walletService.syncInitialBalanceWallet(uid, data.initialBalance)
   }
 }

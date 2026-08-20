@@ -319,16 +319,22 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-4">
-      {/* Auto-Trigger Onboarding Wizard for First Time Users */}
+      {/* Auto-Trigger Onboarding Wizard for First Time Users or Atur Gaji */}
       {(shouldShowOnboarding || isOnboardingModalOpen) && user && (
         <OnboardingWizard
           userId={user.uid}
           userName={userProfile?.name}
+          initialData={{
+            initialBalance: userProfile?.initialBalance,
+            monthlyIncome: userProfile?.monthlyIncome,
+            savingsTarget: userProfile?.savingsTarget,
+          }}
           onComplete={async () => {
             setIsOnboardingModalOpen(false)
             await refreshProfile()
             setRefreshTrigger((p) => p + 1)
           }}
+          onClose={isOnboardingModalOpen ? () => setIsOnboardingModalOpen(false) : undefined}
         />
       )}
 

@@ -112,9 +112,9 @@ git diff --stat
 
 ### Step 9 — Report to User
 
-Berikan ringkasan ke user:
+Berikan ringkasan ke user lengkap dengan **rekomendasi pesan dan deskripsi commit** (Conventional Commits):
 
-```
+```markdown
 ✅ Feature: [Nama Feature]
 
 ### Yang Dikerjakan
@@ -125,6 +125,26 @@ Berikan ringkasan ke user:
 ### Cara Test
 1. ...
 2. ...
+
+### 💡 Rekomendasi Commit Message & Deskripsi
+
+**Judul Commit:**
+`type(scope): brief summary in lowercase`
+
+**Deskripsi Commit:**
+```
+type(scope): brief summary in lowercase
+
+- Detail perubahan 1
+- Detail perubahan 2
+- Rationale atau perbaikan yang dilakukan
+```
+
+**Perintah Git:**
+```bash
+git add .
+git commit -m "type(scope): brief summary in lowercase" -m "- Detail perubahan 1\n- Detail perubahan 2"
+```
 
 ### Catatan
 - ...
@@ -143,4 +163,5 @@ Feature dianggap selesai jika:
 - [ ] Security checklist passed
 - [ ] Dokumentasi diupdate
 - [ ] Roadmap diupdate
+- [ ] Rekomendasi Commit Message & Deskripsi sudah diberikan
 - [ ] User sudah di-inform

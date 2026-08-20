@@ -15,29 +15,40 @@ import {
   ArrowLeft,
   CheckCircle2,
   HelpCircle,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface OnboardingWizardProps {
   userId: string
   userName?: string
+  initialData?: {
+    initialBalance?: number
+    monthlyIncome?: number
+    savingsTarget?: number
+  }
   onComplete: () => void
+  onClose?: () => void
 }
 
-export function OnboardingWizard({ userId, userName, onComplete }: OnboardingWizardProps) {
+export function OnboardingWizard({ userId, userName, initialData, onComplete, onClose }: OnboardingWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [initialBalance, setInitialBalance] = useState('')
-  const [monthlyIncome, setMonthlyIncome] = useState('')
-  const [savingsTarget, setSavingsTarget] = useState(20)
+  const [initialBalance, setInitialBalance] = useState(
+    initialData?.initialBalance ? initialData.initialBalance.toString() : ''
+  )
+  const [monthlyIncome, setMonthlyIncome] = useState(
+    initialData?.monthlyIncome ? initialData.monthlyIncome.toString() : ''
+  )
+  const [savingsTarget, setSavingsTarget] = useState(initialData?.savingsTarget || 20)
   const [loading, setLoading] = useState(false)
 
   const handleFinish = async (skip = false) => {
     setLoading(true)
     try {
       const data: OnboardingData = {
-        initialBalance: skip ? 0 : Number(initialBalance) || 0,
-        monthlyIncome: skip ? 0 : Number(monthlyIncome) || 0,
-        savingsTarget: skip ? 20 : savingsTarget,
+        initialBalance: skip ? (initialData?.initialBalance || 0) : Number(initialBalance) || 0,
+        monthlyIncome: skip ? (initialData?.monthlyIncome || 0) : Number(monthlyIncome) || 0,
+        savingsTarget: skip ? (initialData?.savingsTarget || 20) : savingsTarget,
       }
 
       await completeUserOnboarding(userId, data)
@@ -84,13 +95,26 @@ export function OnboardingWizard({ userId, userName, onComplete }: OnboardingWiz
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleFinish(true)}
-            className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
-          >
-            Lewati Setup
-          </button>
+          <div className="flex items-center gap-2">
+            {onClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a] transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleFinish(true)}
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+              >
+                Lewati Setup
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2 mb-8">
