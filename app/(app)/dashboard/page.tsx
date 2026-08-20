@@ -8,6 +8,7 @@ import { categoryService } from '@/lib/services/category.firebase'
 import { recurringService } from '@/lib/services/recurring.firebase'
 import { savingsService } from '@/lib/services/savings.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
+import { quickTemplateService } from '@/lib/services/quick-template.firebase'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -36,8 +37,9 @@ import {
   Camera,
   Lock,
   Unlock,
+  Zap,
 } from 'lucide-react'
-import type { Category, DashboardSummary, RecurringBill, SavingsGoal, Wallet, ReceiptScanResult } from '@/types'
+import type { Category, DashboardSummary, RecurringBill, SavingsGoal, Wallet, ReceiptScanResult, QuickTemplate } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 type PeriodFilter = 'today' | 'week' | 'month' | 'all'
@@ -58,6 +60,7 @@ export default function DashboardPage() {
   const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([])
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
+  const [templates, setTemplates] = useState<QuickTemplate[]>([])
   const [activePeriod, setActivePeriod] = useState<PeriodFilter>('month')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -111,12 +114,13 @@ export default function DashboardPage() {
           to = todayStr
         }
 
-        const [data, cats, bills, goals, userWallets] = await Promise.all([
+        const [data, cats, bills, goals, userWallets, userTemplates] = await Promise.all([
           transactionService.getDashboardSummary(user.uid, from, to),
           categoryService.getCategories(),
           recurringService.getUserRecurringBills(user.uid),
           savingsService.getUserGoals(user.uid),
           walletService.getUserWallets(user.uid),
+          quickTemplateService.getUserTemplates(user.uid),
         ])
 
         if (isMounted) {
@@ -125,6 +129,7 @@ export default function DashboardPage() {
           setRecurringBills(bills)
           setSavingsGoals(goals)
           setWallets(userWallets)
+          setTemplates(userTemplates)
           if (cats.length > 0 && !categoryId) {
             setCategoryId(cats[0].id)
           }
@@ -168,13 +173,70 @@ export default function DashboardPage() {
     setIsModalOpen(true)
   }
 
-  const handleCreateTransaction = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Handle Auto-fill from Quick Template
+  const handleSelectTemplate = (templateId: string) => {
+    if (!templateId) return
+    const tpl = templates.find((t) => t.id === templateId)
+    if (!tpl) return
+
+    setType('EXPENSE')
+    setAmount(tpl.amount.toString())
+    setDescription(tpl.name)
+    if (tpl.categoryId) setCategoryId(tpl.categoryId)
+    if (tpl.walletId) setWalletId(tpl.walletId)
+  }
+
+  // Daily Overbudget Confirmation State
+  const [overbudgetWarning, setOverbudgetWarning] = useState<{
+    isOpen: boolean
+    amount: number
+    limit: number
+    excess: number
+  }>({
+    isOpen: false,
+    amount: 0,
+    limit: 0,
+    excess: 0,
+  })
+
+  // Handle Type Switcher with locked wallet safeguard
+  const handleSwitchType = (newType: 'INCOME' | 'EXPENSE') => {
+    setType(newType)
+    if (newType === 'EXPENSE') {
+      const selectedW = wallets.find((w) => w.id === walletId)
+      if (selectedW?.isLocked) {
+        const firstUnlocked = wallets.find((w) => !w.isLocked)
+        if (firstUnlocked) setWalletId(firstUnlocked.id)
+      }
+    }
+  }
+
+  const handleCreateTransaction = async (e?: React.FormEvent, skipOverbudgetCheck = false) => {
+    if (e) e.preventDefault()
     setFormError(null)
 
     const numAmount = Number(amount)
     if (!numAmount || numAmount <= 0) {
       setFormError('Nominal transaksi harus lebih besar dari 0')
+      return
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0]
+
+    // Daily Overbudget Interceptor Warning
+    if (
+      !skipOverbudgetCheck &&
+      type === 'EXPENSE' &&
+      transactionDate === todayStr &&
+      dynamicSafeToSpendDaily > 0 &&
+      numAmount > dynamicSafeToSpendDaily
+    ) {
+      setOverbudgetWarning({
+        isOpen: true,
+        amount: numAmount,
+        limit: dynamicSafeToSpendDaily,
+        excess: numAmount - dynamicSafeToSpendDaily,
+      })
       return
     }
 
@@ -186,6 +248,11 @@ export default function DashboardPage() {
     }
 
     const selectedWallet = wallets.find((w) => w.id === walletId)
+
+    if (type === 'EXPENSE' && selectedWallet?.isLocked) {
+      setFormError('Kantong simpanan terkunci tidak dapat digunakan untuk pengeluaran')
+      return
+    }
 
     if (!user?.uid) return
 
@@ -215,6 +282,7 @@ export default function DashboardPage() {
       setAmount('')
       setDescription('')
       setIsModalOpen(false)
+      setOverbudgetWarning({ isOpen: false, amount: 0, limit: 0, excess: 0 })
       setRefreshTrigger((prev) => prev + 1)
     } catch (err: unknown) {
       console.error('[dashboard] Error creating transaction:', err)
@@ -896,7 +964,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#21263a] border border-[#2d3348]">
                 <button
                   type="button"
-                  onClick={() => setType('EXPENSE')}
+                  onClick={() => handleSwitchType('EXPENSE')}
                   className={cn(
                     'py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer',
                     type === 'EXPENSE'
@@ -908,7 +976,7 @@ export default function DashboardPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setType('INCOME')}
+                  onClick={() => handleSwitchType('INCOME')}
                   className={cn(
                     'py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer',
                     type === 'INCOME'
@@ -919,6 +987,34 @@ export default function DashboardPage() {
                   Pemasukan
                 </button>
               </div>
+
+              {/* Quick Template Auto-Fill Selector */}
+              {templates.length > 0 && type === 'EXPENSE' && (
+                <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-[#131620]/60 border border-[#2d3348]/60">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-300 flex items-center gap-1.5 font-semibold">
+                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      Pakai Template Cepat:
+                    </span>
+                    <Link href="/templates" className="text-amber-400 hover:underline text-[11px]">
+                      Atur Template
+                    </Link>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                    {templates.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleSelectTemplate(t.id)}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#21263a] border border-[#2d3348] hover:border-amber-500/60 hover:bg-[#2a3048] text-xs text-slate-200 transition-all shrink-0 cursor-pointer active:scale-95"
+                      >
+                        <span>{t.icon}</span>
+                        <span className="font-medium">{t.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Amount */}
               <FormField label="Nominal (Rp)" required>
@@ -957,18 +1053,25 @@ export default function DashboardPage() {
 
               {/* Wallet Selector */}
               {wallets.length > 0 && (
-                <FormField label="Kantong / Sumber Dana">
+                <FormField label={type === 'EXPENSE' ? 'Kantong Pembayaran' : 'Kantong Tujuan'}>
                   <select
                     value={walletId}
                     onChange={(e) => setWalletId(e.target.value)}
                     className="w-full bg-[#21263a] text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
                   >
-                    {wallets.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.icon} {w.name} ({formatRupiah(w.balance)})
-                      </option>
-                    ))}
+                    {wallets
+                      .filter((w) => (type === 'EXPENSE' ? !w.isLocked : true))
+                      .map((w) => (
+                        <option key={w.id} value={w.id}>
+                          {w.icon} {w.name} {w.isLocked ? '🔒 [Simpanan Terkunci]' : ''} ({formatRupiah(w.balance)})
+                        </option>
+                      ))}
                   </select>
+                  {type === 'EXPENSE' && (
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      🔒 Kantong yang terkunci otomatis disembunyikan agar tabungan/dana darurat tidak terpakai belanja.
+                    </p>
+                  )}
                 </FormField>
               )}
 
@@ -1011,6 +1114,71 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Overbudget Warning Modal */}
+      {overbudgetWarning.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#1a1d27] border border-amber-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl shrink-0">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-white">
+                  Melebihi Batas Aman Harian
+                </h3>
+                <span className="text-xs text-amber-400 font-medium">Peringatan Pengeluaran</span>
+              </div>
+            </div>
+
+            <div className="space-y-3 my-4 p-4 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs">
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Batas Belanja Hari Ini:</span>
+                <span className="font-mono font-bold text-green-400">
+                  {formatRupiah(overbudgetWarning.limit)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Nominal Pengeluaran:</span>
+                <span className="font-mono font-bold text-red-400">
+                  {formatRupiah(overbudgetWarning.amount)}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-[#2d3348] flex items-center justify-between font-bold text-amber-300">
+                <span>Selisih Lebih (Overbudget):</span>
+                <span className="font-mono text-amber-400">
+                  + {formatRupiah(overbudgetWarning.excess)}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed mb-5">
+              Pengeluaran ini akan mengurangi jatah belanja hari-hari berikutnya. Apakah Anda tetap ingin menyimpan transaksi ini?
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#2d3348]">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setOverbudgetWarning({ isOpen: false, amount: 0, limit: 0, excess: 0 })}
+              >
+                Batal &amp; Ubah Nominal
+              </Button>
+              <Button
+                type="button"
+                variant="glow"
+                size="sm"
+                loading={submitting}
+                onClick={() => handleCreateTransaction(undefined, true)}
+                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold"
+              >
+                Tetap Lanjutkan
+              </Button>
+            </div>
           </div>
         </div>
       )}

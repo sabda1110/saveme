@@ -266,6 +266,9 @@ export const walletService = {
     if (!fromSnap.exists() || fromSnap.data().userId !== userId) {
       throw new Error('Kantong asal tidak valid')
     }
+    if (fromSnap.data().isLocked) {
+      throw new Error('Kantong asal sedang dikunci/dibekukan dan tidak dapat digunakan untuk transfer keluar.')
+    }
     if (!toSnap.exists() || toSnap.data().userId !== userId) {
       throw new Error('Kantong tujuan tidak valid')
     }

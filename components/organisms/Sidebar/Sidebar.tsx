@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   LogOut,
   Sparkles,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -42,6 +43,11 @@ export function Sidebar() {
       href: '/wallets',
       icon: <WalletIcon className="w-5 h-5 text-blue-400" />,
       badge: 'Baru',
+    },
+    {
+      label: 'Template Cepat',
+      href: '/templates',
+      icon: <Zap className="w-5 h-5 text-amber-400" />,
     },
     {
       label: 'Celengan Impian',

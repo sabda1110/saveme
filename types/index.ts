@@ -143,3 +143,41 @@ export interface SystemStats {
   totalVolume: number
   recentUsers: UserProfile[]
 }
+
+export interface QuickTemplate {
+  id: string
+  userId: string
+  name: string
+  amount: number
+  icon: string
+  categoryId: string
+  categoryName: string
+  categoryIcon: string
+  walletId?: string
+  walletName?: string
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+export interface CreateQuickTemplateDto {
+  name: string
+  amount: number
+  icon: string
+  categoryId: string
+  categoryName: string
+  categoryIcon: string
+  walletId?: string
+  walletName?: string
+}
+
+export interface UpdateQuickTemplateDto {
+  name?: string
+  amount?: number
+  icon?: string
+  categoryId?: string
+  categoryName?: string
+  categoryIcon?: string
+  walletId?: string
+  walletName?: string
+}
+
