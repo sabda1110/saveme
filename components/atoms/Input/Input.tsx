@@ -29,7 +29,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={inputType}
           disabled={disabled}
           className={cn(
-            'w-full bg-[#21263a] text-slate-100 placeholder:text-slate-500 rounded-xl px-4 py-3 text-sm border transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed',
+            'w-full bg-[#21263a] text-slate-100 placeholder:text-slate-500 rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed',
             leftIcon ? 'pl-11' : 'pl-4',
             isPassword ? 'pr-11' : 'pr-4',
             error
