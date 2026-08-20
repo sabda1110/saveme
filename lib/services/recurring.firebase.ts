@@ -11,8 +11,9 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore'
-import type { RecurringBill } from '@/types'
+import type { RecurringBill, BillType } from '@/types'
 import { transactionService } from '@/lib/services/transaction.firebase'
+import { walletService } from '@/lib/services/wallet.firebase'
 
 export interface CreateRecurringBillDto {
   name: string
@@ -22,18 +23,38 @@ export interface CreateRecurringBillDto {
   categoryIcon: string
   dueDay: number // 1 to 31
   autoDeduct: boolean
+  billType?: BillType
+  walletId?: string
+  walletName?: string
+  totalTenor?: number
+  paidTenor?: number
+  totalPrincipal?: number
+  notes?: string
 }
 
 export const recurringService = {
   async create(userId: string, data: CreateRecurringBillDto): Promise<RecurringBill> {
     if (!userId) throw new Error('Unauthorized: User ID is required')
 
+    const billType: BillType = data.billType || 'RECURRING'
+    const totalTenor = data.totalTenor ? Math.max(1, Number(data.totalTenor)) : undefined
+    const paidTenor = data.paidTenor ? Math.max(0, Number(data.paidTenor)) : 0
+    const totalPrincipal = data.totalPrincipal
+      ? Number(data.totalPrincipal)
+      : totalTenor
+      ? Number(data.amount) * totalTenor
+      : undefined
+
     const payload = {
       userId,
       ...data,
+      billType,
       amount: Number(data.amount),
       dueDay: Math.min(31, Math.max(1, Number(data.dueDay))),
       autoDeduct: Boolean(data.autoDeduct),
+      totalTenor,
+      paidTenor,
+      totalPrincipal,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }
@@ -48,7 +69,7 @@ export const recurringService = {
   async update(
     userId: string,
     billId: string,
-    data: Partial<CreateRecurringBillDto> & { lastProcessedMonth?: string }
+    data: Partial<CreateRecurringBillDto> & { lastProcessedMonth?: string; paidTenor?: number }
   ): Promise<boolean> {
     if (!userId) throw new Error('Unauthorized')
 
@@ -74,6 +95,15 @@ export const recurringService = {
     if (data.dueDay !== undefined) {
       payload.dueDay = Math.min(31, Math.max(1, Number(data.dueDay)))
     }
+    if (data.totalTenor !== undefined) {
+      payload.totalTenor = Number(data.totalTenor)
+    }
+    if (data.paidTenor !== undefined) {
+      payload.paidTenor = Number(data.paidTenor)
+    }
+    if (data.totalPrincipal !== undefined) {
+      payload.totalPrincipal = Number(data.totalPrincipal)
+    }
 
     await updateDoc(docRef, payload)
     return true
@@ -91,6 +121,7 @@ export const recurringService = {
       const snapshot = await getDocs(q)
       const bills = snapshot.docs.map((d) => ({
         id: d.id,
+        billType: 'RECURRING' as BillType,
         ...d.data(),
       })) as unknown as RecurringBill[]
 
@@ -122,9 +153,68 @@ export const recurringService = {
   },
 
   /**
+   * Pay a bill manually or automatically, recording expense and updating tenor/wallet.
+   */
+  async payBill(
+    userId: string,
+    bill: RecurringBill,
+    chosenWalletId?: string,
+    chosenWalletName?: string
+  ): Promise<boolean> {
+    if (!userId || !bill?.id) throw new Error('Unauthorized or invalid bill')
+
+    const now = new Date()
+    const todayStr = now.toISOString().split('T')[0]
+    const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0')
+    const currentMonthStr = `${now.getFullYear()}-${currentMonthNum}`
+
+    const isInstallment = bill.billType === 'INSTALLMENT'
+    const nextPaidTenor = (bill.paidTenor || 0) + 1
+    const totalTenor = bill.totalTenor || 1
+
+    const txDesc = isInstallment
+      ? `[Cicilan ${nextPaidTenor}/${totalTenor}] ${bill.name}`
+      : `[Pembayaran Tagihan] ${bill.name}`
+
+    const targetWalletId = chosenWalletId || bill.walletId
+    const targetWalletName = chosenWalletName || bill.walletName
+
+    // 1. Record expense transaction
+    await transactionService.create(userId, {
+      type: 'EXPENSE',
+      amount: bill.amount,
+      categoryId: bill.categoryId,
+      categoryName: bill.categoryName,
+      categoryIcon: bill.categoryIcon,
+      description: txDesc,
+      transactionDate: todayStr,
+      walletId: targetWalletId,
+      walletName: targetWalletName,
+    })
+
+    // 2. Debit wallet balance if walletId is present
+    if (targetWalletId) {
+      try {
+        await walletService.adjustWalletBalance(userId, targetWalletId, -bill.amount)
+      } catch (err) {
+        console.warn(`[recurringService] Failed to deduct wallet ${targetWalletId}:`, err)
+      }
+    }
+
+    // 3. Update bill status & tenor
+    const updatePayload: { lastProcessedMonth: string; paidTenor?: number } = {
+      lastProcessedMonth: currentMonthStr,
+    }
+    if (isInstallment) {
+      updatePayload.paidTenor = nextPaidTenor
+    }
+
+    await this.update(userId, bill.id, updatePayload)
+    return true
+  },
+
+  /**
    * Automatically processes due recurring bills for the current month.
-   * If today's day >= bill.dueDay and lastProcessedMonth !== currentMonth,
-   * creates an expense transaction and stamps the bill as processed.
    */
   async processDueRecurringBills(userId: string): Promise<number> {
     if (!userId) return 0
@@ -132,44 +222,28 @@ export const recurringService = {
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0')
-    const currentMonthStr = `${currentYear}-${currentMonthNum}` // "YYYY-MM"
+    const currentMonthStr = `${currentYear}-${currentMonthNum}`
     const currentDay = now.getDate()
 
     const bills = await this.getUserRecurringBills(userId)
     let processedCount = 0
 
     for (const bill of bills) {
+      // Check if installment is already finished
+      if (bill.billType === 'INSTALLMENT' && bill.totalTenor && (bill.paidTenor || 0) >= bill.totalTenor) {
+        continue
+      }
+
       if (
         bill.autoDeduct &&
         currentDay >= bill.dueDay &&
         bill.lastProcessedMonth !== currentMonthStr
       ) {
         try {
-          // Format transaction date (use actual due date in current month)
-          const dueDayStr = String(bill.dueDay).padStart(2, '0')
-          const txDate = `${currentMonthStr}-${dueDayStr}`
-
-          // 1. Create the auto-deducted expense transaction
-          await transactionService.create(userId, {
-            type: 'EXPENSE',
-            amount: bill.amount,
-            categoryId: bill.categoryId,
-            categoryName: bill.categoryName,
-            categoryIcon: bill.categoryIcon,
-            description: `[Auto-Cicilan] ${bill.name}`,
-            transactionDate: txDate <= now.toISOString().split('T')[0] ? txDate : now.toISOString().split('T')[0],
-          })
-
-          // 2. Mark this bill as processed for current month
-          const billDocRef = doc(db, 'recurring_bills', bill.id)
-          await updateDoc(billDocRef, {
-            lastProcessedMonth: currentMonthStr,
-            updatedAt: serverTimestamp(),
-          })
-
+          await this.payBill(userId, bill)
           processedCount++
         } catch (err) {
-          console.error(`[recurringService] Error processing bill ${bill.id}:`, err)
+          console.error(`[recurringService] Error auto-processing bill ${bill.id}:`, err)
         }
       }
     }

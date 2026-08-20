@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { savingsService, type CreateSavingsGoalDto } from '@/lib/services/savings.firebase'
-import { transactionService } from '@/lib/services/transaction.firebase'
+import { walletService } from '@/lib/services/wallet.firebase'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
@@ -22,16 +22,16 @@ import {
   RefreshCw,
   Clock,
   TrendingUp,
-  Wallet,
+  Wallet as WalletIcon,
 } from 'lucide-react'
-import type { SavingsGoal, Transaction } from '@/types'
+import type { SavingsGoal, Wallet } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 export default function SavingsPage() {
   const { user } = useAuth()
 
   const [goals, setGoals] = useState<SavingsGoal[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
@@ -46,12 +46,14 @@ export default function SavingsPage() {
   const [currentAmount, setCurrentAmount] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [selectedEmoji, setSelectedEmoji] = useState('🎯')
+  const [goalWalletId, setGoalWalletId] = useState('')
   const [goalError, setGoalError] = useState<string | null>(null)
 
   // Deposit / Withdraw Modal State
   const [depositModalGoal, setDepositModalGoal] = useState<SavingsGoal | null>(null)
   const [withdrawModalGoal, setWithdrawModalGoal] = useState<SavingsGoal | null>(null)
   const [amountAction, setAmountAction] = useState('')
+  const [actionWalletId, setActionWalletId] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -65,17 +67,17 @@ export default function SavingsPage() {
       setLoading(true)
 
       try {
-        const [goalsData, txs] = await Promise.all([
+        const [goalsData, userWallets] = await Promise.all([
           savingsService.getUserGoals(user.uid),
-          transactionService.getUserTransactions(user.uid),
+          walletService.getUserWallets(user.uid),
         ])
 
         if (isMounted) {
           setGoals(goalsData)
-          setTransactions(txs)
+          setWallets(userWallets)
         }
       } catch (err) {
-        console.error('[savings] Error loading goals:', err)
+        console.error('[savings] Error loading goals & wallets:', err)
       } finally {
         if (isMounted) {
           setLoading(false)
@@ -98,12 +100,12 @@ export default function SavingsPage() {
     }).format(val)
   }
 
-  // Liquid Balance in Wallet
-  const liquidBalance = useMemo(() => {
-    const totalInc = transactions.filter((t) => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0)
-    const totalExp = transactions.filter((t) => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0)
-    return totalInc - totalExp
-  }, [transactions])
+  // Active Spending Wallets & Real Liquid Cash Balance
+  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
+  const liquidBalance = useMemo(
+    () => spendingWallets.reduce((sum, w) => sum + w.balance, 0),
+    [spendingWallets]
+  )
 
   // Summary Metrics
   const totalTargetAll = useMemo(
@@ -149,6 +151,11 @@ export default function SavingsPage() {
         })
       } else {
         // CREATE
+        const selectedW =
+          wallets.find((w) => w.id === goalWalletId) ||
+          spendingWallets[0] ||
+          wallets[0]
+
         const payload: CreateSavingsGoalDto = {
           name: goalName,
           targetAmount: numTarget,
@@ -156,7 +163,12 @@ export default function SavingsPage() {
           targetDate,
           icon: selectedEmoji,
         }
-        await savingsService.createGoal(user.uid, payload)
+        await savingsService.createGoal(
+          user.uid,
+          payload,
+          selectedW?.id,
+          selectedW?.name
+        )
       }
 
       setIsGoalModalOpen(false)
@@ -165,6 +177,7 @@ export default function SavingsPage() {
       setTargetAmount('')
       setCurrentAmount('')
       setTargetDate('')
+      setGoalWalletId('')
       setRefreshTrigger((p) => p + 1)
     } catch (err: unknown) {
       console.error('[savings] Error saving goal:', err)
@@ -206,6 +219,22 @@ export default function SavingsPage() {
     }
   }
 
+  // Handle Open Deposit Modal
+  const handleOpenDepositModal = (goal: SavingsGoal) => {
+    setDepositModalGoal(goal)
+    setAmountAction('')
+    setActionError(null)
+    setActionWalletId(spendingWallets[0]?.id || wallets[0]?.id || '')
+  }
+
+  // Handle Open Withdraw Modal
+  const handleOpenWithdrawModal = (goal: SavingsGoal) => {
+    setWithdrawModalGoal(goal)
+    setAmountAction('')
+    setActionError(null)
+    setActionWalletId(spendingWallets[0]?.id || wallets[0]?.id || '')
+  }
+
   // Handle Deposit (+ Setor Uang)
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -217,14 +246,33 @@ export default function SavingsPage() {
       setActionError('Nominal setor harus lebih besar dari 0')
       return
     }
-    if (num > liquidBalance) {
-      setActionError(`Saldo dompet kas tidak mencukupi (Tersedia: ${formatRupiah(liquidBalance)})`)
+
+    const targetWallet =
+      wallets.find((w) => w.id === actionWalletId) ||
+      spendingWallets[0] ||
+      wallets[0]
+
+    if (!targetWallet) {
+      setActionError('Silakan pilih dompet sumber dana')
+      return
+    }
+
+    if (num > targetWallet.balance) {
+      setActionError(
+        `Saldo ${targetWallet.name} tidak mencukupi (Tersedia: ${formatRupiah(targetWallet.balance)})`
+      )
       return
     }
 
     setActionLoading(true)
     try {
-      await savingsService.depositToGoal(user.uid, depositModalGoal.id, num)
+      await savingsService.depositToGoal(
+        user.uid,
+        depositModalGoal.id,
+        num,
+        targetWallet.id,
+        targetWallet.name
+      )
       setDepositModalGoal(null)
       setAmountAction('')
       setRefreshTrigger((p) => p + 1)
@@ -248,9 +296,25 @@ export default function SavingsPage() {
       return
     }
 
+    const targetWallet =
+      wallets.find((w) => w.id === actionWalletId) ||
+      spendingWallets[0] ||
+      wallets[0]
+
+    if (!targetWallet) {
+      setActionError('Silakan pilih dompet tujuan penerimaan dana')
+      return
+    }
+
     setActionLoading(true)
     try {
-      await savingsService.withdrawFromGoal(user.uid, withdrawModalGoal.id, num)
+      await savingsService.withdrawFromGoal(
+        user.uid,
+        withdrawModalGoal.id,
+        num,
+        targetWallet.id,
+        targetWallet.name
+      )
       setWithdrawModalGoal(null)
       setAmountAction('')
       setRefreshTrigger((p) => p + 1)
@@ -304,6 +368,7 @@ export default function SavingsPage() {
               setCurrentAmount('')
               setTargetDate('')
               setSelectedEmoji('🎯')
+              setGoalWalletId(spendingWallets[0]?.id || wallets[0]?.id || '')
               setIsGoalModalOpen(true)
             }}
             className="text-xs sm:text-sm px-3 sm:px-4"
@@ -314,12 +379,12 @@ export default function SavingsPage() {
         </div>
       </div>
 
-      {/* 4 Summary KPI Cards (Including Live Liquid Wallet) */}
+      {/* 4 Summary KPI Cards (Synchronized with Real Liquid Wallet) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-gradient-to-b from-[#1e2333] to-[#1a1d27] border border-[#2d3348] shadow-xl flex items-center justify-between">
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-              Saldo Dompet Kas Bebas
+              Saldo Kas Bebas ({spendingWallets.length} Dompet)
             </span>
             <div className="text-xl sm:text-2xl font-extrabold font-mono text-green-400 tabular-nums">
               {formatRupiah(liquidBalance)}
@@ -329,7 +394,7 @@ export default function SavingsPage() {
             </span>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-green-500/10 text-green-400 flex items-center justify-center">
-            <Wallet className="w-5 h-5" />
+            <WalletIcon className="w-5 h-5" />
           </div>
         </div>
 
@@ -400,6 +465,7 @@ export default function SavingsPage() {
             size="md"
             onClick={() => {
               setEditingGoal(null)
+              setGoalWalletId(spendingWallets[0]?.id || wallets[0]?.id || '')
               setIsGoalModalOpen(true)
             }}
             leftIcon={<PlusCircle className="w-4 h-4" />}
@@ -492,8 +558,8 @@ export default function SavingsPage() {
                     />
                   </div>
 
-                  {/* Smart Daily Savings Requirement Indicator */}
-                  {goal.targetDate && daysLeft > 0 && remaining > 0 && (
+                  {/* Target Date Calculation OR Friendly Motivational Feedback */}
+                  {goal.targetDate && daysLeft > 0 && remaining > 0 ? (
                     <div className="p-3 rounded-xl bg-[#21263a]/60 border border-[#2d3348] text-xs text-slate-300 flex items-center justify-between mb-4">
                       <span className="flex items-center gap-1 text-[11px] text-slate-400">
                         <Clock className="w-3.5 h-3.5 text-purple-400" />
@@ -503,7 +569,22 @@ export default function SavingsPage() {
                         Nabung {formatRupiah(dailySavingsReq)}/hari
                       </span>
                     </div>
-                  )}
+                  ) : !goal.targetDate && remaining > 0 ? (
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex flex-col gap-1 mb-4">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Jangan lupa nabung ya! ✨</span>
+                      </div>
+                      <span className="text-[11px] text-amber-300/80 leading-relaxed">
+                        Ada wishlist impian yang belum kamu tabung nih (Kurang {formatRupiah(remaining)}). Atur target tanggal untuk menghitung jatah nabung harianmu.
+                      </span>
+                    </div>
+                  ) : remaining === 0 ? (
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2 mb-4">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="font-bold text-[11px]">🎉 Target Celengan Impian ini telah tercapai 100%!</span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Deposit & Withdraw Actions */}
@@ -511,11 +592,7 @@ export default function SavingsPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => {
-                      setDepositModalGoal(goal)
-                      setAmountAction('')
-                      setActionError(null)
-                    }}
+                    onClick={() => handleOpenDepositModal(goal)}
                     className="text-xs"
                     leftIcon={<ArrowUpRight className="w-3.5 h-3.5 text-green-400" />}
                   >
@@ -525,11 +602,7 @@ export default function SavingsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setWithdrawModalGoal(goal)
-                      setAmountAction('')
-                      setActionError(null)
-                    }}
+                    onClick={() => handleOpenWithdrawModal(goal)}
                     className="text-xs text-slate-300 hover:text-white"
                     leftIcon={<ArrowDownLeft className="w-3.5 h-3.5 text-amber-400" />}
                   >
@@ -631,6 +704,26 @@ export default function SavingsPage() {
                 </FormField>
               </div>
 
+              {/* Wallet Selector if Initial Deposit is set */}
+              {!editingGoal && Number(currentAmount) > 0 && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Pilih Dompet Sumber Saldo Awal:
+                  </label>
+                  <select
+                    value={goalWalletId}
+                    onChange={(e) => setGoalWalletId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-green-500"
+                  >
+                    {spendingWallets.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} — Saldo: {formatRupiah(w.balance)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348] mt-1">
                 <Button
                   type="button"
@@ -678,13 +771,6 @@ export default function SavingsPage() {
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs text-slate-300 mb-4 flex justify-between">
-              <span>Saldo Dompet Kas Tersedia:</span>
-              <span className="font-mono font-bold text-green-400">
-                {formatRupiah(liquidBalance)}
-              </span>
-            </div>
-
             {actionError && (
               <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
                 {actionError}
@@ -692,7 +778,24 @@ export default function SavingsPage() {
             )}
 
             <form onSubmit={handleDeposit} className="flex flex-col gap-4">
-              <FormField label="Nominal Setor dari Dompet Kas (Rp)" required>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-300">
+                  Pilih Dompet Sumber Dana:
+                </label>
+                <select
+                  value={actionWalletId}
+                  onChange={(e) => setActionWalletId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-green-500"
+                >
+                  {spendingWallets.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} — Saldo: {formatRupiah(w.balance)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <FormField label="Nominal Setor ke Celengan (Rp)" required>
                 <Input
                   type="number"
                   placeholder="Contoh: 100000"
@@ -748,7 +851,7 @@ export default function SavingsPage() {
             </div>
 
             <div className="p-3 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs text-slate-300 mb-4 flex justify-between">
-              <span>Saldo di Celengan:</span>
+              <span>Saldo di Celengan Saat Ini:</span>
               <span className="font-mono font-bold text-purple-300">
                 {formatRupiah(withdrawModalGoal.currentAmount)}
               </span>
@@ -761,7 +864,24 @@ export default function SavingsPage() {
             )}
 
             <form onSubmit={handleWithdraw} className="flex flex-col gap-4">
-              <FormField label="Nominal Tarik ke Dompet Kas (Rp)" required>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-300">
+                  Pilih Dompet Tujuan Penerimaan Dana:
+                </label>
+                <select
+                  value={actionWalletId}
+                  onChange={(e) => setActionWalletId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-green-500"
+                >
+                  {spendingWallets.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} — Saldo Sekarang: {formatRupiah(w.balance)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <FormField label="Nominal Tarik ke Dompet (Rp)" required>
                 <Input
                   type="number"
                   placeholder="Contoh: 50000"

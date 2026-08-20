@@ -318,4 +318,46 @@ export const walletService = {
       }),
     ])
   },
+
+  /**
+   * Recalculate and synchronize a specific wallet's balance strictly from all recorded transactions.
+   */
+  async syncWalletBalanceFromTransactions(userId: string, walletId: string): Promise<number> {
+    if (!userId || !walletId) throw new Error('User ID and Wallet ID are required')
+
+    const q = query(
+      collection(db, 'transactions'),
+      where('userId', '==', userId),
+      where('walletId', '==', walletId)
+    )
+    const snapshot = await getDocs(q)
+
+    let total = 0
+    snapshot.docs.forEach((docSnap) => {
+      const tx = docSnap.data()
+      const amt = Number(tx.amount) || 0
+      if (tx.type === 'INCOME') total += amt
+      if (tx.type === 'EXPENSE') total -= amt
+    })
+
+    const walletRef = doc(db, 'wallets', walletId)
+    await updateDoc(walletRef, {
+      balance: total,
+      updatedAt: serverTimestamp(),
+    })
+
+    return total
+  },
+
+  /**
+   * Recalculate and synchronize ALL wallets' balances from recorded transactions.
+   */
+  async syncAllWalletsFromTransactions(userId: string): Promise<void> {
+    if (!userId) throw new Error('User ID is required')
+
+    const wallets = await this.getUserWallets(userId)
+    await Promise.all(
+      wallets.map((w) => this.syncWalletBalanceFromTransactions(userId, w.id))
+    )
+  },
 }

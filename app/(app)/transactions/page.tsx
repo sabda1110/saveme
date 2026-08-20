@@ -13,6 +13,7 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
+import { savingsService } from '@/lib/services/savings.firebase'
 import {
   ReceiptText,
   Search,
@@ -29,8 +30,17 @@ import {
   Filter,
   Camera,
   Zap,
+  Target,
 } from 'lucide-react'
-import type { Category, Transaction, TransactionType, Wallet, ReceiptScanResult, QuickTemplate } from '@/types'
+import type {
+  Category,
+  Transaction,
+  TransactionType,
+  Wallet,
+  ReceiptScanResult,
+  QuickTemplate,
+  SavingsGoal,
+} from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 export default function TransactionsPage() {
@@ -40,6 +50,7 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [templates, setTemplates] = useState<QuickTemplate[]>([])
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
@@ -62,6 +73,8 @@ export default function TransactionsPage() {
   const [formWalletId, setFormWalletId] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0])
+  const [isSavingsDeposit, setIsSavingsDeposit] = useState(false)
+  const [targetGoalId, setTargetGoalId] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -72,11 +85,12 @@ export default function TransactionsPage() {
       setLoading(true)
 
       try {
-        const [txs, cats, userWallets, userTemplates] = await Promise.all([
+        const [txs, cats, userWallets, userTemplates, goals] = await Promise.all([
           transactionService.getUserTransactions(user.uid),
           categoryService.getCategories(),
           walletService.getUserWallets(user.uid),
           quickTemplateService.getUserTemplates(user.uid),
+          savingsService.getUserGoals(user.uid),
         ])
 
         if (isMounted) {
@@ -84,6 +98,7 @@ export default function TransactionsPage() {
           setCategories(cats)
           setWallets(userWallets)
           setTemplates(userTemplates)
+          setSavingsGoals(goals)
           if (cats.length > 0 && !formCategoryId) {
             setFormCategoryId(cats[0].id)
           }
@@ -172,6 +187,8 @@ export default function TransactionsPage() {
     setFormWalletId(tx.walletId || wallets[0]?.id || '')
     setFormDescription(tx.description || '')
     setFormDate(tx.transactionDate)
+    setIsSavingsDeposit(false)
+    setTargetGoalId('')
     setFormError(null)
     setIsAddModalOpen(true)
   }
@@ -310,6 +327,20 @@ export default function TransactionsPage() {
           walletName: selectedWallet?.name,
         })
         setEditingTx(null)
+      } else if (isSavingsDeposit && targetGoalId && formType === 'EXPENSE') {
+        // Deposit directly to Celengan Impian
+        const targetGoal = savingsGoals.find((g) => g.id === targetGoalId)
+        if (targetGoal) {
+          await savingsService.depositToGoal(
+            user.uid,
+            targetGoal.id,
+            numAmount,
+            selectedWallet?.id,
+            selectedWallet?.name
+          )
+        }
+        setIsAddModalOpen(false)
+        setOverbudgetWarning({ isOpen: false, amount: 0, limit: 0, excess: 0 })
       } else {
         // CREATE New
         const payload: CreateTransactionDto = {
@@ -338,6 +369,8 @@ export default function TransactionsPage() {
       // Reset
       setFormAmount('')
       setFormDescription('')
+      setIsSavingsDeposit(false)
+      setTargetGoalId('')
       setRefreshTrigger((p) => p + 1)
     } catch (err: unknown) {
       console.error('[transactions] Error submitting transaction:', err)
@@ -768,6 +801,63 @@ export default function TransactionsPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Celengan Impian Direct Deposit Selector */}
+              {!editingTx && savingsGoals.length > 0 && formType === 'EXPENSE' && (
+                <div className="p-3.5 rounded-2xl bg-[#131620]/60 border border-[#2d3348] space-y-2.5">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSavingsDeposit}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setIsSavingsDeposit(checked)
+                        if (checked) {
+                          if (!targetGoalId && savingsGoals[0]) {
+                            setTargetGoalId(savingsGoals[0].id)
+                          }
+                          const savCat = categories.find(
+                            (c) =>
+                              c.id === 'savings' ||
+                              c.id === 'savings_deposit' ||
+                              c.name.toLowerCase().includes('tabung')
+                          )
+                          if (savCat) {
+                            setFormCategoryId(savCat.id)
+                          }
+                        }
+                      }}
+                      className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
+                      <Target className="w-4 h-4 text-purple-400" />
+                      <span>Alokasikan / Setor ke Celengan Impian</span>
+                    </div>
+                  </label>
+
+                  {isSavingsDeposit && (
+                    <div className="space-y-1.5 pt-1 animate-in fade-in">
+                      <label className="text-[11px] font-semibold text-slate-400">
+                        Pilih Celengan Tujuan:
+                      </label>
+                      <select
+                        value={targetGoalId}
+                        onChange={(e) => setTargetGoalId(e.target.value)}
+                        className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-2.5 text-xs border border-[#2d3348] focus:border-purple-500 focus:outline-none cursor-pointer"
+                      >
+                        {savingsGoals.map((g) => {
+                          const remaining = Math.max(0, g.targetAmount - g.currentAmount)
+                          return (
+                            <option key={g.id} value={g.id}>
+                              {g.icon || '🎯'} {g.name} (Terkumpul: {formatRupiah(g.currentAmount)} / Sisa: {formatRupiah(remaining)})
+                            </option>
+                          )
+                        })}
+                      </select>
+                    </div>
+                  )}
                 </div>
               )}
 

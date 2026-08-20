@@ -11,6 +11,7 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore'
+import { walletService } from '@/lib/services/wallet.firebase'
 import type { Transaction, TransactionType, DashboardSummary } from '@/types'
 
 export interface CreateTransactionDto {
@@ -63,6 +64,39 @@ export const transactionService = {
       throw new Error('Akses ditolak: Dokumen bukan milik Anda')
     }
 
+    const oldType = existing.type
+    const oldAmount = Number(existing.amount) || 0
+    const oldWalletId = existing.walletId
+
+    const newType = data.type || oldType
+    const newAmount = data.amount !== undefined ? Number(data.amount) : oldAmount
+    const newWalletId = data.walletId !== undefined ? data.walletId : oldWalletId
+
+    // 1. Adjust wallet balances if needed
+    try {
+      if (oldWalletId && oldWalletId === newWalletId) {
+        // Same wallet: calculate net delta
+        const oldEffect = oldType === 'INCOME' ? oldAmount : -oldAmount
+        const newEffect = newType === 'INCOME' ? newAmount : -newAmount
+        const netDelta = newEffect - oldEffect
+        if (netDelta !== 0) {
+          await walletService.adjustWalletBalance(userId, oldWalletId, netDelta)
+        }
+      } else {
+        // Different wallets: revert old, apply new
+        if (oldWalletId) {
+          const revertOld = oldType === 'INCOME' ? -oldAmount : oldAmount
+          await walletService.adjustWalletBalance(userId, oldWalletId, revertOld)
+        }
+        if (newWalletId) {
+          const applyNew = newType === 'INCOME' ? newAmount : -newAmount
+          await walletService.adjustWalletBalance(userId, newWalletId, applyNew)
+        }
+      }
+    } catch (err) {
+      console.warn('[transactionService.update] Failed to adjust wallet balance during update:', err)
+    }
+
     const payload: Record<string, unknown> = {
       ...data,
       updatedAt: serverTimestamp(),
@@ -113,6 +147,55 @@ export const transactionService = {
       throw new Error('Akses ditolak: Dokumen bukan milik Anda')
     }
 
+    // 1. Revert wallet balance if walletId exists
+    if (data.walletId && typeof data.amount === 'number' && data.amount > 0) {
+      try {
+        if (data.type === 'INCOME') {
+          // If income is deleted, deduct from wallet
+          await walletService.adjustWalletBalance(userId, data.walletId, -data.amount)
+        } else if (data.type === 'EXPENSE') {
+          // If expense is deleted, refund back to wallet
+          await walletService.adjustWalletBalance(userId, data.walletId, data.amount)
+        }
+      } catch (err) {
+        console.warn('[transactionService] Failed to adjust wallet balance upon transaction deletion:', err)
+      }
+    }
+
+    // 2. If deleted transaction was a salary or allowance income, unlock payroll
+    const isSalaryOrAllowance =
+      data.type === 'INCOME' &&
+      (data.categoryId === 'salary' ||
+        data.categoryId === 'allowance' ||
+        (typeof data.description === 'string' &&
+          (data.description.includes('[Gaji Masuk]') || data.description.includes('[Uang Saku Masuk]'))))
+
+    if (isSalaryOrAllowance && data.transactionDate) {
+      try {
+        const monthStr = data.transactionDate.substring(0, 7) // e.g. "2026-08"
+        // Delete matching salary_allocations record
+        const allocQuery = query(
+          collection(db, 'salary_allocations'),
+          where('userId', '==', userId),
+          where('monthStr', '==', monthStr)
+        )
+        const allocSnap = await getDocs(allocQuery)
+        for (const aDoc of allocSnap.docs) {
+          await deleteDoc(doc(db, 'salary_allocations', aDoc.id))
+        }
+
+        // Reset lastAllocatedMonth in user profile
+        const userRef = doc(db, 'users', userId)
+        await updateDoc(userRef, {
+          lastAllocatedMonth: '',
+          updatedAt: serverTimestamp(),
+        })
+      } catch (err) {
+        console.warn('[transactionService] Failed to clean salary allocation upon transaction deletion:', err)
+      }
+    }
+
+    // 3. Delete the transaction document
     await deleteDoc(docRef)
     return true
   },

@@ -4,12 +4,13 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { recurringService, type CreateRecurringBillDto } from '@/lib/services/recurring.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
-import { transactionService } from '@/lib/services/transaction.firebase'
+import { walletService } from '@/lib/services/wallet.firebase'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
+import { MarkdownView } from '@/components/molecules/MarkdownView'
 import {
   CreditCard,
   PlusCircle,
@@ -18,24 +19,34 @@ import {
   Clock,
   Zap,
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
   X,
   Sparkles,
+  ShieldCheck,
+  Flame,
+  AlertTriangle,
+  Wallet as WalletIcon,
+  Layers,
+  DollarSign,
+  Bot,
+  HelpCircle,
 } from 'lucide-react'
-import type { RecurringBill, Category } from '@/types'
+import type { RecurringBill, Category, Wallet, BillType } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
+type FilterTab = 'ALL' | 'INSTALLMENT' | 'RECURRING' | 'UNPAID' | 'PAID'
+
 export default function BillsPage() {
-  const { user } = useAuth()
+  const { user, userProfile } = useAuth()
 
   const [bills, setBills] = useState<RecurringBill[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  // Status Filter
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNPAID' | 'PAID'>('ALL')
+  // Filter Tab
+  const [activeTab, setActiveTab] = useState<FilterTab>('ALL')
 
   // Modal State (Add / Edit)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -43,15 +54,34 @@ export default function BillsPage() {
   const [submitting, setSubmitting] = useState(false)
 
   // Form State
+  const [formType, setFormType] = useState<BillType>('RECURRING')
   const [formName, setFormName] = useState('')
   const [formAmount, setFormAmount] = useState('')
   const [formCategoryId, setFormCategoryId] = useState('')
   const [formDueDay, setFormDueDay] = useState('10')
   const [formAutoDeduct, setFormAutoDeduct] = useState(true)
+  const [formTotalTenor, setFormTotalTenor] = useState('12')
+  const [formPaidTenor, setFormPaidTenor] = useState('0')
+  const [formWalletId, setFormWalletId] = useState('')
+  const [formNotes, setFormNotes] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
+  // Pay Modal State
+  const [billToPay, setBillToPay] = useState<RecurringBill | null>(null)
+  const [payWalletId, setPayWalletId] = useState('')
+  const [isPayingBill, setIsPayingBill] = useState(false)
+  const [paySuccessMsg, setPaySuccessMsg] = useState<string | null>(null)
+
+  // Delete State
+  const [billToDelete, setBillToDelete] = useState<string | null>(null)
+  const [isDeletingBill, setIsDeletingBill] = useState(false)
+
+  // AI Advisor State
+  const [aiAdvice, setAiAdvice] = useState<string | null>(null)
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+
   const now = new Date()
-  const currentDay = now.getDate()
   const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0')
   const currentMonthStr = `${now.getFullYear()}-${currentMonthNum}`
 
@@ -63,16 +93,23 @@ export default function BillsPage() {
       setLoading(true)
 
       try {
-        const [billsData, cats] = await Promise.all([
+        const [billsData, cats, wList] = await Promise.all([
           recurringService.getUserRecurringBills(user.uid),
           categoryService.getCategories(),
+          walletService.getUserWallets(user.uid),
         ])
 
         if (isMounted) {
           setBills(billsData)
           setCategories(cats)
+          setWallets(wList)
           if (cats.length > 0 && !formCategoryId) {
             setFormCategoryId(cats[0].id)
+          }
+          const defaultWallet = wList.find((w) => !w.isLocked)
+          if (defaultWallet && !formWalletId) {
+            setFormWalletId(defaultWallet.id)
+            setPayWalletId(defaultWallet.id)
           }
         }
       } catch (error) {
@@ -89,22 +126,126 @@ export default function BillsPage() {
     return () => {
       isMounted = false
     }
-  }, [user?.uid, refreshTrigger, formCategoryId])
+  }, [user?.uid, refreshTrigger, formCategoryId, formWalletId])
 
-  const totalMonthly = useMemo(
-    () => bills.reduce((sum, b) => sum + b.amount, 0),
+  // Unlocked wallets for payment
+  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
+
+  // Aggregate Calculations
+  const monthlyIncome = userProfile?.monthlyIncome || 0
+
+  const activeInstallments = useMemo(
+    () =>
+      bills.filter(
+        (b) =>
+          b.billType === 'INSTALLMENT' &&
+          (!b.totalTenor || (b.paidTenor || 0) < b.totalTenor)
+      ),
     [bills]
   )
-  const totalAnnual = totalMonthly * 12
 
+  const finishedInstallments = useMemo(
+    () =>
+      bills.filter(
+        (b) =>
+          b.billType === 'INSTALLMENT' &&
+          b.totalTenor &&
+          (b.paidTenor || 0) >= b.totalTenor
+      ),
+    [bills]
+  )
+
+  const recurringBillsList = useMemo(
+    () => bills.filter((b) => b.billType !== 'INSTALLMENT'),
+    [bills]
+  )
+
+  const totalInstallmentMonthly = useMemo(
+    () => activeInstallments.reduce((sum, b) => sum + b.amount, 0),
+    [activeInstallments]
+  )
+
+  const totalRecurringMonthly = useMemo(
+    () => recurringBillsList.reduce((sum, b) => sum + b.amount, 0),
+    [recurringBillsList]
+  )
+
+  const totalMonthlyObligation = totalInstallmentMonthly + totalRecurringMonthly
+
+  // Total Remaining Principal Debt across active installments
+  const totalRemainingDebt = useMemo(() => {
+    return activeInstallments.reduce((sum, b) => {
+      const remainingTenor = Math.max(0, (b.totalTenor || 1) - (b.paidTenor || 0))
+      return sum + remainingTenor * b.amount
+    }, 0)
+  }, [activeInstallments])
+
+  // DSR (Debt Service Ratio) Meter: (Installments / Income) * 100
+  const dsrRatio =
+    monthlyIncome > 0
+      ? Math.min(100, Math.round((totalInstallmentMonthly / monthlyIncome) * 100))
+      : 0
+
+  const totalBurdenRatio =
+    monthlyIncome > 0
+      ? Math.min(100, Math.round((totalMonthlyObligation / monthlyIncome) * 100))
+      : 0
+
+  // DSR Health Evaluation
+  const dsrHealth = useMemo(() => {
+    if (monthlyIncome === 0) {
+      return {
+        label: 'Gaji Belum Diisi',
+        desc: 'Atur gaji bulanan di profil untuk melihat evaluasi Debt Service Ratio (DSR).',
+        badge: 'neutral' as const,
+        color: 'text-slate-400',
+        barColor: 'bg-slate-500',
+        icon: <HelpCircle className="w-4 h-4 text-slate-400" />,
+      }
+    }
+    if (dsrRatio <= 20) {
+      return {
+        label: 'Sangat Aman (< 20%) 🟢',
+        desc: 'Beban cicilan sangat sehat! Berada jauh di bawah batas maksimal 30% dari penghasilan.',
+        badge: 'brand' as const,
+        color: 'text-green-400',
+        barColor: 'bg-emerald-500',
+        icon: <ShieldCheck className="w-4 h-4 text-green-400" />,
+      }
+    }
+    if (dsrRatio <= 30) {
+      return {
+        label: 'Waspada (20% - 30%) 🟡',
+        desc: 'Beban cicilan mendekati batas ideal maksimal 30%. Hindari mengambil pinjaman atau paylater baru!',
+        badge: 'warning' as const,
+        color: 'text-amber-400',
+        barColor: 'bg-amber-400',
+        icon: <AlertTriangle className="w-4 h-4 text-amber-400" />,
+      }
+    }
+    return {
+      label: 'Bahaya / Overleveraged (> 30%) 🔴',
+      desc: 'Beban cicilan melampaui 30% gaji! Risiko tinggi mengganggu kebutuhan harian dan dana darurat.',
+      badge: 'expense' as const,
+      color: 'text-red-400',
+      barColor: 'bg-red-500',
+      icon: <Flame className="w-4 h-4 text-red-400" />,
+    }
+  }, [dsrRatio, monthlyIncome])
+
+  // Filtered List based on Active Tab
   const filteredBills = useMemo(() => {
     return bills.filter((b) => {
       const isPaid = b.lastProcessedMonth === currentMonthStr
-      if (statusFilter === 'PAID') return isPaid
-      if (statusFilter === 'UNPAID') return !isPaid
+      const isInstallment = b.billType === 'INSTALLMENT'
+
+      if (activeTab === 'INSTALLMENT') return isInstallment
+      if (activeTab === 'RECURRING') return !isInstallment
+      if (activeTab === 'UNPAID') return !isPaid
+      if (activeTab === 'PAID') return isPaid
       return true
     })
-  }, [bills, statusFilter, currentMonthStr])
+  }, [bills, activeTab, currentMonthStr])
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -114,13 +255,34 @@ export default function BillsPage() {
     }).format(val)
   }
 
+  // Modal Handlers
+  const handleOpenAdd = () => {
+    setEditingBill(null)
+    setFormType('RECURRING')
+    setFormName('')
+    setFormAmount('')
+    setFormDueDay('10')
+    setFormAutoDeduct(true)
+    setFormTotalTenor('12')
+    setFormPaidTenor('0')
+    setFormWalletId(spendingWallets[0]?.id || '')
+    setFormNotes('')
+    setFormError(null)
+    setIsModalOpen(true)
+  }
+
   const handleOpenEdit = (bill: RecurringBill) => {
     setEditingBill(bill)
+    setFormType(bill.billType || 'RECURRING')
     setFormName(bill.name)
     setFormAmount(bill.amount.toString())
     setFormCategoryId(bill.categoryId)
     setFormDueDay(bill.dueDay.toString())
     setFormAutoDeduct(bill.autoDeduct)
+    setFormTotalTenor(bill.totalTenor ? bill.totalTenor.toString() : '12')
+    setFormPaidTenor(bill.paidTenor ? bill.paidTenor.toString() : '0')
+    setFormWalletId(bill.walletId || spendingWallets[0]?.id || '')
+    setFormNotes(bill.notes || '')
     setFormError(null)
     setIsModalOpen(true)
   }
@@ -131,6 +293,8 @@ export default function BillsPage() {
 
     const numAmount = Number(formAmount)
     const numDueDay = Number(formDueDay)
+    const numTotalTenor = Number(formTotalTenor)
+    const numPaidTenor = Number(formPaidTenor)
 
     if (!formName.trim()) {
       setFormError('Nama tagihan / cicilan wajib diisi')
@@ -144,6 +308,10 @@ export default function BillsPage() {
       setFormError('Tanggal jatuh tempo harus antara 1 sampai 31')
       return
     }
+    if (formType === 'INSTALLMENT' && (!numTotalTenor || numTotalTenor < 1)) {
+      setFormError('Total tenor harus minimal 1 bulan')
+      return
+    }
 
     const selectedCategory = categories.find((c) => c.id === formCategoryId) || {
       id: 'bills',
@@ -152,40 +320,37 @@ export default function BillsPage() {
       type: 'EXPENSE' as const,
     }
 
+    const selectedWallet = wallets.find((w) => w.id === formWalletId)
+
     if (!user?.uid) return
 
     setSubmitting(true)
     try {
+      const payload: CreateRecurringBillDto = {
+        name: formName,
+        amount: numAmount,
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
+        categoryIcon: selectedCategory.icon,
+        dueDay: numDueDay,
+        autoDeduct: formAutoDeduct,
+        billType: formType,
+        walletId: selectedWallet?.id,
+        walletName: selectedWallet?.name,
+        totalTenor: formType === 'INSTALLMENT' ? numTotalTenor : undefined,
+        paidTenor: formType === 'INSTALLMENT' ? numPaidTenor : 0,
+        totalPrincipal: formType === 'INSTALLMENT' ? numAmount * numTotalTenor : undefined,
+        notes: formNotes.trim() || undefined,
+      }
+
       if (editingBill) {
-        // UPDATE
-        await recurringService.update(user.uid, editingBill.id, {
-          name: formName,
-          amount: numAmount,
-          categoryId: selectedCategory.id,
-          categoryName: selectedCategory.name,
-          categoryIcon: selectedCategory.icon,
-          dueDay: numDueDay,
-          autoDeduct: formAutoDeduct,
-        })
+        await recurringService.update(user.uid, editingBill.id, payload)
       } else {
-        // CREATE
-        const payload: CreateRecurringBillDto = {
-          name: formName,
-          amount: numAmount,
-          categoryId: selectedCategory.id,
-          categoryName: selectedCategory.name,
-          categoryIcon: selectedCategory.icon,
-          dueDay: numDueDay,
-          autoDeduct: formAutoDeduct,
-        }
         await recurringService.create(user.uid, payload)
       }
 
       setIsModalOpen(false)
       setEditingBill(null)
-      setFormName('')
-      setFormAmount('')
-      setFormDueDay('10')
       setRefreshTrigger((p) => p + 1)
     } catch (err: unknown) {
       console.error('[bills] Error saving bill:', err)
@@ -196,10 +361,37 @@ export default function BillsPage() {
     }
   }
 
-  // Delete Confirmation State
-  const [billToDelete, setBillToDelete] = useState<string | null>(null)
-  const [isDeletingBill, setIsDeletingBill] = useState(false)
+  // Confirm Pay Handler
+  const handleOpenPayModal = (bill: RecurringBill) => {
+    setBillToPay(bill)
+    setPayWalletId(bill.walletId || spendingWallets[0]?.id || '')
+  }
 
+  const handleConfirmPayBill = async () => {
+    if (!user?.uid || !billToPay) return
+    setIsPayingBill(true)
+
+    try {
+      const selectedWallet = wallets.find((w) => w.id === payWalletId)
+      await recurringService.payBill(
+        user.uid,
+        billToPay,
+        selectedWallet?.id,
+        selectedWallet?.name
+      )
+
+      setPaySuccessMsg(`Pembayaran "${billToPay.name}" berhasil dicatat & saldo terpotong!`)
+      setBillToPay(null)
+      setRefreshTrigger((p) => p + 1)
+      setTimeout(() => setPaySuccessMsg(null), 3500)
+    } catch (err) {
+      console.error('[bills] Error paying bill:', err)
+    } finally {
+      setIsPayingBill(false)
+    }
+  }
+
+  // Delete Handler
   const handleConfirmDeleteBill = async () => {
     if (!user?.uid || !billToDelete) return
     setIsDeletingBill(true)
@@ -215,42 +407,50 @@ export default function BillsPage() {
     }
   }
 
-  // Pay Confirmation State
-  const [billToPay, setBillToPay] = useState<RecurringBill | null>(null)
-  const [isPayingBill, setIsPayingBill] = useState(false)
-
-  const handleConfirmPayBill = async () => {
-    if (!user?.uid || !billToPay) return
-    setIsPayingBill(true)
+  // AI Advisor for Bills & Debt Optimization
+  const handleGenerateAiDebtAudit = async () => {
+    setIsAiLoading(true)
+    setAiError(null)
 
     try {
-      const todayStr = new Date().toISOString().split('T')[0]
-      await transactionService.create(user.uid, {
-        type: 'EXPENSE',
-        amount: billToPay.amount,
-        categoryId: billToPay.categoryId,
-        categoryName: billToPay.categoryName,
-        categoryIcon: billToPay.categoryIcon,
-        description: `[Pembayaran Tagihan] ${billToPay.name}`,
-        transactionDate: todayStr,
+      const response = await fetch('/api/ai/advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          monthlyIncome,
+          totalBills: totalMonthlyObligation,
+          wallets,
+          userQuery: `Analisis seluruh tagihan dan cicilan saya:
+- Pemasukan Bulanan: Rp ${monthlyIncome}
+- Total Tagihan Rutin: Rp ${totalRecurringMonthly} (${recurringBillsList.length} tagihan)
+- Total Cicilan Tenor: Rp ${totalInstallmentMonthly} (${activeInstallments.length} cicilan aktif)
+- Sisa Total Pokok Hutang: Rp ${totalRemainingDebt}
+- Debt Service Ratio (DSR): ${dsrRatio}%
+- Daftar Cicilan/Tagihan: ${bills.map((b) => `${b.name} (Rp ${b.amount}, tipe: ${b.billType || 'RECURRING'}, tenor: ${b.paidTenor || 0}/${b.totalTenor || '-'})`).join(', ')}
+
+Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir, dan 3 langkah strategis pelunasan cicilan tercepat (Debt Snowball/Avalanche).`,
+        }),
       })
 
-      await recurringService.update(user.uid, billToPay.id, {
-        lastProcessedMonth: currentMonthStr,
-      })
+      if (!response.ok) {
+        const errJson = await response.json()
+        throw new Error(errJson.error || 'Gagal memanggil AI Advisor.')
+      }
 
-      setBillToPay(null)
-      setRefreshTrigger((p) => p + 1)
-    } catch (err) {
-      console.error('[bills] Error processing payment:', err)
+      const data = await response.json()
+      setAiAdvice(data.advice)
+    } catch (err: unknown) {
+      console.error('[bills] AI Debt Audit Error:', err)
+      const errObj = err as { message?: string }
+      setAiError(errObj.message || 'Terjadi kendala saat meminta analisis AI.')
     } finally {
-      setIsPayingBill(false)
+      setIsAiLoading(false)
     }
   }
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 pb-4">
-      {/* Header */}
+    <div className="flex flex-col gap-6 sm:gap-8 pb-10">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
@@ -259,10 +459,10 @@ export default function BillsPage() {
             </div>
             <div>
               <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Cicilan & Pengeluaran Rutin
+                Cicilan &amp; Tagihan Rutin
               </h1>
               <p className="text-xs text-slate-400">
-                Pantau seluruh tagihan tetap, cicilan, dan langganan bulanan tanpa terlewat
+                Kelola angsuran ber-tenor, pantau Debt Service Ratio (DSR), dan bayar tepat waktu
               </p>
             </div>
           </div>
@@ -274,7 +474,7 @@ export default function BillsPage() {
             size="sm"
             onClick={() => setRefreshTrigger((p) => p + 1)}
             title="Muat ulang data"
-            className="text-xs px-2.5 sm:px-3"
+            className="text-xs px-2.5 sm:px-3 cursor-pointer"
             leftIcon={<RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />}
           >
             Refresh
@@ -283,223 +483,401 @@ export default function BillsPage() {
           <Button
             variant="glow"
             size="sm"
-            onClick={() => {
-              setEditingBill(null)
-              setFormName('')
-              setFormAmount('')
-              setFormDueDay('10')
-              setFormAutoDeduct(true)
-              setIsModalOpen(true)
-            }}
-            className="text-xs sm:text-sm px-3 sm:px-4 ml-auto sm:ml-0"
+            onClick={handleOpenAdd}
+            className="text-xs sm:text-sm px-3.5 sm:px-4 cursor-pointer"
             leftIcon={<PlusCircle className="w-4 h-4" />}
           >
-            Daftarkan Tagihan
+            Tambah Tagihan / Cicilan
           </Button>
         </div>
       </div>
 
-      {/* 2 Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-              Total Beban Pasti per Bulan
-            </span>
-            <div className="text-xl sm:text-3xl font-extrabold font-mono text-purple-400 tabular-nums">
-              {formatRupiah(totalMonthly)}
-            </div>
-            <span className="text-xs text-slate-500 mt-1 block">
-              Akumulasi {bills.length} pos tagihan aktif
-            </span>
+      {/* Success Toast Banner */}
+      {paySuccessMsg && (
+        <div className="p-4 rounded-2xl bg-emerald-500/15 border border-green-500/40 text-xs sm:text-sm text-green-300 flex items-center justify-between shadow-lg animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+            <span>{paySuccessMsg}</span>
           </div>
-          <Badge variant="brand" size="md">
-            Bulanan
-          </Badge>
+          <button
+            type="button"
+            onClick={() => setPaySuccessMsg(null)}
+            className="text-slate-400 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 🛡️ 1. DSR (Debt Service Ratio) Meter & Sisa Pokok Hutang Banner */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* DSR Meter Card */}
+        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1f2038] to-[#1a1d27] border border-purple-500/30 shadow-2xl flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+                  <ShieldCheck className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Debt Service Ratio (DSR) Meter
+                </span>
+              </div>
+              <Badge variant={dsrHealth.badge} size="sm">
+                {dsrHealth.label}
+              </Badge>
+            </div>
+
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className={cn('text-3xl sm:text-4xl font-black font-mono', dsrHealth.color)}>
+                {dsrRatio}%
+              </span>
+              <span className="text-xs text-slate-400 font-sans">
+                dari gaji bulanan ({formatRupiah(monthlyIncome)})
+              </span>
+            </div>
+
+            {/* DSR Visual Progress Bar */}
+            <div className="w-full h-3 bg-[#131620] rounded-full overflow-hidden border border-[#2d3348] p-0.5 mb-2.5">
+              <div
+                className={cn('h-full rounded-full transition-all duration-700', dsrHealth.barColor)}
+                style={{ width: `${Math.min(100, Math.max(3, dsrRatio))}%` }}
+              />
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">{dsrHealth.desc}</p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#2d3348]/70 text-xs">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-400">Cicilan Tenor / Bln</span>
+              <span className="font-bold font-mono text-purple-300">
+                {formatRupiah(totalInstallmentMonthly)}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-400">Tagihan Rutin / Bln</span>
+              <span className="font-bold font-mono text-blue-300">
+                {formatRupiah(totalRecurringMonthly)}
+              </span>
+            </div>
+            <div className="flex flex-col col-span-2 sm:col-span-1">
+              <span className="text-[10px] text-slate-400">Total Beban Wajib</span>
+              <span className="font-bold font-mono text-white">
+                {formatRupiah(totalMonthlyObligation)} ({totalBurdenRatio}%)
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex items-center justify-between">
+        {/* Total Sisa Pokok Hutang Card */}
+        <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#21263a] to-[#1a1d27] border border-[#2d3348] shadow-2xl flex flex-col justify-between">
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-              Estimasi Komitmen per Tahun
-            </span>
-            <div className="text-xl sm:text-3xl font-extrabold font-mono text-amber-300 tabular-nums">
-              {formatRupiah(totalAnnual)}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Total Sisa Pokok Hutang
+              </span>
+              <DollarSign className="w-4 h-4 text-purple-400" />
             </div>
-            <span className="text-xs text-slate-500 mt-1 block">
-              12 bulan pengeluaran rutin
+            <div className="text-2xl sm:text-3xl font-black font-mono text-white tabular-nums">
+              {formatRupiah(totalRemainingDebt)}
+            </div>
+            <span className="text-xs text-purple-300 mt-1 block">
+              Dari {activeInstallments.length} cicilan aktif yang sedang berjalan
             </span>
           </div>
-          <Badge variant="warning" size="md">
-            Tahunan
-          </Badge>
+
+          <div className="p-3.5 rounded-2xl bg-[#131620]/70 border border-[#2d3348] mt-4 text-xs space-y-1.5">
+            <div className="flex items-center justify-between text-slate-300">
+              <span>Cicilan Berjalan:</span>
+              <span className="font-bold font-mono text-white">{activeInstallments.length} Pos</span>
+            </div>
+            <div className="flex items-center justify-between text-slate-300">
+              <span>Cicilan Sudah Lunas:</span>
+              <span className="font-bold font-mono text-green-400">
+                {finishedInstallments.length} Selesai 🎉
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-slate-300">
+              <span>Tagihan Rutin Tetap:</span>
+              <span className="font-bold font-mono text-blue-300">
+                {recurringBillsList.length} Layanan
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Filter Tabs (Horizontal Scrollable) */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
-        <div className="flex items-center gap-1 min-w-max">
-          <button
-            type="button"
-            onClick={() => setStatusFilter('ALL')}
-            className={cn(
-              'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
-              statusFilter === 'ALL'
-                ? 'bg-purple-500 text-white font-bold shadow-lg shadow-purple-500/20'
-                : 'text-slate-400 hover:text-white'
-            )}
-          >
-            Semua Tagihan ({bills.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter('UNPAID')}
-            className={cn(
-              'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
-              statusFilter === 'UNPAID'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
-                : 'text-slate-400 hover:text-white'
-            )}
-          >
-            Belum Terbayar Bulan Ini
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter('PAID')}
-            className={cn(
-              'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
-              statusFilter === 'PAID'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
-            )}
-          >
-            Sudah Terbayar Bulan Ini
-          </button>
-        </div>
-      </div>
+      {/* 🤖 2. SaveMe AI Debt & Subscription Optimization Card */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1c1f30] to-[#1a1d27] border border-emerald-500/30 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-[#2d3348]/70">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/20 border border-green-500/30 text-green-400 shrink-0">
+              <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-white">
+                  Audit Cicilan &amp; Langganan SaveMe AI
+                </h3>
+                <span className="px-2 py-0.5 rounded-md bg-green-500/20 text-green-300 text-[10px] font-bold">
+                  AI Debt Coach
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Evaluasi efisiensi tagihan langganan dan strategi pelunasan cicilan tercepat
+              </p>
+            </div>
+          </div>
 
-      {/* Bills Grid / Cards */}
-      {filteredBills.length === 0 ? (
-        <div className="p-8 sm:p-12 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex flex-col items-center justify-center text-center">
-          <div className="text-4xl mb-3">💳</div>
-          <h4 className="text-base font-bold text-white mb-1">
-            Tidak ada data tagihan pada filter ini
-          </h4>
-          <p className="text-xs text-slate-400 max-w-sm mb-4">
-            Klik tombol di bawah untuk mendaftarkan cicilan atau tagihan bulanan baru.
-          </p>
           <Button
             variant="glow"
             size="sm"
-            onClick={() => {
-              setEditingBill(null)
-              setIsModalOpen(true)
-            }}
-            leftIcon={<PlusCircle className="w-4 h-4" />}
+            onClick={handleGenerateAiDebtAudit}
+            loading={isAiLoading}
+            leftIcon={<Sparkles className="w-4 h-4 text-emerald-200" />}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 font-bold shrink-0 cursor-pointer"
           >
-            Daftarkan Tagihan Baru
+            {aiAdvice ? 'Perbarui Audit AI' : 'Jalankan Audit AI'}
+          </Button>
+        </div>
+
+        {aiError && (
+          <div className="mt-3.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+            {aiError}
+          </div>
+        )}
+
+        {isAiLoading && (
+          <div className="py-8 flex flex-col items-center justify-center gap-2.5 animate-in fade-in">
+            <div className="w-7 h-7 border-3 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin" />
+            <span className="text-xs text-emerald-300 font-mono">
+              SaveMe AI Coach sedang menganalisis DSR dan strategi pelunasan...
+            </span>
+          </div>
+        )}
+
+        {!isAiLoading && aiAdvice && (
+          <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-[#131620]/90 border border-green-500/20 text-xs sm:text-sm text-slate-200 leading-relaxed animate-in fade-in">
+            <MarkdownView content={aiAdvice} />
+          </div>
+        )}
+
+        {!isAiLoading && !aiAdvice && (
+          <div className="mt-3.5 p-3.5 rounded-2xl bg-[#131620]/40 border border-[#2d3348]/60 text-xs text-slate-400 flex items-center justify-between">
+            <span>
+              Klik tombol di atas untuk melihat audit pintar apakah ada langganan yang boros dan strategi pelunasan cicilan tercepat (Debt Snowball/Avalanche).
+            </span>
+            <Sparkles className="w-4 h-4 text-emerald-400/60 shrink-0 ml-2" />
+          </div>
+        )}
+      </div>
+
+      {/* 3. Filter Tabs */}
+      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
+        <div className="flex items-center gap-1 min-w-max">
+          {(
+            [
+              { id: 'ALL', label: `Semua (${bills.length})` },
+              { id: 'INSTALLMENT', label: `Cicilan Tenor (${activeInstallments.length})` },
+              { id: 'RECURRING', label: `Tagihan Rutin (${recurringBillsList.length})` },
+              {
+                id: 'UNPAID',
+                label: `Belum Bayar (${bills.filter((b) => b.lastProcessedMonth !== currentMonthStr).length})`,
+              },
+              {
+                id: 'PAID',
+                label: `Sudah Bayar (${bills.filter((b) => b.lastProcessedMonth === currentMonthStr).length})`,
+              },
+            ] as { id: FilterTab; label: string }[]
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
+                activeTab === tab.id
+                  ? 'bg-purple-600 text-white font-bold shadow-lg shadow-purple-500/20'
+                  : 'text-slate-400 hover:text-white'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 4. List of Bills & Installments */}
+      {filteredBills.length === 0 ? (
+        <div className="p-12 rounded-3xl bg-[#1a1d27] border border-[#2d3348] text-center flex flex-col items-center justify-center">
+          <CreditCard className="w-12 h-12 text-slate-600 mb-3" />
+          <h3 className="text-base font-bold text-slate-200 mb-1">
+            Belum ada data pada tab ini
+          </h3>
+          <p className="text-xs text-slate-500 max-w-sm mb-4">
+            Tambahkan cicilan motor, KPR, gadget, atau tagihan rutin seperti WiFi dan listrik untuk memantau pengeluaran wajibmu.
+          </p>
+          <Button variant="glow" size="sm" onClick={handleOpenAdd}>
+            Tambah Sekarang
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredBills.map((bill) => {
             const isPaid = bill.lastProcessedMonth === currentMonthStr
-            const daysDiff = bill.dueDay - currentDay
+            const isInstallment = bill.billType === 'INSTALLMENT'
+            const isCompleted =
+              isInstallment && bill.totalTenor && (bill.paidTenor || 0) >= bill.totalTenor
+
+            const paidCount = bill.paidTenor || 0
+            const totalCount = bill.totalTenor || 1
+            const progressPercent = Math.min(100, Math.round((paidCount / totalCount) * 100))
+            const remainingTenor = Math.max(0, totalCount - paidCount)
+            const remainingPrincipal = remainingTenor * bill.amount
 
             return (
               <div
                 key={bill.id}
-                className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex flex-col justify-between shadow-xl transition-all group hover:border-purple-500/40"
+                className={cn(
+                  'p-5 rounded-3xl bg-[#1a1d27] border transition-all shadow-xl flex flex-col justify-between relative overflow-hidden',
+                  isCompleted
+                    ? 'border-green-500/40 bg-gradient-to-br from-[#1a1d27] to-[#162320]'
+                    : isPaid
+                    ? 'border-[#2d3348]'
+                    : 'border-purple-500/30'
+                )}
               >
                 <div>
+                  {/* Card Header: Icon + Name + Badge */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#21263a] border border-[#2d3348] text-xl sm:text-2xl flex items-center justify-center shrink-0 shadow-inner">
+                      <div className="w-11 h-11 rounded-2xl bg-[#21263a] border border-[#2d3348] flex items-center justify-center text-xl shrink-0">
                         {bill.categoryIcon || '📄'}
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm sm:text-base font-bold text-white truncate">
-                          {bill.name}
-                        </h4>
-                        <span className="text-xs text-slate-400">
-                          {bill.categoryName}
+                      <div className="flex flex-col min-w-0">
+                        <h4 className="text-base font-bold text-white truncate">{bill.name}</h4>
+                        <span className="text-xs text-slate-400 truncate">
+                          {bill.categoryName || 'Tagihan'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(bill)}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a] transition-colors cursor-pointer"
-                        title="Edit tagihan"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setBillToDelete(bill.id)}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-[#21263a] transition-colors cursor-pointer"
-                        title="Hapus tagihan"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {isCompleted ? (
+                        <Badge variant="brand" size="sm">
+                          🎉 Lunas
+                        </Badge>
+                      ) : isPaid ? (
+                        <Badge variant="brand" size="sm">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Lunas Bln Ini
+                        </Badge>
+                      ) : (
+                        <Badge variant="warning" size="sm">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Tgl {bill.dueDay}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#21263a]/60 border border-[#2d3348] mb-3 sm:mb-4">
-                    <span className="text-xs text-slate-400">Nominal per Bulan:</span>
-                    <span className="text-sm sm:text-base font-bold font-mono text-purple-300">
-                      {formatRupiah(bill.amount)}
-                    </span>
+                  {/* Monthly Amount */}
+                  <div className="p-3.5 rounded-2xl bg-[#21263a]/50 border border-[#2d3348] mb-3.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Angsuran / Tagihan:</span>
+                      <span className="text-base sm:text-lg font-black font-mono text-purple-300">
+                        {formatRupiah(bill.amount)}
+                        <span className="text-[10px] text-slate-400 font-sans font-normal ml-1">
+                          /bln
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Installment Tenor Progress */}
+                    {isInstallment && (
+                      <div className="mt-2.5 pt-2.5 border-t border-[#2d3348]/60">
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-slate-300 font-medium">
+                            Progres: <strong>{paidCount}</strong> dari {totalCount} Bulan
+                          </span>
+                          <span className="font-mono font-bold text-green-400">
+                            {progressPercent}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-[#131620] rounded-full overflow-hidden border border-[#2d3348]/60 p-0.5">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+                          <span>Sisa: {remainingTenor}x bayar</span>
+                          <span className="font-mono text-slate-200">
+                            Sisa Pokok: {formatRupiah(remainingPrincipal)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Due date & Auto-deduct pills */}
-                  <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
-                    <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-[#21263a] px-2.5 py-1 rounded-xl border border-[#2d3348]">
-                      <Clock className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Jatuh tempo tiap tgl <strong>{bill.dueDay}</strong></span>
+                  {/* Meta Details: Auto-deduct & Wallet */}
+                  <div className="flex items-center justify-between text-xs text-slate-400 mb-4 px-1">
+                    <span className="flex items-center gap-1">
+                      {bill.autoDeduct ? (
+                        <>
+                          <Zap className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Auto-Deduct Aktif</span>
+                        </>
+                      ) : (
+                        <span>Manual Bayar</span>
+                      )}
                     </span>
-
-                    {bill.autoDeduct ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-green-400 bg-green-500/10 px-2.5 py-1 rounded-xl border border-green-500/20">
-                        <Zap className="w-3.5 h-3.5" /> Auto-Deduct
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 bg-[#21263a] px-2.5 py-1 rounded-xl border border-[#2d3348]">
-                        Manual
+                    {bill.walletName && (
+                      <span className="flex items-center gap-1 text-slate-300 truncate max-w-[140px]">
+                        <WalletIcon className="w-3 h-3 text-blue-400 shrink-0" />
+                        <span className="truncate">{bill.walletName}</span>
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Status & Quick Pay Footer */}
-                <div className="pt-3 border-t border-[#2d3348] flex items-center justify-between gap-2">
-                  {isPaid ? (
-                    <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-400">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Lunas untuk bulan ini</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <span className="text-[11px] sm:text-xs text-amber-400 font-semibold flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {daysDiff === 0
-                          ? 'Hari ini!'
-                          : daysDiff > 0
-                          ? `${daysDiff} hari lagi`
-                          : 'Lewat tanggal'}
-                      </span>
+                {/* Card Actions */}
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#2d3348]">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenEdit(bill)}
+                      title="Edit Tagihan"
+                      className="text-slate-400 hover:text-white p-2"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setBillToDelete(bill.id)}
+                      title="Hapus Tagihan"
+                      className="text-slate-400 hover:text-red-400 p-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
 
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="text-xs px-2.5 sm:px-3"
-                        onClick={() => setBillToPay(bill)}
-                      >
-                        Bayar Sekarang
-                      </Button>
-                    </div>
+                  {!isCompleted && (
+                    <Button
+                      variant={isPaid ? 'secondary' : 'glow'}
+                      size="sm"
+                      disabled={isPaid}
+                      onClick={() => handleOpenPayModal(bill)}
+                      className={cn(
+                        'text-xs font-bold cursor-pointer',
+                        isPaid ? 'opacity-60' : 'bg-purple-600 hover:bg-purple-500 text-white'
+                      )}
+                    >
+                      {isPaid ? 'Sudah Lunas Bulan Ini' : 'Bayar Sekarang'}
+                    </Button>
                   )}
                 </div>
               </div>
@@ -508,87 +886,91 @@ export default function BillsPage() {
         </div>
       )}
 
-      {/* Custom Confirmation Modal for Deleting Bill */}
-      <ConfirmModal
-        isOpen={Boolean(billToDelete)}
-        title="Hapus Tagihan Rutin?"
-        description="Apakah Anda yakin ingin menghapus tagihan rutin ini dari daftar kewajiban bulanan?"
-        confirmText="Hapus Tagihan"
-        cancelText="Batal"
-        variant="danger"
-        loading={isDeletingBill}
-        onConfirm={handleConfirmDeleteBill}
-        onClose={() => setBillToDelete(null)}
-      />
-
-      {/* Custom Confirmation Modal for Paying Bill */}
-      <ConfirmModal
-        isOpen={Boolean(billToPay)}
-        title="Bayar & Catat Pengeluaran?"
-        description={
-          billToPay
-            ? `Tandai "${billToPay.name}" (${formatRupiah(billToPay.amount)}) sebagai lunas dan catat transaksi pengeluaran hari ini?`
-            : ''
-        }
-        confirmText="Ya, Lunaskan"
-        cancelText="Batal"
-        variant="warning"
-        loading={isPayingBill}
-        onConfirm={handleConfirmPayBill}
-        onClose={() => setBillToPay(null)}
-      />
-
-      {/* Modal Add / Edit Recurring Bill (Responsive bottom-sheet style on mobile) */}
+      {/* 5. Modal: Add / Edit Tagihan & Cicilan */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-8 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200">
-            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-[#2d3348]">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                <h3 className="text-base sm:text-lg font-bold text-white">
-                  {editingBill ? 'Edit Data Tagihan' : 'Daftarkan Cicilan / Tagihan'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#2d3348]">
+              <div className="flex items-center gap-2.5">
+                <CreditCard className="w-5 h-5 text-purple-400" />
+                <h3 className="text-lg font-bold text-white">
+                  {editingBill ? 'Edit Tagihan / Cicilan' : 'Tambah Tagihan Baru'}
                 </h3>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setIsModalOpen(false)
-                  setEditingBill(null)
-                }}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a]"
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Type Switcher: Tagihan Rutin vs Cicilan Ber-Tenor */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#21263a] border border-[#2d3348] mb-5">
+              <button
+                type="button"
+                onClick={() => setFormType('RECURRING')}
+                className={cn(
+                  'py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5',
+                  formType === 'RECURRING'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                )}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Tagihan Rutin Tetap
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormType('INSTALLMENT')}
+                className={cn(
+                  'py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5',
+                  formType === 'INSTALLMENT'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                )}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                Cicilan Ber-Tenor
+              </button>
+            </div>
+
             {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
                 {formError}
               </div>
             )}
 
-            <form onSubmit={handleSubmitForm} className="flex flex-col gap-3.5 sm:gap-4">
+            <form onSubmit={handleSubmitForm} className="flex flex-col gap-4">
               <FormField label="Nama Tagihan / Cicilan" required>
                 <Input
-                  placeholder="Contoh: Cicilan Motor Honda Beat / Wi-Fi Indihome"
+                  placeholder={
+                    formType === 'INSTALLMENT'
+                      ? 'Contoh: Cicilan Motor Vario / Laptop MacBook'
+                      : 'Contoh: WiFi Indihome / Listrik PLN / Netflix'
+                  }
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   required
                 />
               </FormField>
 
-              <FormField label="Nominal Tagihan per Bulan (Rp)" required>
-                <Input
-                  type="number"
-                  placeholder="Contoh: 1200000"
-                  value={formAmount}
-                  onChange={(e) => setFormAmount(e.target.value)}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  label={formType === 'INSTALLMENT' ? 'Angsuran per Bulan (Rp)' : 'Nominal Tagihan (Rp)'}
                   required
-                />
-              </FormField>
+                >
+                  <Input
+                    type="number"
+                    placeholder="Contoh: 1200000"
+                    value={formAmount}
+                    onChange={(e) => setFormAmount(e.target.value)}
+                    required
+                  />
+                </FormField>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                <FormField label="Tanggal Jatuh Tempo" hint="Tanggal 1 s.d 31 setiap bulan" required>
+                <FormField label="Tanggal Jatuh Tempo (1 - 31)" required>
                   <Input
                     type="number"
                     min={1}
@@ -598,12 +980,53 @@ export default function BillsPage() {
                     required
                   />
                 </FormField>
+              </div>
 
-                <FormField label="Kategori">
+              {/* Installment Specific Fields */}
+              {formType === 'INSTALLMENT' && (
+                <div className="p-4 rounded-2xl bg-[#21263a]/60 border border-purple-500/20 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Total Tenor (Bulan)" required>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Contoh: 12"
+                        value={formTotalTenor}
+                        onChange={(e) => setFormTotalTenor(e.target.value)}
+                        required
+                      />
+                    </FormField>
+
+                    <FormField label="Sudah Dibayar (Bulan)">
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="Contoh: 3"
+                        value={formPaidTenor}
+                        onChange={(e) => setFormPaidTenor(e.target.value)}
+                      />
+                    </FormField>
+                  </div>
+
+                  {Number(formAmount) > 0 && Number(formTotalTenor) > 0 && (
+                    <div className="p-2.5 rounded-xl bg-[#131620] text-xs flex items-center justify-between text-slate-300">
+                      <span>Estimasi Total Pokok:</span>
+                      <span className="font-mono font-bold text-purple-300">
+                        {formatRupiah(Number(formAmount) * Number(formTotalTenor))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Category Selector */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-300">Kategori</label>
                   <select
                     value={formCategoryId}
                     onChange={(e) => setFormCategoryId(e.target.value)}
-                    className="w-full bg-[#21263a] text-slate-100 rounded-xl px-4 py-3 text-sm border border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -611,37 +1034,48 @@ export default function BillsPage() {
                       </option>
                     ))}
                   </select>
-                </FormField>
+                </div>
+
+                {/* Default Wallet Selector */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-slate-300">Sumber Dompet Default</label>
+                  <select
+                    value={formWalletId}
+                    onChange={(e) => setFormWalletId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="">Pilih saat pembayaran</option>
+                    {spendingWallets.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.icon || '💳'} {w.name} ({formatRupiah(w.balance)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Auto Deduct Switch */}
-              <label className="p-3.5 rounded-xl bg-[#21263a] border border-[#2d3348] flex items-center justify-between cursor-pointer">
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-green-400" />
-                    Auto-Deduct (Potong Otomatis)
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    Otomatis catat transaksi pengeluaran saat tanggal jatuh tempo tiba di bulan berjalan.
-                  </span>
-                </div>
+              {/* Auto Deduct Toggle */}
+              <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#21263a]/40 border border-[#2d3348] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formAutoDeduct}
                   onChange={(e) => setFormAutoDeduct(e.target.checked)}
-                  className="w-4 h-4 accent-green-500 rounded cursor-pointer"
+                  className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600"
                 />
+                <div className="flex flex-col text-xs">
+                  <span className="font-bold text-slate-200">Auto-Deduct Otomatis</span>
+                  <span className="text-slate-400">
+                    Otomatis catat transaksi pengeluaran saat tanggal jatuh tempo tiba
+                  </span>
+                </div>
               </label>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348] mt-1">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#2d3348]">
                 <Button
                   type="button"
                   variant="ghost"
                   size="md"
-                  onClick={() => {
-                    setIsModalOpen(false)
-                    setEditingBill(null)
-                  }}
+                  onClick={() => setIsModalOpen(false)}
                 >
                   Batal
                 </Button>
@@ -650,15 +1084,118 @@ export default function BillsPage() {
                   variant="glow"
                   size="md"
                   loading={submitting}
-                  leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-bold"
                 >
-                  {editingBill ? 'Simpan Perubahan' : 'Simpan Tagihan'}
+                  {editingBill ? 'Simpan Perubahan' : 'Tambah Tagihan'}
                 </Button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* 6. Modal: Konfirmasi Pembayaran Tagihan & Pilihan Dompet */}
+      {billToPay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-white">
+                  Konfirmasi Pembayaran
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBillToPay(null)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="p-4 rounded-2xl bg-[#21263a] border border-[#2d3348] space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span>Nama Tagihan:</span>
+                  <span className="font-bold text-white">{billToPay.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span>Nominal Pembayaran:</span>
+                  <span className="font-mono font-bold text-lg text-purple-300">
+                    {formatRupiah(billToPay.amount)}
+                  </span>
+                </div>
+                {billToPay.billType === 'INSTALLMENT' && (
+                  <div className="flex items-center justify-between text-xs text-green-400 pt-2 border-t border-[#2d3348]">
+                    <span>Akan mencatat angsuran:</span>
+                    <span className="font-bold">
+                      Ke-{(billToPay.paidTenor || 0) + 1} dari {billToPay.totalTenor || 1} Bulan
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Wallet Selector */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
+                  Pilih Dompet Sumber Pembayaran
+                </label>
+                <select
+                  value={payWalletId}
+                  onChange={(e) => setPayWalletId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                >
+                  <option value="">Tanpa potong dompet (Hanya catat transaksi)</option>
+                  {spendingWallets.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.icon || '💳'} {w.name} — Saldo: {formatRupiah(w.balance)}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[11px] text-slate-500">
+                  Saldo dompet yang dipilih akan otomatis terpotong sebesar {formatRupiah(billToPay.amount)}.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 mt-2 border-t border-[#2d3348]">
+                <Button
+                  variant="ghost"
+                  size="md"
+                  onClick={() => setBillToPay(null)}
+                  disabled={isPayingBill}
+                >
+                  Batal
+                </Button>
+                <Button
+                  variant="glow"
+                  size="md"
+                  loading={isPayingBill}
+                  onClick={handleConfirmPayBill}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-bold"
+                >
+                  Bayar &amp; Potong Saldo
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(billToDelete)}
+        title="Hapus Tagihan / Cicilan?"
+        description="Tagihan ini akan dihapus dari daftar tagihan rutin. Riwayat transaksi pengeluaran masa lalu tidak akan terhapus."
+        confirmText="Hapus Tagihan"
+        variant="danger"
+        loading={isDeletingBill}
+        onConfirm={handleConfirmDeleteBill}
+        onClose={() => setBillToDelete(null)}
+      />
     </div>
   )
 }

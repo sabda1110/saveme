@@ -59,6 +59,10 @@ export default function WalletsPage() {
   const [walletToDelete, setWalletToDelete] = useState<Wallet | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Sync Balance States
+  const [syncingWalletId, setSyncingWalletId] = useState<string | null>(null)
+  const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null)
+
   useEffect(() => {
     let isMounted = true
     async function loadWallets() {
@@ -108,6 +112,38 @@ export default function WalletsPage() {
       currency: 'IDR',
       maximumFractionDigits: 0,
     }).format(val)
+  }
+
+  const handleSyncWallet = async (walletId: string, walletName: string) => {
+    if (!user?.uid) return
+    setSyncingWalletId(walletId)
+    setSyncSuccessMsg(null)
+    try {
+      const newBal = await walletService.syncWalletBalanceFromTransactions(user.uid, walletId)
+      setSyncSuccessMsg(
+        `Saldo kantong "${walletName}" berhasil disinkronkan (${formatRupiah(newBal)}) sesuai riwayat transaksi!`
+      )
+      setRefreshTrigger((p) => p + 1)
+    } catch (err) {
+      console.error('[wallets] Error syncing wallet:', err)
+    } finally {
+      setSyncingWalletId(null)
+    }
+  }
+
+  const handleSyncAllWallets = async () => {
+    if (!user?.uid) return
+    setSyncingWalletId('ALL')
+    setSyncSuccessMsg(null)
+    try {
+      await walletService.syncAllWalletsFromTransactions(user.uid)
+      setSyncSuccessMsg('Semua saldo kantong berhasil disinkronkan dengan seluruh riwayat transaksi!')
+      setRefreshTrigger((p) => p + 1)
+    } catch (err) {
+      console.error('[wallets] Error syncing all wallets:', err)
+    } finally {
+      setSyncingWalletId(null)
+    }
   }
 
   const handleOpenAdd = () => {
@@ -226,6 +262,22 @@ export default function WalletsPage() {
           <Button
             variant="ghost"
             size="sm"
+            onClick={handleSyncAllWallets}
+            disabled={syncingWalletId === 'ALL'}
+            title="Hitung ulang & sinkronkan saldo semua kantong dari riwayat transaksi"
+            className="text-xs px-2.5 sm:px-3 text-slate-300 hover:text-emerald-400"
+            leftIcon={
+              <RefreshCw
+                className={cn('w-3.5 h-3.5', syncingWalletId === 'ALL' && 'animate-spin text-emerald-400')}
+              />
+            }
+          >
+            {syncingWalletId === 'ALL' ? 'Menyinkronkan...' : 'Sinkronkan Saldo'}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setRefreshTrigger((p) => p + 1)}
             title="Muat ulang data"
             className="text-xs px-2.5 sm:px-3"
@@ -257,6 +309,23 @@ export default function WalletsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Sync Success Notification Banner */}
+      {syncSuccessMsg && (
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-medium">{syncSuccessMsg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncSuccessMsg(null)}
+            className="p-1 rounded-lg text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-500/20"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* 3 Summary Breakdown Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -394,6 +463,20 @@ export default function WalletsPage() {
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleSyncWallet(w.id, w.name)}
+                        disabled={syncingWalletId === w.id}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-[#21263a] transition-colors cursor-pointer"
+                        title="Sinkronkan saldo kantong ini dengan riwayat transaksi"
+                      >
+                        <RefreshCw
+                          className={cn(
+                            'w-4 h-4',
+                            syncingWalletId === w.id && 'animate-spin text-emerald-400'
+                          )}
+                        />
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(w)}

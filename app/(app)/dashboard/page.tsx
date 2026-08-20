@@ -18,6 +18,7 @@ import { GettingStartedWidget } from '@/components/organisms/GettingStartedWidge
 import { RecurringBillsCard } from '@/components/organisms/RecurringBillsCard'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
+import { PaydayAllocationModal } from '@/components/organisms/PaydayAllocationModal'
 import {
   Wallet as WalletIcon,
   PlusCircle,
@@ -38,6 +39,8 @@ import {
   Lock,
   Unlock,
   Zap,
+  DollarSign,
+  GraduationCap,
 } from 'lucide-react'
 import type { Category, DashboardSummary, RecurringBill, SavingsGoal, Wallet, ReceiptScanResult, QuickTemplate } from '@/types'
 import { cn } from '@/lib/utils/cn'
@@ -65,6 +68,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isScanModalOpen, setIsScanModalOpen] = useState(false)
+  const [isPaydayModalOpen, setIsPaydayModalOpen] = useState(false)
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
@@ -78,6 +82,8 @@ export default function DashboardPage() {
   const [transactionDate, setTransactionDate] = useState(
     new Date().toISOString().split('T')[0]
   )
+  const [isSavingsDeposit, setIsSavingsDeposit] = useState(false)
+  const [targetGoalId, setTargetGoalId] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -258,29 +264,44 @@ export default function DashboardPage() {
 
     setSubmitting(true)
     try {
-      const payload: CreateTransactionDto = {
-        type,
-        amount: numAmount,
-        categoryId: selectedCategory.id,
-        categoryName: selectedCategory.name,
-        categoryIcon: selectedCategory.icon,
-        description: description || selectedCategory.name,
-        transactionDate,
-        walletId: selectedWallet?.id,
-        walletName: selectedWallet?.name,
-      }
+      if (isSavingsDeposit && targetGoalId && type === 'EXPENSE') {
+        const targetGoal = savingsGoals.find((g) => g.id === targetGoalId)
+        if (targetGoal) {
+          await savingsService.depositToGoal(
+            user.uid,
+            targetGoal.id,
+            numAmount,
+            selectedWallet?.id,
+            selectedWallet?.name
+          )
+        }
+      } else {
+        const payload: CreateTransactionDto = {
+          type,
+          amount: numAmount,
+          categoryId: selectedCategory.id,
+          categoryName: selectedCategory.name,
+          categoryIcon: selectedCategory.icon,
+          description: description || selectedCategory.name,
+          transactionDate,
+          walletId: selectedWallet?.id,
+          walletName: selectedWallet?.name,
+        }
 
-      await transactionService.create(user.uid, payload)
+        await transactionService.create(user.uid, payload)
 
-      // Adjust wallet balance if wallet is selected
-      if (selectedWallet) {
-        const delta = type === 'INCOME' ? numAmount : -numAmount
-        await walletService.adjustWalletBalance(user.uid, selectedWallet.id, delta)
+        // Adjust wallet balance if wallet is selected
+        if (selectedWallet) {
+          const delta = type === 'INCOME' ? numAmount : -numAmount
+          await walletService.adjustWalletBalance(user.uid, selectedWallet.id, delta)
+        }
       }
 
       // Reset form & close modal
       setAmount('')
       setDescription('')
+      setIsSavingsDeposit(false)
+      setTargetGoalId('')
       setIsModalOpen(false)
       setOverbudgetWarning({ isOpen: false, amount: 0, limit: 0, excess: 0 })
       setRefreshTrigger((prev) => prev + 1)
@@ -384,6 +405,27 @@ export default function DashboardPage() {
     Math.round((effectiveOperatingCash - unpaidBillsThisMonth) / daysRemainingInMonth)
   )
 
+  // Payday & Income Mode Calculations
+  const userIncomeType = userProfile?.incomeType || 'SALARIED'
+  const scheduleType =
+    userProfile?.paydayScheduleType ||
+    (userProfile?.isEndOfMonthPayday
+      ? 'END_OF_MONTH'
+      : userProfile?.paydayDay === 1
+      ? 'START_OF_MONTH'
+      : 'CUSTOM')
+  const isEndOfMonth = scheduleType === 'END_OF_MONTH' || Boolean(userProfile?.isEndOfMonthPayday)
+  const isStartOfMonth = scheduleType === 'START_OF_MONTH'
+  const effectivePayday = isEndOfMonth ? lastDayOfMonth : isStartOfMonth ? 1 : (userProfile?.paydayDay || 25)
+
+  const daysUntilPayday = useMemo(() => {
+    if (currentDay === effectivePayday) return 0
+    if (currentDay < effectivePayday) return effectivePayday - currentDay
+    return (lastDayOfMonth - currentDay) + effectivePayday
+  }, [currentDay, effectivePayday, lastDayOfMonth])
+
+  const isPaydayToday = userIncomeType === 'SALARIED' && daysUntilPayday === 0
+
   const shouldShowOnboarding =
     userProfile !== null &&
     userProfile.hasCompletedOnboarding === false &&
@@ -418,7 +460,11 @@ export default function DashboardPage() {
               Halo, {userProfile?.name?.split(' ')[0] || 'Teman SaveMe'}! 👋
             </h1>
             <Badge variant="brand" size="sm">
-              {userProfile?.role || 'USER'}
+              {userIncomeType === 'STUDENT_ALLOWANCE'
+                ? 'Pelajar'
+                : userIncomeType === 'FREELANCE_VARIABLE'
+                ? 'Freelancer'
+                : userProfile?.role || 'USER'}
             </Badge>
           </div>
           <p className="text-xs sm:text-sm text-slate-400">
@@ -436,8 +482,19 @@ export default function DashboardPage() {
             className="text-xs px-2.5 sm:px-3"
             leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
           >
-            Atur Gaji
+            Atur Profil
           </Button>
+
+          <Link href="/payroll">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs sm:text-sm text-purple-300 border-purple-500/30 hover:bg-purple-500/10 cursor-pointer"
+              leftIcon={<DollarSign className="w-4 h-4 text-purple-400" />}
+            >
+              {userIncomeType === 'STUDENT_ALLOWANCE' ? 'Alokasi Uang Saku' : 'Alokasi Gaji'}
+            </Button>
+          </Link>
 
           <Button
             variant="ghost"
@@ -469,6 +526,100 @@ export default function DashboardPage() {
           >
             Catat Transaksi
           </Button>
+        </div>
+      </div>
+
+      {/* 💰 Payday & Income Mode Adaptive Hub Banner */}
+      <div
+        className={cn(
+          'p-5 sm:p-6 rounded-3xl border shadow-2xl relative overflow-hidden transition-all',
+          isPaydayToday
+            ? 'bg-gradient-to-r from-emerald-950/80 via-[#1a1d27] to-[#1a1d27] border-green-500/50 shadow-green-500/10'
+            : userIncomeType === 'STUDENT_ALLOWANCE'
+            ? 'bg-gradient-to-r from-emerald-950/40 via-[#1a1d27] to-[#1a1d27] border-emerald-500/30'
+            : 'bg-gradient-to-r from-purple-950/40 via-[#1a1d27] to-[#1a1d27] border-[#2d3348]'
+        )}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div
+              className={cn(
+                'p-3 rounded-2xl border shrink-0',
+                isPaydayToday
+                  ? 'bg-green-500/20 border-green-500/40 text-green-400 animate-pulse'
+                  : userIncomeType === 'STUDENT_ALLOWANCE'
+                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                  : 'bg-purple-500/20 border-purple-500/30 text-purple-300'
+              )}
+            >
+              {userIncomeType === 'STUDENT_ALLOWANCE' ? (
+                <GraduationCap className="w-6 h-6" />
+              ) : userIncomeType === 'FREELANCE_VARIABLE' ? (
+                <Zap className="w-6 h-6" />
+              ) : (
+                <Calendar className="w-6 h-6" />
+              )}
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  {userIncomeType === 'STUDENT_ALLOWANCE'
+                    ? 'Hub Uang Saku & Celengan Pelajar'
+                    : userIncomeType === 'FREELANCE_VARIABLE'
+                    ? 'Hub Pendapatan Bebas & Freelance'
+                    : 'Siklus & Alokasi Gajian'}
+                </span>
+                {isPaydayToday ? (
+                  <Badge variant="brand" size="sm">
+                    🎉 HARI INI GAJIAN! (Tgl {effectivePayday})
+                  </Badge>
+                ) : userIncomeType === 'SALARIED' ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold">
+                    H-{daysUntilPayday} Menuju Gajian ({isEndOfMonth ? 'Akhir Bulan' : isStartOfMonth ? 'Awal Bulan (Tgl 1)' : `Tgl ${effectivePayday}`})
+                  </span>
+                ) : userIncomeType === 'STUDENT_ALLOWANCE' ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+                    🎒 Mode Pelajar / Uang Saku
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+                    ⚡ Mode Pemasukan Bebas
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
+                {isPaydayToday
+                  ? 'Gaji bulan ini sudah masuk! Segera alokasikan ke Kas Belanja, Tabungan Beku, dan Celengan Impian.'
+                  : userIncomeType === 'STUDENT_ALLOWANCE'
+                  ? `Uang saku bulanan (${formatRupiah(userProfile?.monthlyIncome || 0)}). Bagi otomatis menjadi jatah jajan harian dan tabungan celengan impian.`
+                  : userIncomeType === 'FREELANCE_VARIABLE'
+                  ? 'Pemasukan fleksibel tanpa jadwal gajian tetap. Jatah belanja harian dihitung murni dari sisa saldo kas aktif.'
+                  : `Gaji masuk ke ${userProfile?.primarySalaryWalletName ? `Rekening ${userProfile.primarySalaryWalletName}` : 'rekening utamamu'} setiap ${isEndOfMonth ? 'hari terakhir bulan' : isStartOfMonth ? 'tanggal 1 awal bulan' : `tanggal ${effectivePayday}`}. Gunakan Alokasi Cerdas untuk mengamankan tabungan (*Pay Yourself First*).`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:self-center shrink-0">
+            <Link href="/payroll">
+              <Button
+                variant="glow"
+                size="sm"
+                className={cn(
+                  'font-bold cursor-pointer text-xs sm:text-sm px-4 py-2.5',
+                  isPaydayToday
+                    ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/25'
+                    : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20'
+                )}
+                leftIcon={<DollarSign className="w-4 h-4" />}
+              >
+                {isPaydayToday
+                  ? 'Alokasikan Gaji Sekarang'
+                  : userIncomeType === 'STUDENT_ALLOWANCE'
+                  ? 'Buka Hub Uang Saku'
+                  : 'Buka Hub Payroll'}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -1016,6 +1167,63 @@ export default function DashboardPage() {
                 </div>
               )}
 
+              {/* Celengan Impian Direct Deposit Selector */}
+              {savingsGoals.length > 0 && type === 'EXPENSE' && (
+                <div className="p-3.5 rounded-2xl bg-[#131620]/60 border border-[#2d3348] space-y-2.5">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSavingsDeposit}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setIsSavingsDeposit(checked)
+                        if (checked) {
+                          if (!targetGoalId && savingsGoals[0]) {
+                            setTargetGoalId(savingsGoals[0].id)
+                          }
+                          const savCat = categories.find(
+                            (c) =>
+                              c.id === 'savings' ||
+                              c.id === 'savings_deposit' ||
+                              c.name.toLowerCase().includes('tabung')
+                          )
+                          if (savCat) {
+                            setCategoryId(savCat.id)
+                          }
+                        }
+                      }}
+                      className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
+                      <Target className="w-4 h-4 text-purple-400" />
+                      <span>Alokasikan / Setor ke Celengan Impian</span>
+                    </div>
+                  </label>
+
+                  {isSavingsDeposit && (
+                    <div className="space-y-1.5 pt-1 animate-in fade-in">
+                      <label className="text-[11px] font-semibold text-slate-400">
+                        Pilih Celengan Tujuan:
+                      </label>
+                      <select
+                        value={targetGoalId}
+                        onChange={(e) => setTargetGoalId(e.target.value)}
+                        className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-2.5 text-xs border border-[#2d3348] focus:border-purple-500 focus:outline-none cursor-pointer"
+                      >
+                        {savingsGoals.map((g) => {
+                          const remaining = Math.max(0, g.targetAmount - g.currentAmount)
+                          return (
+                            <option key={g.id} value={g.id}>
+                              {g.icon || '🎯'} {g.name} (Terkumpul: {formatRupiah(g.currentAmount)} / Sisa: {formatRupiah(remaining)})
+                            </option>
+                          )
+                        })}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Amount */}
               <FormField label="Nominal (Rp)" required>
                 <Input
@@ -1188,6 +1396,19 @@ export default function DashboardPage() {
         isOpen={isScanModalOpen}
         onClose={() => setIsScanModalOpen(false)}
         onApplyResult={handleApplyScanResult}
+      />
+
+      {/* 💰 Smart Payday Salary Allocation Modal */}
+      <PaydayAllocationModal
+        isOpen={isPaydayModalOpen}
+        onClose={() => setIsPaydayModalOpen(false)}
+        onSuccess={async () => {
+          await refreshProfile()
+          setRefreshTrigger((p) => p + 1)
+        }}
+        wallets={wallets}
+        savingsGoals={savingsGoals}
+        recurringBills={recurringBills}
       />
     </div>
   )

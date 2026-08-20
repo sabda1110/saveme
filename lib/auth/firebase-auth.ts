@@ -75,6 +75,18 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       monthlyIncome: data.monthlyIncome || 0,
       initialBalance: data.initialBalance || 0,
       savingsTarget: data.savingsTarget || 20,
+      incomeType: data.incomeType || 'SALARIED',
+      hasFixedSalary: data.hasFixedSalary ?? true,
+      allowanceFrequency: data.allowanceFrequency || 'MONTHLY',
+      allowanceAmount: data.allowanceAmount || 0,
+      paydayScheduleType:
+        data.paydayScheduleType ||
+        (data.isEndOfMonthPayday ? 'END_OF_MONTH' : data.paydayDay === 1 ? 'START_OF_MONTH' : 'CUSTOM'),
+      paydayDay: data.paydayDay || 25,
+      isEndOfMonthPayday: data.isEndOfMonthPayday ?? false,
+      primarySalaryWalletId: data.primarySalaryWalletId,
+      primarySalaryWalletName: data.primarySalaryWalletName,
+      lastAllocatedMonth: data.lastAllocatedMonth,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     } as UserProfile
@@ -86,10 +98,15 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
 export async function updateUserProfile(uid: string, data: Partial<UserProfile>): Promise<void> {
   const docRef = doc(db, 'users', uid)
-  await updateDoc(docRef, {
-    ...data,
+  const cleanData: Record<string, unknown> = {
     updatedAt: serverTimestamp(),
-  })
+  }
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      cleanData[key] = value
+    }
+  }
+  await updateDoc(docRef, cleanData)
 }
 
 export interface OnboardingData {

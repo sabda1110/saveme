@@ -24,6 +24,7 @@ import {
   PieChart,
   User,
   Zap,
+  DollarSign,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -55,6 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const drawerNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Jatah Harian & AI', href: '/daily', icon: <Compass className="w-5 h-5 text-emerald-400" /> },
+    { label: 'Alokasi Gaji & Uang Saku', href: '/payroll', icon: <DollarSign className="w-5 h-5 text-purple-400" /> },
     { label: 'Kantong & Rekening', href: '/wallets', icon: <CreditCard className="w-5 h-5 text-blue-400" /> },
     { label: 'Template Cepat', href: '/templates', icon: <Zap className="w-5 h-5 text-amber-400" /> },
     { label: 'Celengan Impian', href: '/savings', icon: <Target className="w-5 h-5 text-green-400" /> },

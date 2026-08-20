@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore'
 import type { SavingsGoal } from '@/types'
 import { transactionService } from '@/lib/services/transaction.firebase'
+import { walletService } from '@/lib/services/wallet.firebase'
 
 export interface CreateSavingsGoalDto {
   name: string
@@ -25,7 +26,12 @@ export interface CreateSavingsGoalDto {
 }
 
 export const savingsService = {
-  async createGoal(userId: string, data: CreateSavingsGoalDto): Promise<SavingsGoal> {
+  async createGoal(
+    userId: string,
+    data: CreateSavingsGoalDto,
+    walletId?: string,
+    walletName?: string
+  ): Promise<SavingsGoal> {
     if (!userId) throw new Error('Unauthorized')
 
     const initialCurrent = Number(data.currentAmount) || 0
@@ -45,9 +51,13 @@ export const savingsService = {
 
     const docRef = await addDoc(collection(db, 'savings_goals'), payload)
 
-    // If there is initial amount, record transaction to deduct liquid balance
+    // If there is initial amount, record transaction and deduct wallet balance
     if (initialCurrent > 0) {
       try {
+        if (walletId) {
+          await walletService.adjustWalletBalance(userId, walletId, -initialCurrent)
+        }
+
         const todayStr = new Date().toISOString().split('T')[0]
         await transactionService.create(userId, {
           type: 'EXPENSE',
@@ -57,6 +67,8 @@ export const savingsService = {
           categoryIcon: data.icon || '🎯',
           description: `[Celengan] Saldo Awal: ${data.name.trim()}`,
           transactionDate: todayStr,
+          walletId,
+          walletName,
         })
       } catch (err) {
         console.error('[savingsService] Error recording initial deposit tx:', err)
@@ -134,13 +146,15 @@ export const savingsService = {
 
   /**
    * Deposit money into a savings goal.
-   * Automatically creates an expense transaction so liquid wallet balance is deducted,
+   * Automatically creates an expense transaction and deducts wallet balance,
    * while the money is safely stored in this goal.
    */
   async depositToGoal(
     userId: string,
     goalId: string,
-    amount: number
+    amount: number,
+    walletId?: string,
+    walletName?: string
   ): Promise<number> {
     if (!userId) throw new Error('Unauthorized')
     if (amount <= 0) throw new Error('Nominal setor harus lebih dari 0')
@@ -165,7 +179,12 @@ export const savingsService = {
       updatedAt: serverTimestamp(),
     })
 
-    // 2. Record Transaction to deduct liquid wallet
+    // 2. Deduct Wallet Balance
+    if (walletId) {
+      await walletService.adjustWalletBalance(userId, walletId, -amount)
+    }
+
+    // 3. Record Transaction
     const todayStr = new Date().toISOString().split('T')[0]
     await transactionService.create(userId, {
       type: 'EXPENSE',
@@ -175,6 +194,8 @@ export const savingsService = {
       categoryIcon: existing.icon || '🎯',
       description: `[Celengan] Setor ke: ${existing.name}`,
       transactionDate: todayStr,
+      walletId,
+      walletName,
     })
 
     return newCurrent
@@ -182,12 +203,14 @@ export const savingsService = {
 
   /**
    * Withdraw money from a savings goal.
-   * Automatically creates an income transaction so money is credited back to liquid wallet.
+   * Automatically creates an income transaction and credits money back to wallet.
    */
   async withdrawFromGoal(
     userId: string,
     goalId: string,
-    amount: number
+    amount: number,
+    walletId?: string,
+    walletName?: string
   ): Promise<number> {
     if (!userId) throw new Error('Unauthorized')
     if (amount <= 0) throw new Error('Nominal tarik harus lebih dari 0')
@@ -217,7 +240,12 @@ export const savingsService = {
       updatedAt: serverTimestamp(),
     })
 
-    // 2. Record Transaction to credit back to liquid wallet
+    // 2. Increment Wallet Balance
+    if (walletId) {
+      await walletService.adjustWalletBalance(userId, walletId, amount)
+    }
+
+    // 3. Record Transaction
     const todayStr = new Date().toISOString().split('T')[0]
     await transactionService.create(userId, {
       type: 'INCOME',
@@ -227,6 +255,8 @@ export const savingsService = {
       categoryIcon: '💵',
       description: `[Celengan] Tarik dari: ${existing.name}`,
       transactionDate: todayStr,
+      walletId,
+      walletName,
     })
 
     return newCurrent

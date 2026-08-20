@@ -19,6 +19,7 @@ import {
   LogOut,
   Sparkles,
   Zap,
+  DollarSign,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -39,10 +40,15 @@ export function Sidebar() {
       badge: 'AI',
     },
     {
+      label: 'Alokasi Gaji & Uang Saku',
+      href: '/payroll',
+      icon: <DollarSign className="w-5 h-5 text-purple-400" />,
+      badge: 'Hub',
+    },
+    {
       label: 'Kantong & Rekening',
       href: '/wallets',
       icon: <WalletIcon className="w-5 h-5 text-blue-400" />,
-      badge: 'Baru',
     },
     {
       label: 'Template Cepat',
