@@ -29,6 +29,8 @@ export interface UserProfile {
   primarySalaryWalletId?: string // Dompet penampung gaji/uang saku utama (e.g. Rekening BCA / GoPay)
   primarySalaryWalletName?: string
   lastAllocatedMonth?: string // e.g. "2026-08" to guard against double allocation in a single month
+  monthlyBudget?: number // Quick budget set by user for the month (Rp)
+  monthlyBudgetMonth?: string // e.g. "2026-08" — which month this budget applies to
   createdAt?: unknown
   updatedAt?: unknown
 }

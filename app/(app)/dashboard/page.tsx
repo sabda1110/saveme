@@ -399,11 +399,78 @@ export default function DashboardPage() {
     }, 0)
   }, [savingsGoals, now])
 
-  // Dynamic Real-time Safe-to-Spend Daily (STRICTLY FROM OPERATING CASH)
-  const dynamicSafeToSpendDaily = Math.max(
-    0,
-    Math.round((effectiveOperatingCash - unpaidBillsThisMonth) / daysRemainingInMonth)
-  )
+  // ── Smart Budget-Aware Daily Limit ───────────────────────────────
+  // Priority 1: payroll allocation operatingAmount for this month
+  // Priority 2: quick monthly budget set by user
+  // Priority 3: null (not set)
+  const effectiveMonthlyBudget = useMemo(() => {
+    const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0')
+    const cMonthStr = `${now.getFullYear()}-${currentMonthNum}`
+
+    if (userProfile?.lastAllocatedMonth === cMonthStr) {
+      return effectiveOperatingCash
+    }
+
+    if (userProfile?.monthlyBudget && userProfile?.monthlyBudgetMonth === cMonthStr) {
+      return userProfile.monthlyBudget
+    }
+
+    return null
+  }, [userProfile, effectiveOperatingCash, now])
+
+  // Total EXPENSE transactions for today and this month (from all-month data)
+  const todayStr = now.toISOString().split('T')[0]
+  const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  const spentThisMonth = useMemo(() => {
+    return summary.transactions
+      .filter(
+        (t) =>
+          t.type === 'EXPENSE' &&
+          t.transactionDate >= `${currentMonthPrefix}-01` &&
+          t.transactionDate <= todayStr
+      )
+      .reduce((sum, t) => sum + t.amount, 0)
+  }, [summary.transactions, currentMonthPrefix, todayStr])
+
+  const todayExpense = useMemo(() => {
+    return summary.transactions
+      .filter((t) => t.type === 'EXPENSE' && t.transactionDate === todayStr)
+      .reduce((sum, t) => sum + t.amount, 0)
+  }, [summary.transactions, todayStr])
+
+  // Remaining budget & daily limit
+  const remainingMonthBudget =
+    effectiveMonthlyBudget !== null
+      ? Math.max(0, effectiveMonthlyBudget - spentThisMonth)
+      : null
+
+  const smartDailyLimit =
+    remainingMonthBudget !== null
+      ? Math.round(remainingMonthBudget / daysRemainingInMonth)
+      : null
+
+  // Fallback: old calculation from wallet balance (used when no budget set)
+  const dynamicSafeToSpendDaily =
+    smartDailyLimit ??
+    Math.max(
+      0,
+      Math.round((effectiveOperatingCash - unpaidBillsThisMonth) / daysRemainingInMonth)
+    )
+
+  // Overbudget detection
+  const isBudgetSet = effectiveMonthlyBudget !== null
+  const isOverbudgetToday =
+    isBudgetSet && smartDailyLimit !== null && todayExpense > smartDailyLimit && smartDailyLimit > 0
+  const isWarningToday =
+    isBudgetSet &&
+    smartDailyLimit !== null &&
+    !isOverbudgetToday &&
+    todayExpense > smartDailyLimit * 0.8 &&
+    smartDailyLimit > 0
+  const overbudgetExcess = isOverbudgetToday && smartDailyLimit !== null
+    ? todayExpense - smartDailyLimit
+    : 0
 
   // Payday & Income Mode Calculations
   const userIncomeType = userProfile?.incomeType || 'SALARIED'
@@ -633,32 +700,113 @@ export default function DashboardPage() {
 
       {/* 2 Smart Dynamic Indicators (Safe-to-Spend Today & Daily Savings Required) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Dynamic Safe-to-Spend Today */}
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-[#1a1d27] to-[#1a1d27] border border-green-500/30 shadow-xl flex items-center justify-between">
+        {/* Dynamic Safe-to-Spend Today — 4-State Adaptive Card */}
+        <Link
+          href="/daily"
+          className={cn(
+            'p-5 rounded-2xl shadow-xl flex items-center justify-between transition-all hover:-translate-y-0.5 group',
+            isOverbudgetToday
+              ? 'bg-gradient-to-br from-red-500/15 via-[#1a1d27] to-[#1a1d27] border border-red-500/40'
+              : isWarningToday
+              ? 'bg-gradient-to-br from-amber-500/15 via-[#1a1d27] to-[#1a1d27] border border-amber-500/40'
+              : 'bg-gradient-to-br from-emerald-500/15 via-[#1a1d27] to-[#1a1d27] border border-green-500/30'
+          )}
+        >
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/30 text-green-400 flex items-center justify-center shrink-0">
+            <div
+              className={cn(
+                'w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0',
+                isOverbudgetToday
+                  ? 'bg-red-500/20 border-red-500/30 text-red-400'
+                  : isWarningToday
+                  ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                  : 'bg-green-500/20 border-green-500/30 text-green-400'
+              )}
+            >
               <Compass className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-green-400">
-                  Batas Aman Belanja Hari Ini
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span
+                  className={cn(
+                    'text-xs font-bold uppercase tracking-wider',
+                    isOverbudgetToday
+                      ? 'text-red-400'
+                      : isWarningToday
+                      ? 'text-amber-400'
+                      : 'text-green-400'
+                  )}
+                >
+                  {isOverbudgetToday
+                    ? '⚠️ Overbudget Hari Ini!'
+                    : isWarningToday
+                    ? '⚠️ Mendekati Batas Harian'
+                    : 'Batas Aman Belanja Hari Ini'}
                 </span>
-                <span className="text-[10px] text-slate-400">({daysRemainingInMonth} hari sisa)</span>
+                <span className="text-[10px] text-slate-400">
+                  ({daysRemainingInMonth} hari sisa)
+                </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tabular-nums tracking-tight mt-0.5">
-                {formatRupiah(dynamicSafeToSpendDaily)}
-                <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
-              </div>
-              <p className="text-[11px] text-slate-300 mt-1">
-                Dihitung dari saldo dompet kas dibagi {daysRemainingInMonth} hari sisa bulan berjalan.
-              </p>
+
+              {isOverbudgetToday ? (
+                <>
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-red-400 tabular-nums tracking-tight mt-0.5">
+                    +{formatRupiah(overbudgetExcess)}
+                    <span className="text-xs text-slate-400 font-sans font-normal ml-1">melebihi</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-1">
+                    Batas hari ini:{' '}
+                    <span className="text-red-300 font-semibold">
+                      {formatRupiah(smartDailyLimit ?? 0)}
+                    </span>{' '}
+                    · Sudah belanja:{' '}
+                    <span className="text-red-300 font-semibold">
+                      {formatRupiah(todayExpense)}
+                    </span>
+                  </p>
+                  <p className="text-[10px] text-red-400/70 mt-0.5">
+                    💡 Batas belanja hari-hari berikutnya otomatis menyesuaikan
+                  </p>
+                </>
+              ) : isWarningToday ? (
+                <>
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-300 tabular-nums tracking-tight mt-0.5">
+                    {formatRupiah(dynamicSafeToSpendDaily)}
+                    <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-1">
+                    Sudah belanja hari ini:{' '}
+                    <span className="text-amber-300 font-semibold">
+                      {formatRupiah(todayExpense)}
+                    </span>{' '}
+                    · Sisa:{' '}
+                    <span className="text-amber-300 font-semibold">
+                      {formatRupiah(Math.max(0, (smartDailyLimit ?? dynamicSafeToSpendDaily) - todayExpense))}
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tabular-nums tracking-tight mt-0.5">
+                    {formatRupiah(dynamicSafeToSpendDaily)}
+                    <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-1">
+                    {isBudgetSet
+                      ? `Dari sisa budget Rp${(remainingMonthBudget ?? 0).toLocaleString('id-ID')} ÷ ${daysRemainingInMonth} hari`
+                      : `Dihitung dari saldo dompet kas dibagi ${daysRemainingInMonth} hari sisa bulan berjalan.`}
+                    {isBudgetSet && todayExpense > 0 && (
+                      <span className="text-slate-400">
+                        {' '}· Belanja hari ini: {formatRupiah(todayExpense)}
+                      </span>
+                    )}
+                  </p>
+                </>
+              )}
             </div>
           </div>
-          <Link href="/daily" className="p-2 rounded-xl bg-[#21263a] hover:bg-[#2d3348] text-slate-300 hover:text-white transition-colors">
-            <ChevronRight className="w-5 h-5" />
-          </Link>
-        </div>
+          <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors shrink-0" />
+        </Link>
 
         {/* Daily Required Savings for Goals */}
         <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-500/15 via-[#1a1d27] to-[#1a1d27] border border-purple-500/30 shadow-xl flex items-center justify-between">

@@ -87,6 +87,8 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       primarySalaryWalletId: data.primarySalaryWalletId,
       primarySalaryWalletName: data.primarySalaryWalletName,
       lastAllocatedMonth: data.lastAllocatedMonth,
+      monthlyBudget: data.monthlyBudget || 0,
+      monthlyBudgetMonth: data.monthlyBudgetMonth,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     } as UserProfile
@@ -113,19 +115,30 @@ export interface OnboardingData {
   initialBalance: number
   monthlyIncome: number
   savingsTarget: number
+  monthlyBudget?: number
+  monthlyBudgetMonth?: string
 }
 
 export async function completeUserOnboarding(uid: string, data: OnboardingData): Promise<void> {
   const docRef = doc(db, 'users', uid)
 
-  // Update profile fields
-  await updateDoc(docRef, {
+  const payload: Record<string, unknown> = {
     hasCompletedOnboarding: true,
     initialBalance: data.initialBalance,
     monthlyIncome: data.monthlyIncome,
     savingsTarget: data.savingsTarget,
     updatedAt: serverTimestamp(),
-  })
+  }
+
+  if (data.monthlyBudget !== undefined) {
+    payload.monthlyBudget = data.monthlyBudget
+  }
+  if (data.monthlyBudgetMonth !== undefined) {
+    payload.monthlyBudgetMonth = data.monthlyBudgetMonth
+  }
+
+  // Update profile fields
+  await updateDoc(docRef, payload)
 
   // Sync initial balance directly into primary cash wallet & record linked transaction
   if (data.initialBalance > 0) {
