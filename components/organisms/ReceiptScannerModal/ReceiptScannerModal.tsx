@@ -41,13 +41,63 @@ export function ReceiptScannerModal({
 
     setError(null)
     setScanResult(null)
-    setMimeType(file.type || 'image/jpeg')
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      setSelectedImage(reader.result as string)
+    try {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const rawResult = event.target?.result as string
+        if (!rawResult) return
+
+        // Optimize and compress image via Canvas to prevent memory lag and format mismatch
+        const img = new Image()
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas')
+            let width = img.width
+            let height = img.height
+            const maxDim = 1200
+
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width)
+                width = maxDim
+              } else {
+                width = Math.round((width * maxDim) / height)
+                height = maxDim
+              }
+            }
+
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height)
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85)
+              setSelectedImage(compressedBase64)
+              setMimeType('image/jpeg')
+            } else {
+              setSelectedImage(rawResult)
+              setMimeType(file.type || 'image/jpeg')
+            }
+          } catch {
+            setSelectedImage(rawResult)
+            setMimeType(file.type || 'image/jpeg')
+          }
+        }
+        img.onerror = () => {
+          setSelectedImage(rawResult)
+          setMimeType(file.type || 'image/jpeg')
+        }
+        img.src = rawResult
+      }
+      reader.onerror = () => {
+        setError('Gagal membaca berkas gambar. Silakan coba gambar lain.')
+      }
+      reader.readAsDataURL(file)
+    } catch (err: unknown) {
+      console.error('[handleFileChange error]:', err)
+      setError('Gagal memproses gambar. Pastikan format gambar valid (JPG, PNG, WEBP).')
     }
-    reader.readAsDataURL(file)
   }
 
   const handleScanReceipt = async () => {
@@ -94,8 +144,12 @@ export function ReceiptScannerModal({
     setSelectedImage(null)
     setScanResult(null)
     setError(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+    try {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch {
+      // Safe fallback
     }
   }
 

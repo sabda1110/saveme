@@ -13,6 +13,7 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
+import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
 import { savingsService } from '@/lib/services/savings.firebase'
 import {
   ReceiptText,
@@ -197,15 +198,18 @@ export default function TransactionsPage() {
   const handleApplyScanResult = (result: ReceiptScanResult) => {
     setEditingTx(null)
     setFormType('EXPENSE')
-    setFormAmount(result.totalAmount.toString())
-    setFormDescription(result.merchantName)
-    setFormDate(result.transactionDate)
+    setFormAmount((Number(result.totalAmount) || 0).toString())
+    setFormDescription(result.merchantName || 'Struk Belanja')
+    setFormDate(normalizeDateToYYYYMMDD(result.transactionDate))
     
-    // Auto-match category
+    // Auto-match category safely
+    const catId = result.suggestedCategoryId?.toLowerCase() || ''
+    const catName = result.suggestedCategoryName?.toLowerCase() || ''
+
     const matchedCategory = categories.find(
       (c) =>
-        c.id.toLowerCase() === result.suggestedCategoryId.toLowerCase() ||
-        c.name.toLowerCase().includes(result.suggestedCategoryName.toLowerCase())
+        (c.id && catId && c.id.toLowerCase() === catId) ||
+        (c.name && catName && c.name.toLowerCase().includes(catName))
     )
     if (matchedCategory) {
       setFormCategoryId(matchedCategory.id)

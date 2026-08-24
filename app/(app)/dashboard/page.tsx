@@ -13,6 +13,7 @@ import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
+import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
 import { OnboardingWizard } from '@/components/organisms/OnboardingWizard'
 import { GettingStartedWidget } from '@/components/organisms/GettingStartedWidget'
 import { RecurringBillsCard } from '@/components/organisms/RecurringBillsCard'
@@ -162,14 +163,17 @@ export default function DashboardPage() {
   // Handle Apply Scan Result from AI Scanner
   const handleApplyScanResult = (result: ReceiptScanResult) => {
     setType('EXPENSE')
-    setAmount(result.totalAmount.toString())
-    setDescription(result.merchantName)
-    setTransactionDate(result.transactionDate)
+    setAmount((Number(result.totalAmount) || 0).toString())
+    setDescription(result.merchantName || 'Struk Belanja')
+    setTransactionDate(normalizeDateToYYYYMMDD(result.transactionDate))
+
+    const catId = result.suggestedCategoryId?.toLowerCase() || ''
+    const catName = result.suggestedCategoryName?.toLowerCase() || ''
 
     const matchedCategory = categories.find(
       (c) =>
-        c.id.toLowerCase() === result.suggestedCategoryId.toLowerCase() ||
-        c.name.toLowerCase().includes(result.suggestedCategoryName.toLowerCase())
+        (c.id && catId && c.id.toLowerCase() === catId) ||
+        (c.name && catName && c.name.toLowerCase().includes(catName))
     )
     if (matchedCategory) {
       setCategoryId(matchedCategory.id)

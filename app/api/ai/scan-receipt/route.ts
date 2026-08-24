@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
 
 interface ScanReceiptRequestBody {
   imageBase64: string
@@ -25,8 +26,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Clean base64 string if data URL prefix exists
-    const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/, '')
+    // Clean base64 string safely regardless of data URL format
+    const cleanBase64 = imageBase64.includes(';base64,')
+      ? imageBase64.split(';base64,')[1].trim()
+      : imageBase64.trim()
 
     const prompt = `Anda adalah asisten AI OCR keuangan profesional (Receipt OCR Parser).
 Tugas Anda adalah membaca gambar struk / nota pembayaran ini dan mengekstrak informasi finansial ke dalam format JSON murni.
@@ -104,13 +107,14 @@ Kembalikan HANYA format JSON valid tanpa tanda markdown (no backticks):
 
     const parsed = JSON.parse(cleanedJsonStr)
 
-    // Ensure fallback today date
-    if (!parsed.transactionDate || !/^\d{4}-\d{2}-\d{2}$/.test(parsed.transactionDate)) {
-      parsed.transactionDate = new Date().toISOString().split('T')[0]
-    }
+    // Normalize transaction date to strict YYYY-MM-DD
+    parsed.transactionDate = normalizeDateToYYYYMMDD(parsed.transactionDate)
 
     // Ensure numeric amount
     parsed.totalAmount = Number(parsed.totalAmount) || 0
+    parsed.merchantName = typeof parsed.merchantName === 'string' ? parsed.merchantName.trim() : 'Struk Belanja'
+    parsed.suggestedCategoryId = typeof parsed.suggestedCategoryId === 'string' ? parsed.suggestedCategoryId.trim() : 'Food'
+    parsed.suggestedCategoryName = typeof parsed.suggestedCategoryName === 'string' ? parsed.suggestedCategoryName.trim() : 'Makanan'
 
     return NextResponse.json({
       success: true,
