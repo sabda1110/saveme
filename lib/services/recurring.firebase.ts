@@ -221,6 +221,9 @@ export const recurringService = {
 
   /**
    * Automatically processes due recurring bills for the current month.
+   * SMART AUTO-DEDUCT GUARD:
+   * Only debits and marks as paid if the target wallet has sufficient balance (balance >= bill.amount).
+   * If balance is insufficient, auto-deduct is gracefully held without making the wallet negative.
    */
   async processDueRecurringBills(userId: string): Promise<number> {
     if (!userId) return 0
@@ -231,7 +234,10 @@ export const recurringService = {
     const currentMonthStr = `${currentYear}-${currentMonthNum}`
     const currentDay = now.getDate()
 
-    const bills = await this.getUserRecurringBills(userId)
+    const [bills, wallets] = await Promise.all([
+      this.getUserRecurringBills(userId),
+      walletService.getUserWallets(userId),
+    ])
     let processedCount = 0
 
     for (const bill of bills) {
@@ -245,8 +251,25 @@ export const recurringService = {
         currentDay >= bill.dueDay &&
         bill.lastProcessedMonth !== currentMonthStr
       ) {
+        // Find target wallet: configured wallet > first unlocked wallet > first wallet
+        const targetWallet =
+          wallets.find((w) => w.id === bill.walletId) ||
+          wallets.find((w) => !w.isLocked) ||
+          wallets[0]
+
+        // Guard: Verify target wallet balance >= bill amount
+        const currentBalance = Number(targetWallet?.balance) || 0
+        if (!targetWallet || currentBalance < bill.amount) {
+          console.warn(
+            `[recurringService] Auto-deduct skipped for bill "${bill.name}": Insufficient balance in wallet "${targetWallet?.name || 'Unknown'}" (Balance: ${currentBalance}, Required: ${bill.amount})`
+          )
+          continue
+        }
+
         try {
-          await this.payBill(userId, bill)
+          await this.payBill(userId, bill, targetWallet.id, targetWallet.name)
+          // Adjust in-memory balance to handle multiple bills processing in the same batch accurately
+          targetWallet.balance = currentBalance - bill.amount
           processedCount++
         } catch (err) {
           console.error(`[recurringService] Error auto-processing bill ${bill.id}:`, err)

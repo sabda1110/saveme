@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { recurringService, type CreateRecurringBillDto } from '@/lib/services/recurring.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
@@ -730,6 +731,15 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
             const isCompleted =
               isInstallment && bill.totalTenor && (bill.paidTenor || 0) >= bill.totalTenor
 
+            const currentDay = now.getDate()
+            const isDueOrPastDue = currentDay >= bill.dueDay && !isPaid && !isCompleted
+            const targetWallet =
+              wallets.find((w) => w.id === bill.walletId) ||
+              spendingWallets[0] ||
+              wallets[0]
+            const hasInsufficientBalance =
+              isDueOrPastDue && Boolean(targetWallet && Number(targetWallet.balance) < bill.amount)
+
             const paidCount = bill.paidTenor || 0
             const totalCount = bill.totalTenor || 1
             const progressPercent = Math.min(100, Math.round((paidCount / totalCount) * 100))
@@ -745,6 +755,10 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                     ? 'border-green-500/40 bg-gradient-to-br from-[#1a1d27] to-[#162320]'
                     : isPaid
                     ? 'border-[#2d3348]'
+                    : hasInsufficientBalance
+                    ? 'border-red-500/50 bg-gradient-to-br from-red-950/20 via-[#1a1d27] to-[#1a1d27]'
+                    : isDueOrPastDue
+                    ? 'border-amber-500/40'
                     : 'border-purple-500/30'
                 )}
               >
@@ -773,14 +787,47 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           Lunas Bln Ini
                         </Badge>
+                      ) : hasInsufficientBalance ? (
+                        <Badge variant="expense" size="sm" className="bg-red-500/20 text-red-300 border border-red-500/40">
+                          <AlertTriangle className="w-3 h-3 mr-1 text-red-400" />
+                          Saldo Kurang (Tgl {bill.dueDay})
+                        </Badge>
+                      ) : isDueOrPastDue ? (
+                        <Badge variant="warning" size="sm" className="bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Jatuh Tempo (Tgl {bill.dueDay})
+                        </Badge>
                       ) : (
-                        <Badge variant="warning" size="sm">
+                        <Badge variant="neutral" size="sm">
                           <Clock className="w-3 h-3 mr-1" />
                           Tgl {bill.dueDay}
                         </Badge>
                       )}
                     </div>
                   </div>
+
+                  {/* Insufficient Balance Alert for Due Bills */}
+                  {hasInsufficientBalance && (
+                    <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs text-red-300 mb-3.5 space-y-1.5 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold flex items-center gap-1.5 text-red-400">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          Gagal Autodebet (Saldo Kurang)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-red-200/90 leading-relaxed">
+                        Saldo di <strong>{targetWallet?.name || 'Kantong Utama'}</strong> ({formatRupiah(targetWallet?.balance || 0)}) tidak cukup untuk autodebet tagihan ini ({formatRupiah(bill.amount)}).
+                      </p>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <Link
+                          href="/wallets"
+                          className="text-[11px] font-bold text-amber-300 hover:text-amber-200 underline inline-flex items-center gap-1"
+                        >
+                          Pindahkan Dana dari Kantong Lain →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Monthly Amount */}
                   <div className="p-3.5 rounded-2xl bg-[#21263a]/50 border border-[#2d3348] mb-3.5">
@@ -1159,6 +1206,26 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                 <span className="text-[11px] text-slate-500">
                   Saldo dompet yang dipilih akan otomatis terpotong sebesar {formatRupiah(billToPay.amount)}.
                 </span>
+
+                {/* Insufficient Balance Alert in Pay Modal */}
+                {(() => {
+                  const selectedPayWallet = spendingWallets.find((w) => w.id === payWalletId)
+                  const isInsufficient = Boolean(
+                    payWalletId &&
+                      selectedPayWallet &&
+                      Number(selectedPayWallet.balance) < billToPay.amount
+                  )
+                  if (!isInsufficient) return null
+                  return (
+                    <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2 mt-1 animate-in fade-in">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="text-[11px] leading-relaxed">
+                        <span className="font-bold text-amber-300">Peringatan:</span> Saldo di{' '}
+                        <strong>{selectedPayWallet?.name}</strong> ({formatRupiah(selectedPayWallet?.balance || 0)}) kurang dari tagihan ({formatRupiah(billToPay.amount)}). Saldo akan menjadi minus jika tetap diproses.
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 mt-2 border-t border-[#2d3348]">

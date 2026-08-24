@@ -182,6 +182,12 @@ export default function WalletsPage() {
 
     const numBal = Number(balance) || 0
 
+    // Guard: saat edit, tidak boleh lock satu-satunya kantong non-locked
+    if (editingWallet && isLocked && !editingWallet.isLocked && spendingWallets.length <= 1) {
+      setWalletError('Tidak bisa dikunci — kamu harus punya minimal 1 kantong aktif (non-locked) sebagai saldo utama.')
+      return
+    }
+
     setSubmitting(true)
     try {
       if (editingWallet) {
@@ -220,6 +226,14 @@ export default function WalletsPage() {
 
   const handleConfirmDelete = async () => {
     if (!user?.uid || !walletToDelete) return
+
+    // Guard: harus ada minimal 1 kantong non-locked
+    if (!walletToDelete.isLocked && spendingWallets.length <= 1) {
+      setWalletToDelete(null)
+      setWalletError('Tidak bisa dihapus — kamu harus punya minimal 1 kantong aktif (non-locked) sebagai saldo utama.')
+      return
+    }
+
     setIsDeleting(true)
 
     try {
@@ -321,6 +335,23 @@ export default function WalletsPage() {
             type="button"
             onClick={() => setSyncSuccessMsg(null)}
             className="p-1 rounded-lg text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-500/20"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Guard Error Banner (delete/lock blocked) */}
+      {walletError && !editingWallet && (
+        <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-red-400 shrink-0" />
+            <span className="font-medium">{walletError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWalletError(null)}
+            className="p-1 rounded-lg text-red-400/80 hover:text-red-300 hover:bg-red-500/20"
           >
             <X className="w-4 h-4" />
           </button>

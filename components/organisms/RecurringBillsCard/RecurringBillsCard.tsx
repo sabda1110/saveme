@@ -16,13 +16,15 @@ import {
   X,
   Sparkles,
   Zap,
+  AlertTriangle,
 } from 'lucide-react'
-import type { RecurringBill, Category } from '@/types'
+import type { RecurringBill, Category, Wallet } from '@/types'
 
 export interface RecurringBillsCardProps {
   userId: string
   bills: RecurringBill[]
   categories: Category[]
+  wallets?: Wallet[]
   onUpdated: () => void
 }
 
@@ -30,6 +32,7 @@ export function RecurringBillsCard({
   userId,
   bills,
   categories,
+  wallets = [],
   onUpdated,
 }: RecurringBillsCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -202,6 +205,14 @@ export function RecurringBillsCard({
             {bills.map((bill) => {
               const isPaidThisMonth = bill.lastProcessedMonth === currentMonthStr
               const daysDiff = bill.dueDay - currentDay
+              const targetWallet =
+                wallets.find((w) => w.id === bill.walletId) ||
+                wallets.find((w) => !w.isLocked) ||
+                wallets[0]
+              const isOverdueInsufficient =
+                !isPaidThisMonth &&
+                currentDay >= bill.dueDay &&
+                Boolean(targetWallet && Number(targetWallet.balance) < bill.amount)
 
               let statusBadge = (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
@@ -218,6 +229,12 @@ export function RecurringBillsCard({
                 statusBadge = (
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-400 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
                     <CheckCircle2 className="w-3 h-3" /> Terpotong Bln Ini
+                  </span>
+                )
+              } else if (isOverdueInsufficient) {
+                statusBadge = (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20">
+                    <AlertTriangle className="w-3 h-3 text-red-400" /> Saldo Kurang
                   </span>
                 )
               }

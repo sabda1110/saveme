@@ -46,7 +46,7 @@ import type {
 } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
-type AllocationPreset = '50_30_20' | '60_30_10' | '70_20_10' | 'CUSTOM'
+type AllocationPreset = '50_30_20' | '60_30_10' | '70_20_10' | '100_0_0' | 'CUSTOM'
 
 export default function PayrollPage() {
   const { user, userProfile, refreshProfile } = useAuth()
@@ -185,6 +185,10 @@ export default function PayrollPage() {
       setOperatingPct(70)
       setLockedPct(20)
       setGoalsPct(10)
+    } else if (p === '100_0_0') {
+      setOperatingPct(100)
+      setLockedPct(0)
+      setGoalsPct(0)
     }
   }
 
@@ -370,6 +374,27 @@ export default function PayrollPage() {
     }
   }
 
+  // Skip This Month Handler — untuk user baru yang saldo sudah dicatat manual
+  const [skipping, setSkipping] = useState(false)
+
+  const handleSkipThisMonth = async () => {
+    if (!user?.uid) return
+    setSkipping(true)
+    try {
+      await updateUserProfile(user.uid, {
+        lastAllocatedMonth: currentMonthStr,
+      })
+      await refreshProfile()
+      setAllocSuccessMsg(`✅ Bulan ${monthName} ditandai selesai. Saldo yang sudah kamu catat tetap digunakan — alokasi otomatis berlaku mulai bulan depan.`)
+      setRefreshTrigger((p) => p + 1)
+      setTimeout(() => setAllocSuccessMsg(null), 5000)
+    } catch (err) {
+      console.error('[payroll] Error skipping month:', err)
+    } finally {
+      setSkipping(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-10 max-w-6xl mx-auto">
       {/* Top Page Header */}
@@ -475,13 +500,21 @@ export default function PayrollPage() {
               <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
                 {isAlreadyAllocatedThisMonth && currentMonthAllocation
                   ? `Pemasukan bulan ${monthName} sebesar ${formatRupiah(currentMonthAllocation.totalSalary)} telah didistribusikan ke Kas Belanja (${formatRupiah(currentMonthAllocation.operatingAmount)}), Tabungan Beku (${formatRupiah(currentMonthAllocation.lockedAmount)}), dan Celengan Impian.`
+                  : isAlreadyAllocatedThisMonth
+                  ? `Bulan ${monthName} sudah ditandai selesai. Saldo aktif kamu digunakan langsung.`
                   : `Siklus pemasukan ${incomeType === 'STUDENT_ALLOWANCE' ? 'uang saku' : 'gaji'} dijadwalkan setiap ${paydayScheduleType === 'END_OF_MONTH' ? 'Hari Terakhir Bulan' : paydayScheduleType === 'START_OF_MONTH' ? 'Tanggal 1 (Awal Bulan)' : `Tanggal ${effectivePaydayDay}`}. Gunakan tombol di bawah untuk mendistribusikan dana secara terencana.`}
               </p>
+
+              {!isAlreadyAllocatedThisMonth && (
+                <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200 leading-relaxed">
+                  💡 <strong>Baru bergabung bulan ini?</strong> Jika kamu sudah menerima gaji dan saldo sudah dicatat manual lewat Saldo Awal, klik <strong>&quot;Lewati Bulan Ini&quot;</strong> agar notifikasi ini tidak muncul lagi.
+                </div>
+              )}
             </div>
           </div>
 
-          {isAlreadyAllocatedThisMonth && (
-            <div className="flex items-center gap-2 sm:self-center shrink-0">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:self-center shrink-0">
+            {isAlreadyAllocatedThisMonth ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -492,8 +525,20 @@ export default function PayrollPage() {
               >
                 Koreksi / Reset Alokasi
               </Button>
-            </div>
-          )}
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSkipThisMonth}
+                loading={skipping}
+                className="text-slate-400 hover:text-slate-200 hover:bg-slate-500/10 border border-slate-500/30 text-xs cursor-pointer"
+                leftIcon={<ChevronRight className="w-3.5 h-3.5" />}
+              >
+                Lewati Bulan Ini
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Breakdown Card if Already Allocated */}
@@ -830,7 +875,22 @@ export default function PayrollPage() {
                     Pilih Formula Alokasi:
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('100_0_0')}
+                    disabled={isAlreadyAllocatedThisMonth}
+                    className={cn(
+                      'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 disabled:opacity-50',
+                      preset === '100_0_0'
+                        ? 'bg-green-600 border-green-500 text-white shadow-md'
+                        : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                    )}
+                  >
+                    <span className="text-xs font-bold">100% Kas</span>
+                    <span className="text-[10px] opacity-80">Semua ke Belanja</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => handleApplyPreset('50_30_20')}
