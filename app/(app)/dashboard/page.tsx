@@ -323,12 +323,7 @@ export default function DashboardPage() {
     setIsDeletingTx(true)
 
     try {
-      const tx = summary.transactions.find((t) => t.id === txToDelete)
-      if (tx && tx.walletId) {
-        const delta = tx.type === 'INCOME' ? -tx.amount : tx.amount
-        await walletService.adjustWalletBalance(user.uid, tx.walletId, delta)
-      }
-
+      // transactionService.delete automatically handles wallet balance reversal internally
       await transactionService.delete(user.uid, txToDelete)
       setTxToDelete(null)
       setRefreshTrigger((prev) => prev + 1)

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <AuthTemplate>
-      <Suspense fallback={<div className="w-full max-w-md h-96 rounded-2xl bg-[#1a1d27]/50 animate-pulse" />}>
+      <Suspense fallback={<div className="w-full max-w-md h-96 rounded-2xl bg-white dark:bg-[#1a1d27]/50 border border-slate-200 dark:border-[#2d3348] animate-pulse" />}>
         <LoginForm />
       </Suspense>
     </AuthTemplate>
