@@ -560,12 +560,12 @@ export default function SavingsPage() {
 
                   {/* Target Date Calculation OR Friendly Motivational Feedback */}
                   {goal.targetDate && daysLeft > 0 && remaining > 0 ? (
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 flex items-center justify-between mb-4">
-                      <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="p-3 rounded-xl bg-purple-50/80 dark:bg-gradient-to-r dark:from-purple-950/40 dark:via-[#1e2333] dark:to-[#1a1d27] border border-purple-200 dark:border-purple-500/30 text-xs text-slate-700 dark:text-slate-300 flex items-center justify-between mb-4 shadow-sm">
+                      <span className="flex items-center gap-1 text-[11px] text-purple-700 dark:text-purple-300">
                         <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                         <span>Sisa {daysLeft} hari:</span>
                       </span>
-                      <span className="font-bold font-mono text-purple-700 dark:text-purple-300 text-xs">
+                      <span className="font-bold font-mono text-purple-700 dark:text-purple-200 text-xs">
                         Nabung {formatRupiah(dailySavingsReq)}/hari
                       </span>
                     </div>
@@ -850,9 +850,9 @@ export default function SavingsPage() {
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 mb-4 flex justify-between">
-              <span>Saldo di Celengan Saat Ini:</span>
-              <span className="font-mono font-bold text-purple-700 dark:text-purple-300">
+            <div className="p-3 rounded-xl bg-purple-50/80 dark:bg-gradient-to-r dark:from-purple-950/40 dark:via-[#1e2333] dark:to-[#1a1d27] border border-purple-200 dark:border-purple-500/30 text-xs text-slate-700 dark:text-slate-300 mb-4 flex justify-between shadow-sm">
+              <span className="text-purple-700 dark:text-purple-300 font-medium">Saldo di Celengan Saat Ini:</span>
+              <span className="font-mono font-bold text-purple-700 dark:text-purple-200">
                 {formatRupiah(withdrawModalGoal.currentAmount)}
               </span>
             </div>

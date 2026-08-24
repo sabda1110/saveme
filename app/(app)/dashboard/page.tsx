@@ -727,28 +727,28 @@ export default function DashboardPage() {
         </Link>
 
         {/* Daily Required Savings for Goals */}
-        <div className="p-5 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-purple-500/30 shadow-md dark:shadow-xl flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-900/40 dark:via-purple-950/20 dark:to-[#1a1d27] border border-purple-500/30 dark:border-purple-500/40 shadow-sm dark:shadow-purple-950/30 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 dark:bg-purple-500/25 border border-purple-500/30 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
               <Target className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
                   Wajib Disisihkan per Hari
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">({savingsGoals.length} Celengan)</span>
+                <span className="text-[10px] text-purple-600/70 dark:text-purple-300/70">({savingsGoals.length} Celengan)</span>
               </div>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-700 dark:text-purple-300 tabular-nums tracking-tight mt-0.5">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-700 dark:text-purple-200 tabular-nums tracking-tight mt-0.5">
                 {formatRupiah(totalDailySavingsRequired)}
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                <span className="text-xs text-purple-600/70 dark:text-purple-300/70 font-sans font-normal ml-1">/ hari</span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                 Nominal yang perlu kamu tabung agar seluruh target impianmu tercapai tepat waktu.
               </p>
             </div>
           </div>
-          <Link href="/savings" className="p-2 rounded-xl bg-white dark:bg-[#21263a] hover:bg-slate-100 dark:hover:bg-[#2d3348] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent transition-colors shadow-sm">
+          <Link href="/savings" className="p-2 rounded-xl bg-white dark:bg-[#21263a] hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-white border border-purple-200 dark:border-purple-500/30 transition-colors shadow-sm">
             <ChevronRight className="w-5 h-5" />
           </Link>
         </div>

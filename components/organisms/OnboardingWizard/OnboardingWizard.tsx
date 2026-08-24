@@ -611,8 +611,8 @@ export function OnboardingWizard({
                   className={cn(
                     'p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
                     !isCustomSavings && savingsTarget === opt.pct
-                      ? 'bg-emerald-500/20 border-emerald-500 text-slate-900 dark:text-white shadow-md'
-                      : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
+                      ? 'bg-emerald-500/15 dark:bg-gradient-to-br dark:from-emerald-900/40 dark:via-[#1e2333] dark:to-[#161922] border-emerald-500 text-slate-900 dark:text-white shadow-md shadow-emerald-500/10'
+                      : 'bg-slate-50 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-emerald-500/40'
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -637,7 +637,7 @@ export function OnboardingWizard({
                 className={cn(
                   'px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer',
                   isCustomSavings
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-emerald-500/20 dark:bg-emerald-950/50 border-emerald-500 text-emerald-700 dark:text-emerald-300'
                     : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
@@ -661,7 +661,7 @@ export function OnboardingWizard({
             </div>
 
             {/* Outcome Summary Breakdown */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-gradient-to-br dark:from-[#1e2333] dark:to-[#131620] border border-slate-200 dark:border-[#2d3348] space-y-2">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                 Hasil Perhitungan Uangmu:
@@ -694,7 +694,7 @@ export function OnboardingWizard({
                   </span>
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 dark:bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-500/20 dark:border-emerald-500/30 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
                 <span className="text-[11px] font-medium">📅 Jatah Belanja Harian:</span>
                 <span className="font-extrabold font-mono text-emerald-700 dark:text-emerald-300 text-sm">
                   {formatRupiahPreview(estimatedDailyBudget)} / hari

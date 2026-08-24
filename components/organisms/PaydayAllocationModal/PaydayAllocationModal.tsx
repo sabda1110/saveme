@@ -219,8 +219,8 @@ export function PaydayAllocationModal({
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
                   preset === '50_30_20'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20 font-bold'
-                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-500 text-white shadow-lg shadow-purple-500/25 font-bold'
+                    : 'bg-slate-100 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <span className="text-xs font-bold">50 / 30 / 20</span>
@@ -233,8 +233,8 @@ export function PaydayAllocationModal({
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
                   preset === '70_20_10'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20 font-bold'
-                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-500 text-white shadow-lg shadow-purple-500/25 font-bold'
+                    : 'bg-slate-100 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <span className="text-xs font-bold">70 / 20 / 10</span>
@@ -247,8 +247,8 @@ export function PaydayAllocationModal({
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
                   preset === 'CUSTOM'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20 font-bold'
-                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 border-purple-500 text-white shadow-lg shadow-purple-500/25 font-bold'
+                    : 'bg-slate-100 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <span className="text-xs font-bold">Kustom Split</span>
@@ -260,19 +260,19 @@ export function PaydayAllocationModal({
           {/* 3. Breakdown Pembagian 3 Pos Finansial */}
           <div className="space-y-3">
             {/* Pos 1: Kas Belanja Operasional */}
-            <div className="p-3.5 rounded-2xl bg-green-50/70 dark:bg-[#21263a]/80 border border-green-500/30 flex flex-col gap-2">
+            <div className="p-3.5 rounded-2xl bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-950/40 dark:via-[#1e2333] dark:to-[#161922] border border-green-500/30 dark:border-emerald-500/40 shadow-sm dark:shadow-emerald-950/20 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Unlock className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs font-bold text-green-700 dark:text-green-400">
+                  <Unlock className="w-4 h-4 text-green-600 dark:text-emerald-400" />
+                  <span className="text-xs font-bold text-green-700 dark:text-emerald-300">
                     1. Kas Belanja Operasional ({operatingPct}%)
                   </span>
                 </div>
-                <span className="text-sm font-black font-mono text-green-700 dark:text-green-400">
+                <span className="text-sm font-black font-mono text-green-700 dark:text-emerald-300">
                   {formatRupiah(operatingAmount)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300">
                 Uang untuk makan, transportasi, jajan, dan kebutuhan harian (dipakai dalam Jatah Belanja Harian).
               </p>
               {preset === 'CUSTOM' && (
@@ -288,19 +288,19 @@ export function PaydayAllocationModal({
             </div>
 
             {/* Pos 2: Tabungan Beku / Dana Darurat */}
-            <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-[#21263a]/80 border border-purple-500/30 flex flex-col gap-2">
+            <div className="p-3.5 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-950/40 dark:via-[#1e2333] dark:to-[#161922] border border-purple-500/30 dark:border-purple-500/40 shadow-sm dark:shadow-purple-950/20 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <span className="text-xs font-bold text-purple-700 dark:text-purple-400">
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
                     2. Tabungan Beku &amp; Dana Darurat ({lockedPct}%)
                   </span>
                 </div>
-                <span className="text-sm font-black font-mono text-purple-700 dark:text-purple-400">
+                <span className="text-sm font-black font-mono text-purple-700 dark:text-purple-200">
                   {formatRupiah(lockedAmount)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300">
                 Uang yang langsung dikunci &amp; diamankan agar tidak terpakai belanja (*Pay Yourself First*).
               </p>
               {lockedWallets.length > 0 && (
@@ -332,15 +332,15 @@ export function PaydayAllocationModal({
             </div>
 
             {/* Pos 3: Tabungan Impian (Savings Goals) */}
-            <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-[#21263a]/80 border border-blue-500/30 flex flex-col gap-2">
+            <div className="p-3.5 rounded-2xl bg-blue-50/80 dark:bg-gradient-to-br dark:from-blue-950/40 dark:via-[#1e2333] dark:to-[#161922] border border-blue-500/30 dark:border-blue-500/40 shadow-sm dark:shadow-blue-950/20 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
                     3. Celengan Impian / Keinginan ({goalsPct}%)
                   </span>
                 </div>
-                <span className="text-sm font-black font-mono text-blue-700 dark:text-blue-400">
+                <span className="text-sm font-black font-mono text-blue-700 dark:text-blue-200">
                   {formatRupiah(goalsAmount)}
                 </span>
               </div>
@@ -360,7 +360,7 @@ export function PaydayAllocationModal({
                   </select>
                 </div>
               ) : (
-                <span className="text-[11px] text-slate-500 italic">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                   Belum ada target impian, sisa ini akan tetap di rekening utama untuk cadangan belanja/tagihan.
                 </span>
               )}

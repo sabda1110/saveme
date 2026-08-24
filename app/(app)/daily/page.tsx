@@ -253,13 +253,13 @@ export default function DailyBudgetPage() {
     }, 0)
   }, [savingsGoals, now])
 
-  // Dynamic Real-time Safe-to-Spend (STRICTLY FROM OPERATING CASH)
+  // Dynamic Real-time Safe-to-Spend (STRICTLY FROM OPERATING CASH — Synchronized with Dashboard)
   const dynamicSafeToSpendDaily = Math.max(
     0,
-    Math.round((effectiveOperatingCash - unpaidBillsThisMonth) / daysRemainingInMonth)
+    Math.round(effectiveOperatingCash / daysRemainingInMonth)
   )
   const dynamicSafeToSpendWeekly = dynamicSafeToSpendDaily * 7
-  const dynamicSafeToSpendMonthly = Math.max(0, effectiveOperatingCash - unpaidBillsThisMonth)
+  const dynamicSafeToSpendMonthly = Math.max(0, effectiveOperatingCash)
 
   // Today's Expense
   const todayStr = now.toISOString().split('T')[0]
@@ -541,37 +541,37 @@ export default function DailyBudgetPage() {
       {/* 2 Core Strategic Indicators (Target Sisihkan per Hari vs Batas Belanja Hari Ini) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Card 1: Wajib Disisihkan untuk Tabungan Impian */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-xl flex items-center justify-between">
+        <div className="p-5 sm:p-6 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-900/40 dark:via-purple-950/20 dark:to-[#1a1d27] border border-purple-500/30 dark:border-purple-500/40 shadow-sm dark:shadow-purple-950/30 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 dark:bg-purple-500/25 border border-purple-500/30 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
               <Target className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 block">
                 Wajib Disisihkan per Hari
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-700 dark:text-purple-300 tabular-nums tracking-tight mt-0.5">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-700 dark:text-purple-200 tabular-nums tracking-tight mt-0.5">
                 {formatRupiah(totalDailySavingsRequired)}
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                <span className="text-xs text-purple-600/70 dark:text-purple-300/70 font-sans font-normal ml-1">/ hari</span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                 Alokasi wajib untuk mencapai {savingsGoals.length} celengan impianmu tepat waktu.
               </p>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
             <PiggyBank className="w-5 h-5" />
           </div>
         </div>
 
         {/* Card 2: Sisa Uang Bebas yang Boleh Dibelanjakan Hari Ini */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-green-500/30 shadow-sm dark:shadow-xl flex items-center justify-between">
+        <div className="p-5 sm:p-6 rounded-2xl bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-900/40 dark:via-emerald-950/20 dark:to-[#1a1d27] border border-green-500/30 dark:border-emerald-500/40 shadow-sm dark:shadow-emerald-950/30 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-green-500/20 dark:bg-emerald-500/25 border border-green-500/30 text-green-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
               <Compass className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-emerald-300 block">
                 Batas Aman Belanja Hari Ini
               </span>
               <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums tracking-tight mt-0.5">
@@ -583,7 +583,7 @@ export default function DailyBudgetPage() {
               </p>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-green-500/10 dark:bg-emerald-500/20 text-green-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
             <WalletIcon className="w-5 h-5" />
           </div>
         </div>

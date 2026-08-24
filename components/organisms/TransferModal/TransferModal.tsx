@@ -194,13 +194,13 @@ export function TransferModal({
 
           {/* Transfer Summary Preview Box */}
           {fromWallet && toWallet && fromWalletId !== toWalletId && Number(amount) > 0 && (
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200 dark:border-[#2d3348] flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 mt-1">
+            <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-gradient-to-r dark:from-blue-950/40 dark:via-[#1e2333] dark:to-[#1a1d27] border border-blue-200 dark:border-blue-500/30 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 mt-1 shadow-sm">
               <div className="flex items-center gap-1.5 font-medium">
                 <span>{fromWallet.icon} {fromWallet.name}</span>
                 <span className="text-blue-600 dark:text-blue-400 font-bold">➔</span>
                 <span>{toWallet.icon} {toWallet.name}</span>
               </div>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-300">
                 {formatRupiah(Number(amount))}
               </span>
             </div>
