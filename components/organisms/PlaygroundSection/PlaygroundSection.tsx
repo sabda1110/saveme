@@ -210,15 +210,15 @@ export function PlaygroundSection() {
           {/* Left Column: Sliders & Quick Actions (7 Cols) */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             {/* Simulator Control Card */}
-            <div className="bg-[#1a1d27] border border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-xl relative">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#2d3348]">
+            <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-sm dark:shadow-xl relative text-slate-900 dark:text-white">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-[#2d3348]">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
+                  <div className="p-2 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
                     <Wallet className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Simulasi Anggaran Bulanan</h3>
-                    <p className="text-xs text-slate-400">Geser slider untuk menyesuaikan kondisimu</p>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Simulasi Anggaran Bulanan</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Geser slider untuk menyesuaikan kondisimu</p>
                   </div>
                 </div>
                 <Button
@@ -232,36 +232,90 @@ export function PlaygroundSection() {
                 </Button>
               </div>
 
+              {/* Profile Preset Selectors */}
+              <div className="mb-6 pb-4 border-b border-slate-200 dark:border-[#2d3348]">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 block">
+                  Pilih Profil Finansial:
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMonthlyIncome(8500000)
+                      setMonthlyFixedExpense(4200000)
+                    }}
+                    className={cn(
+                      'px-3 py-2 rounded-xl text-xs font-medium border transition-all cursor-pointer text-center',
+                      monthlyIncome === 8500000
+                        ? 'bg-green-500/15 border-green-500/40 text-green-700 dark:text-green-300 font-bold'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#2a3048]'
+                    )}
+                  >
+                    👔 Karyawan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMonthlyIncome(2500000)
+                      setMonthlyFixedExpense(1200000)
+                    }}
+                    className={cn(
+                      'px-3 py-2 rounded-xl text-xs font-medium border transition-all cursor-pointer text-center',
+                      monthlyIncome === 2500000
+                        ? 'bg-green-500/15 border-green-500/40 text-green-700 dark:text-green-300 font-bold'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#2a3048]'
+                    )}
+                  >
+                    🎓 Pelajar / Mhs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMonthlyIncome(15000000)
+                      setMonthlyFixedExpense(6500000)
+                    }}
+                    className={cn(
+                      'px-3 py-2 rounded-xl text-xs font-medium border transition-all cursor-pointer text-center',
+                      monthlyIncome === 15000000
+                        ? 'bg-green-500/15 border-green-500/40 text-green-700 dark:text-green-300 font-bold'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#2a3048]'
+                    )}
+                  >
+                    💻 Freelancer
+                  </button>
+                </div>
+              </div>
+
               {/* Sliders */}
               <div className="flex flex-col gap-4 mb-8">
                 <PlaygroundSlider
                   label="Estimasi Pemasukan Pokok / Bulan"
                   value={monthlyIncome}
-                  min={2000000}
+                  min={1000000}
                   max={50000000}
                   step={500000}
                   onChange={setMonthlyIncome}
                   color="green"
-                  icon={<TrendingUp className="w-4 h-4 text-green-400" />}
+                  icon={<TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />}
                 />
 
                 <PlaygroundSlider
                   label="Estimasi Pengeluaran Rutin / Bulan"
                   value={monthlyFixedExpense}
-                  min={1000000}
+                  min={500000}
                   max={40000000}
                   step={250000}
                   onChange={setMonthlyFixedExpense}
                   color="red"
-                  icon={<Wallet className="w-4 h-4 text-red-400" />}
+                  icon={<Wallet className="w-4 h-4 text-red-600 dark:text-red-400" />}
                 />
               </div>
 
               {/* Quick Add Transactions Chips */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <PlusCircle className="w-3.5 h-3.5 text-green-400" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <PlusCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                     Coba Tambah Transaksi Instan (Klik Chip)
                   </span>
                   <span className="text-[11px] text-slate-500">Live preview</span>
@@ -276,19 +330,19 @@ export function PlaygroundSection() {
                       className={cn(
                         'flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all duration-150 active:scale-95 cursor-pointer hover:-translate-y-0.5',
                         action.type === 'INCOME'
-                          ? 'bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-slate-200'
-                          : 'bg-[#21263a] hover:bg-[#282e44] border-[#2d3348] text-slate-200'
+                          ? 'bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-slate-800 dark:text-slate-200'
+                          : 'bg-slate-100 hover:bg-slate-200/80 dark:bg-[#21263a] dark:hover:bg-[#282e44] border-slate-200 dark:border-[#2d3348] text-slate-800 dark:text-slate-200'
                       )}
                     >
                       <span className="text-lg shrink-0">{action.icon}</span>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-medium truncate text-slate-200">
+                        <span className="text-xs font-medium truncate text-slate-800 dark:text-slate-200">
                           {action.description}
                         </span>
                         <span
                           className={cn(
                             'text-[11px] font-mono font-bold tabular-nums',
-                            action.type === 'INCOME' ? 'text-green-400' : 'text-slate-400'
+                            action.type === 'INCOME' ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'
                           )}
                         >
                           {action.type === 'INCOME' ? '+' : '-'}
@@ -305,11 +359,11 @@ export function PlaygroundSection() {
             </div>
 
             {/* Live Interactive Transaction Feed */}
-            <div className="bg-[#1a1d27] border border-[#2d3348] rounded-2xl p-6 shadow-xl">
+            <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl p-6 shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-green-400" />
-                  <h4 className="text-sm font-bold text-white">Log Transaksi Real-Time ({extraTransactions.length})</h4>
+                  <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">Log Transaksi Real-Time ({extraTransactions.length})</h4>
                 </div>
                 <span className="text-xs text-slate-500">Urut dari terbaru</span>
               </div>
@@ -325,9 +379,9 @@ export function PlaygroundSection() {
           {/* Right Column: Dynamic Health Gauge & 1-Year Forecast (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             {/* Financial Health & Balance Card */}
-            <div className="bg-gradient-to-b from-[#1e2333] to-[#1a1d27] border border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="bg-gradient-to-b from-slate-50 via-white to-white dark:from-[#1e2333] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-sm dark:shadow-2xl relative overflow-hidden text-slate-900 dark:text-white">
               <div className="absolute top-0 right-0 p-6 opacity-10">
-                <PiggyBank className="w-32 h-32 text-green-400" />
+                <PiggyBank className="w-32 h-32 text-green-500 dark:text-green-400" />
               </div>
 
               {/* Status Header */}
@@ -339,25 +393,47 @@ export function PlaygroundSection() {
               </div>
 
               {/* Net Balance */}
-              <div className="mb-6">
-                <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+              <div className="mb-4">
+                <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
                   Sisa Saldo Bersih / Bulan
                 </span>
                 <div
                   className={cn(
                     'text-3xl sm:text-4xl font-extrabold font-mono tabular-nums tracking-tight mt-1',
-                    netBalance >= 0 ? 'text-white' : 'text-red-400'
+                    netBalance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'
                   )}
                 >
                   {formatRupiah(netBalance)}
                 </div>
               </div>
 
+              {/* Jatah Belanja Harian & Target Celengan */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0f1117]/60 border border-slate-200 dark:border-[#2d3348]/60">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold block">
+                    Jatah Belanja Harian
+                  </span>
+                  <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                    {formatRupiah(Math.max(0, Math.round(netBalance / 30)))}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block">/ hari (Safe-to-Spend)</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0f1117]/60 border border-slate-200 dark:border-[#2d3348]/60">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold block">
+                    Alokasi Celengan
+                  </span>
+                  <span className="text-base font-bold font-mono text-blue-600 dark:text-blue-400">
+                    {formatRupiah(Math.max(0, Math.round(netBalance * 0.4)))}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block">/ bulan (Auto-Saved)</span>
+                </div>
+              </div>
+
               {/* Savings Rate Bar */}
-              <div className="mb-6 p-4 rounded-xl bg-[#0f1117]/60 border border-[#2d3348]/60">
+              <div className="mb-6 p-4 rounded-xl bg-slate-50 dark:bg-[#0f1117]/60 border border-slate-200 dark:border-[#2d3348]/60">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
-                    <HeartPulse className="w-4 h-4 text-green-400" />
+                  <span className="text-xs text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5">
+                    <HeartPulse className="w-4 h-4 text-green-600 dark:text-green-400" />
                     Rasio Tabungan
                   </span>
                   <span className={cn('text-sm font-bold font-mono', healthStatus.scoreColor)}>
@@ -366,27 +442,27 @@ export function PlaygroundSection() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full h-3 bg-[#21263a] rounded-full overflow-hidden p-0.5 border border-[#2d3348]">
+                <div className="w-full h-3 bg-slate-100 dark:bg-[#21263a] rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-[#2d3348]">
                   <div
                     className={cn('h-full rounded-full transition-all duration-500', healthStatus.gaugeBg)}
                     style={{ width: `${Math.min(100, Math.max(5, savingsRate))}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-400 mt-2.5 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2.5 leading-relaxed">
                   {healthStatus.description}
                 </p>
               </div>
 
               {/* 1 Year Projection Banner */}
               <div className="p-4 rounded-xl bg-gradient-to-r from-green-500/15 via-emerald-500/10 to-transparent border border-green-500/30 mb-6">
-                <span className="text-[11px] font-bold text-green-400 uppercase tracking-wider flex items-center gap-1 mb-1">
+                <span className="text-[11px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider flex items-center gap-1 mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   Proyeksi 1 Tahun ke Depan
                 </span>
-                <div className="text-2xl font-bold font-mono text-white tabular-nums">
+                <div className="text-2xl font-bold font-mono text-slate-900 dark:text-white tabular-nums">
                   {formatRupiah(oneYearSavings)}
                 </div>
-                <span className="text-xs text-slate-300 mt-0.5 block">
+                <span className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 block">
                   Potensi tabungan terkumpul jika kamu konsisten mencatat di SaveMe!
                 </span>
               </div>
@@ -398,8 +474,8 @@ export function PlaygroundSection() {
                     Mulai Catat Keuangan Aslimu
                   </Button>
                 </Link>
-                <div className="flex items-center justify-center gap-2 mt-3 text-[11px] text-slate-400">
-                  <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                <div className="flex items-center justify-center gap-2 mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+                  <ShieldCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                   <span>Daftar gratis tanpa kartu kredit</span>
                 </div>
               </div>

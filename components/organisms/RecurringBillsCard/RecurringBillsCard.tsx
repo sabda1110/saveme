@@ -137,24 +137,24 @@ export function RecurringBillsCard({
   }
 
   return (
-    <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+    <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
       <div>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#2d3348]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">
-                  Pengeluaran Rutin & Cicilan
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Pengeluaran Rutin &amp; Cicilan
                 </h3>
                 <Badge variant="brand" size="sm">
                   {bills.length} Tagihan
                 </Badge>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Beban pasti bulanan yang otomatis terpotong saat jatuh tempo.
               </p>
             </div>
@@ -162,10 +162,10 @@ export function RecurringBillsCard({
 
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block font-semibold">
                 Total Beban Pasti:
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-purple-400">
+              <span className="text-sm sm:text-base font-bold font-mono text-purple-600 dark:text-purple-400">
                 {formatRupiah(totalMonthlyBills)}/bln
               </span>
             </div>
@@ -185,7 +185,7 @@ export function RecurringBillsCard({
         {bills.length === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center text-center">
             <div className="text-3xl mb-2">💳</div>
-            <h4 className="text-sm font-semibold text-slate-300 mb-1">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Belum ada cicilan / pengeluaran rutin
             </h4>
             <p className="text-xs text-slate-500 max-w-sm mb-4">
@@ -215,7 +215,7 @@ export function RecurringBillsCard({
                 Boolean(targetWallet && Number(targetWallet.balance) < bill.amount)
 
               let statusBadge = (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
                   <Clock className="w-3 h-3" />
                   {daysDiff === 0
                     ? 'Hari ini'
@@ -227,14 +227,14 @@ export function RecurringBillsCard({
 
               if (isPaidThisMonth) {
                 statusBadge = (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-400 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
                     <CheckCircle2 className="w-3 h-3" /> Terpotong Bln Ini
                   </span>
                 )
               } else if (isOverdueInsufficient) {
                 statusBadge = (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20">
-                    <AlertTriangle className="w-3 h-3 text-red-400" /> Saldo Kurang
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 dark:text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20">
+                    <AlertTriangle className="w-3 h-3 text-red-600 dark:text-red-400" /> Saldo Kurang
                   </span>
                 )
               }
@@ -242,18 +242,18 @@ export function RecurringBillsCard({
               return (
                 <div
                   key={bill.id}
-                  className="p-4 rounded-xl bg-[#21263a]/50 hover:bg-[#21263a] border border-[#2d3348] flex items-center justify-between transition-all group"
+                  className="p-4 rounded-xl bg-slate-50 dark:bg-[#21263a]/50 hover:bg-slate-100 dark:hover:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between transition-all group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-[#1a1d27] border border-[#2d3348] text-lg flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] text-lg flex items-center justify-center shrink-0 shadow-sm">
                       {bill.categoryIcon || '📄'}
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-semibold text-white truncate">
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                         {bill.name}
                       </span>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-mono font-bold text-slate-200">
+                        <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
                           {formatRupiah(bill.amount)}
                         </span>
                         {statusBadge}
@@ -264,7 +264,7 @@ export function RecurringBillsCard({
                   <div className="flex items-center gap-2 shrink-0 pl-2">
                     {bill.autoDeduct && (
                       <span
-                        className="p-1 rounded-lg bg-green-500/10 text-green-400"
+                        className="p-1 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400"
                         title="Auto-Deduct Aktif"
                       >
                         <Zap className="w-3.5 h-3.5" />
@@ -274,7 +274,7 @@ export function RecurringBillsCard({
                     <button
                       type="button"
                       onClick={() => setBillToDelete(bill.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-[#1a1d27] transition-all cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-white dark:hover:bg-[#1a1d27] transition-all cursor-pointer"
                       title="Hapus tagihan"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -289,26 +289,26 @@ export function RecurringBillsCard({
 
       {/* Modal Add Recurring Bill */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-[#2d3348] rounded-2xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-[#2d3348]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-bold text-white">
+                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   Daftarkan Cicilan / Tagihan Rutin
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a]"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
                 {formError}
               </div>
             )}
@@ -349,7 +349,7 @@ export function RecurringBillsCard({
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full bg-[#21263a] text-slate-100 rounded-xl px-4 py-3 text-sm border border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
+                    className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-4 py-3 text-sm border border-slate-200 dark:border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -361,13 +361,13 @@ export function RecurringBillsCard({
               </div>
 
               {/* Auto Deduct Switch */}
-              <label className="p-3.5 rounded-xl bg-[#21263a] border border-[#2d3348] flex items-center justify-between cursor-pointer">
+              <label className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between cursor-pointer">
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-green-400" />
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                     Auto-Deduct (Potong Otomatis)
                   </span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
                     Otomatis catat transaksi pengeluaran saat tanggal jatuh tempo tiba di bulan berjalan.
                   </span>
                 </div>
@@ -379,7 +379,7 @@ export function RecurringBillsCard({
                 />
               </label>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#2d3348] mt-2">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-[#2d3348] mt-2">
                 <Button
                   type="button"
                   variant="ghost"

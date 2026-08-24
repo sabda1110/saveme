@@ -428,14 +428,14 @@ _Dihasilkan otomatis oleh SaveMe App_`
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400">
+            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400">
               <PieChart className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Laporan &amp; Analitik Keuangan
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Analisis kesehatan arus kas, perbandingan bulanan, dan evaluasi SaveMe AI Coach
               </p>
             </div>
@@ -467,7 +467,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
       </div>
 
       {/* Period Filter Tabs */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
         <div className="flex items-center gap-1 min-w-max">
           {(['month', 'last_month', 'last_3_months', 'year', 'all'] as ReportPeriod[]).map((p) => (
             <button
@@ -480,8 +480,8 @@ _Dihasilkan otomatis oleh SaveMe App_`
               className={cn(
                 'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
                 period === p
-                  ? 'bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white dark:bg-blue-500 text-blue-700 dark:text-white font-bold shadow-sm dark:shadow-blue-500/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
               {periodLabelMap[p]}
@@ -491,20 +491,20 @@ _Dihasilkan otomatis oleh SaveMe App_`
       </div>
 
       {/* 🌟 1. Financial Health Score & Diagnostic Banner */}
-      <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1a2133] to-[#1a1d27] border border-[#2d3348] shadow-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#1a2133] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 text-slate-900 dark:text-white">
         <div className="flex items-start sm:items-center gap-4">
           <div className="relative flex items-center justify-center shrink-0">
             {/* Score Ring Progress */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#21263a] border border-[#2d3348] flex flex-col items-center justify-center shadow-inner">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center shadow-inner">
               <span className={cn('text-xl sm:text-2xl font-black font-mono', healthScoreAnalysis.color)}>
                 {healthScoreAnalysis.score}
               </span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">SKOR / 100</span>
+              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">SKOR / 100</span>
             </div>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Skor Kesehatan ({periodLabelMap[period]})
               </span>
               <Badge variant={healthScoreAnalysis.badge} size="sm">
@@ -514,48 +514,48 @@ _Dihasilkan otomatis oleh SaveMe App_`
             <h3 className={cn('text-base sm:text-xl font-extrabold flex items-center gap-2', healthScoreAnalysis.color)}>
               {healthScoreAnalysis.label}
             </h3>
-            <p className="text-xs text-slate-300 max-w-xl mt-1 leading-relaxed">{healthScoreAnalysis.desc}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl mt-1 leading-relaxed">{healthScoreAnalysis.desc}</p>
           </div>
         </div>
 
         {/* 4 Pillars Mini Score */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl bg-[#21263a]/70 border border-[#2d3348] shrink-0 text-xs">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/70 border border-slate-200 dark:border-[#2d3348] shrink-0 text-xs">
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400">Tabungan (35%)</span>
-            <span className="font-bold font-mono text-green-400">{healthScoreAnalysis.breakdown.savingsRateScore} pts</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Tabungan (35%)</span>
+            <span className="font-bold font-mono text-green-600 dark:text-green-400">{healthScoreAnalysis.breakdown.savingsRateScore} pts</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400">Kontrol Belanja (25%)</span>
-            <span className="font-bold font-mono text-blue-400">{healthScoreAnalysis.breakdown.expenseControlScore} pts</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Kontrol Belanja (25%)</span>
+            <span className="font-bold font-mono text-blue-600 dark:text-blue-400">{healthScoreAnalysis.breakdown.expenseControlScore} pts</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400">Surplus Kas (20%)</span>
-            <span className="font-bold font-mono text-amber-400">{healthScoreAnalysis.breakdown.cashflowScore} pts</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Surplus Kas (20%)</span>
+            <span className="font-bold font-mono text-amber-600 dark:text-amber-400">{healthScoreAnalysis.breakdown.cashflowScore} pts</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400">Kantong Beku (20%)</span>
-            <span className="font-bold font-mono text-purple-400">{healthScoreAnalysis.breakdown.lockedSavingsScore} pts</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Kantong Beku (20%)</span>
+            <span className="font-bold font-mono text-purple-600 dark:text-purple-400">{healthScoreAnalysis.breakdown.lockedSavingsScore} pts</span>
           </div>
         </div>
       </div>
 
       {/* 🤖 2. AI Financial Diagnostic Advisor Card */}
-      <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1f2038] to-[#1a1d27] border border-purple-500/30 shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#2d3348]/70">
+      <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-white dark:from-[#1a1d27] dark:via-[#1f2038] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-2xl relative overflow-hidden text-slate-900 dark:text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#2d3348]/70">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-400 shrink-0">
+            <div className="p-2.5 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-600 dark:text-purple-400 shrink-0">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Diagnosis Keuangan AI SaveMe
                 </h3>
-                <span className="px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-[10px] font-bold text-purple-300">
+                <span className="px-2 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-[10px] font-bold text-purple-700 dark:text-purple-300">
                   AI Coach
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Analisis otomatis apakah pengeluaranmu sehat, boros, dan rekomendasi aksi bulan depan
               </p>
             </div>
@@ -574,32 +574,32 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
 
         {aiError && (
-          <div className="mt-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+          <div className="mt-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
             {aiError}
           </div>
         )}
 
         {isAiLoading && (
           <div className="py-10 flex flex-col items-center justify-center gap-3 animate-in fade-in">
-            <div className="w-8 h-8 border-3 border-purple-500/20 border-t-purple-400 rounded-full animate-spin" />
-            <span className="text-xs text-purple-300 font-mono">
+            <div className="w-8 h-8 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+            <span className="text-xs text-purple-700 dark:text-purple-300 font-mono">
               SaveMe AI Coach sedang menganalisis seluruh data transaksi, kantong beku &amp; tren...
             </span>
           </div>
         )}
 
         {!isAiLoading && aiAnalysis && (
-          <div className="mt-5 p-4 sm:p-6 rounded-2xl bg-[#131620]/90 border border-purple-500/20 text-xs sm:text-sm text-slate-200 leading-relaxed animate-in fade-in">
+          <div className="mt-5 p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#131620]/90 border border-slate-200 dark:border-purple-500/20 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed animate-in fade-in shadow-sm">
             <MarkdownView content={aiAnalysis} />
           </div>
         )}
 
         {!isAiLoading && !aiAnalysis && (
-          <div className="mt-4 p-4 rounded-2xl bg-[#131620]/40 border border-[#2d3348]/60 text-xs text-slate-400 flex items-center justify-between">
+          <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-[#131620]/40 border border-slate-200 dark:border-[#2d3348]/60 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>
               Klik tombol di atas untuk melihat diagnosis mendalam mengenai kebiasaan belanja dan kesehatan tabunganmu di periode ini.
             </span>
-            <Sparkles className="w-4 h-4 text-purple-400/60 shrink-0 ml-2" />
+            <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400/60 shrink-0 ml-2" />
           </div>
         )}
       </div>
@@ -608,21 +608,21 @@ _Dihasilkan otomatis oleh SaveMe App_`
       {momComparison.hasPrevData && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {/* Expense MoM */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-between shadow-lg">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between shadow-sm">
             <div className="flex flex-col">
-              <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Tren Pengeluaran vs Bulan Lalu
               </span>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-lg sm:text-xl font-bold font-mono text-white">
+                <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 dark:text-white">
                   {formatRupiah(momComparison.curExpense)}
                 </span>
                 <span
                   className={cn(
                     'px-2 py-0.5 rounded-lg text-xs font-bold font-mono flex items-center gap-0.5',
                     momComparison.expenseChangePercent > 0
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'bg-green-500/20 text-green-400'
+                      ? 'bg-red-500/20 text-red-600 dark:text-red-400'
+                      : 'bg-green-500/20 text-green-600 dark:text-green-400'
                   )}
                 >
                   {momComparison.expenseChangePercent > 0 ? (
@@ -635,30 +635,30 @@ _Dihasilkan otomatis oleh SaveMe App_`
                 </span>
               </div>
             </div>
-            <span className="text-xs text-slate-400 text-right">
+            <span className="text-xs text-slate-500 dark:text-slate-400 text-right">
               {momComparison.expenseDiff > 0 ? 'Naik' : 'Hemat'}{' '}
-              <strong className="text-slate-200 font-mono">
+              <strong className="text-slate-900 dark:text-slate-200 font-mono">
                 {formatRupiah(Math.abs(momComparison.expenseDiff))}
               </strong>
             </span>
           </div>
 
           {/* Income MoM */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-between shadow-lg">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between shadow-sm">
             <div className="flex flex-col">
-              <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Tren Pemasukan vs Bulan Lalu
               </span>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-lg sm:text-xl font-bold font-mono text-white">
+                <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 dark:text-white">
                   +{formatRupiah(momComparison.curIncome)}
                 </span>
                 <span
                   className={cn(
                     'px-2 py-0.5 rounded-lg text-xs font-bold font-mono flex items-center gap-0.5',
                     momComparison.incomeChangePercent >= 0
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-green-500/20 text-green-600 dark:text-green-400'
+                      : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
                   )}
                 >
                   {momComparison.incomeChangePercent >= 0 ? (
@@ -671,9 +671,9 @@ _Dihasilkan otomatis oleh SaveMe App_`
                 </span>
               </div>
             </div>
-            <span className="text-xs text-slate-400 text-right">
+            <span className="text-xs text-slate-500 dark:text-slate-400 text-right">
               {momComparison.incomeDiff >= 0 ? 'Naik' : 'Turun'}{' '}
-              <strong className="text-slate-200 font-mono">
+              <strong className="text-slate-900 dark:text-slate-200 font-mono">
                 {formatRupiah(Math.abs(momComparison.incomeDiff))}
               </strong>
             </span>
@@ -682,16 +682,16 @@ _Dihasilkan otomatis oleh SaveMe App_`
       )}
 
       {/* 💳 4. Executive KPI Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-slate-900 dark:text-white">
         {/* Total Income */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-green-400">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400">
               Pemasukan
             </span>
-            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" />
+            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-base sm:text-2xl font-bold font-mono text-green-400 tabular-nums">
+          <div className="text-base sm:text-2xl font-bold font-mono text-green-600 dark:text-green-400 tabular-nums">
             +{formatRupiah(totalIncome)}
           </div>
           <span className="text-[10px] sm:text-[11px] text-slate-500 mt-1 block">
@@ -700,14 +700,14 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
 
         {/* Total Expense */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-red-400">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
               Pengeluaran
             </span>
-            <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
+            <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600 dark:text-red-400" />
           </div>
-          <div className="text-base sm:text-2xl font-bold font-mono text-red-400 tabular-nums">
+          <div className="text-base sm:text-2xl font-bold font-mono text-red-600 dark:text-red-400 tabular-nums">
             -{formatRupiah(totalExpense)}
           </div>
           <span className="text-[10px] sm:text-[11px] text-slate-500 mt-1 block">
@@ -716,17 +716,17 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
 
         {/* Net Savings */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
             <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
               Saldo Bersih
             </span>
-            <WalletIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+            <WalletIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div
             className={cn(
               'text-base sm:text-2xl font-bold font-mono tabular-nums',
-              netSavings >= 0 ? 'text-white' : 'text-red-400'
+              netSavings >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'
             )}
           >
             {formatRupiah(netSavings)}
@@ -737,14 +737,14 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
 
         {/* Savings Rate */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
             <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
               Rasio Tabungan
             </span>
-            <PiggyBank className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400" />
+            <PiggyBank className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-base sm:text-2xl font-bold font-mono text-green-400 tabular-nums">
+          <div className="text-base sm:text-2xl font-bold font-mono text-green-600 dark:text-green-400 tabular-nums">
             {savingsRate}%
           </div>
           <span className="text-[10px] sm:text-[11px] text-slate-500 mt-1 block">
@@ -754,28 +754,28 @@ _Dihasilkan otomatis oleh SaveMe App_`
       </div>
 
       {/* 🔒 5. Multi-Wallet Cash Distribution (Operating vs Frozen) */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2">
-            <WalletIcon className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm sm:text-base font-bold text-white">
+            <WalletIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
               Struktur Saldo &amp; Kantong Keuangan
             </h3>
           </div>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
             {wallets.length} Kantong Terdaftar
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Operating Cash */}
-          <div className="p-4 rounded-xl bg-[#21263a]/50 border border-green-500/20 flex flex-col justify-between">
+          <div className="p-4 rounded-xl bg-green-50/60 dark:bg-[#21263a]/50 border border-green-500/20 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-green-400 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-green-700 dark:text-green-400 flex items-center gap-1.5">
                 <Unlock className="w-3.5 h-3.5" />
                 Kas Belanja Aktif (Operasional)
               </span>
-              <span className="text-xs font-mono font-bold text-green-400">
+              <span className="text-xs font-mono font-bold text-green-700 dark:text-green-400">
                 {formatRupiah(totalOperatingCash)}
               </span>
             </div>
@@ -784,7 +784,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
                 <span className="text-xs text-slate-500 italic">Belum ada kantong operasional</span>
               ) : (
                 spendingWallets.map((w) => (
-                  <div key={w.id} className="flex items-center justify-between text-xs text-slate-300">
+                  <div key={w.id} className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
                     <span>{w.icon || '💳'} {w.name}</span>
                     <span className="font-mono">{formatRupiah(w.balance)}</span>
                   </div>
@@ -794,13 +794,13 @@ _Dihasilkan otomatis oleh SaveMe App_`
           </div>
 
           {/* Locked Savings */}
-          <div className="p-4 rounded-xl bg-[#21263a]/50 border border-purple-500/20 flex flex-col justify-between">
+          <div className="p-4 rounded-xl bg-purple-50/60 dark:bg-[#21263a]/50 border border-purple-500/20 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5" />
                 Tabungan Beku &amp; Dana Terkunci
               </span>
-              <span className="text-xs font-mono font-bold text-purple-400">
+              <span className="text-xs font-mono font-bold text-purple-700 dark:text-purple-400">
                 {formatRupiah(totalLockedSavings)}
               </span>
             </div>
@@ -809,7 +809,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
                 <span className="text-xs text-slate-500 italic">Belum ada kantong simpanan beku</span>
               ) : (
                 lockedWallets.map((w) => (
-                  <div key={w.id} className="flex items-center justify-between text-xs text-slate-300">
+                  <div key={w.id} className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
                     <span>{w.icon || '🔒'} {w.name}</span>
                     <span className="font-mono">{formatRupiah(w.balance)}</span>
                   </div>
@@ -821,13 +821,13 @@ _Dihasilkan otomatis oleh SaveMe App_`
       </div>
 
       {/* 📊 6. Categories & Transaction History Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-slate-900 dark:text-white">
         {/* Top Expense Categories Breakdown */}
-        <div className="lg:col-span-6 p-4 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b border-[#2d3348]">
+        <div className="lg:col-span-6 p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 border-b border-slate-200 dark:border-[#2d3348]">
             <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-green-400" />
-              <h3 className="text-sm sm:text-base font-bold text-white">
+              <Tag className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 Pos Pengeluaran Terbesar
               </h3>
             </div>
@@ -845,20 +845,20 @@ _Dihasilkan otomatis oleh SaveMe App_`
               {categoryBreakdown.slice(0, 6).map((cat, idx) => (
                 <div key={idx} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-xs sm:text-sm">
-                    <span className="text-slate-200 flex items-center gap-2 font-medium">
+                    <span className="text-slate-800 dark:text-slate-200 flex items-center gap-2 font-medium">
                       <span className="text-base sm:text-lg">{cat.icon}</span>
                       <span className="truncate max-w-[120px] sm:max-w-none">{cat.name}</span>
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-slate-200 font-bold">
+                      <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">
                         {formatRupiah(cat.amount)}
                       </span>
-                      <span className="text-xs text-slate-400 font-mono">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                         ({cat.percentage}%)
                       </span>
                     </div>
                   </div>
-                  <div className="w-full h-2 sm:h-2.5 bg-[#21263a] rounded-full overflow-hidden">
+                  <div className="w-full h-2 sm:h-2.5 bg-slate-100 dark:bg-[#21263a] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, Math.max(5, cat.percentage))}%` }}
@@ -871,16 +871,16 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
 
         {/* Transactions in Period List */}
-        <div className="lg:col-span-6 p-4 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-6 p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2d3348]">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-400" />
-                <h3 className="text-sm sm:text-base font-bold text-white">
+                <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                   Riwayat Periode Ini ({filteredTransactions.length})
                 </h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                 {periodLabelMap[period]}
               </span>
             </div>
@@ -896,15 +896,15 @@ _Dihasilkan otomatis oleh SaveMe App_`
                   return (
                     <div
                       key={tx.id}
-                      className="p-3 rounded-xl bg-[#21263a]/40 border border-[#2d3348] flex items-center justify-between text-xs"
+                      className="p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/40 border border-slate-200 dark:border-[#2d3348] flex items-center justify-between text-xs"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-base">{tx.categoryIcon || '📦'}</span>
                         <div className="flex flex-col min-w-0">
-                          <span className="font-semibold text-slate-100 truncate max-w-[120px] sm:max-w-[200px]">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[120px] sm:max-w-[200px]">
                             {tx.description}
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
                             {tx.transactionDate}
                           </span>
                         </div>
@@ -912,7 +912,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
                       <span
                         className={cn(
                           'font-bold font-mono tabular-nums shrink-0 pl-2',
-                          isIncome ? 'text-green-400' : 'text-red-400'
+                          isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                         )}
                       >
                         {isIncome ? `+${formatRupiah(tx.amount)}` : `-${formatRupiah(tx.amount)}`}
@@ -924,9 +924,9 @@ _Dihasilkan otomatis oleh SaveMe App_`
             )}
           </div>
 
-          <div className="pt-4 border-t border-[#2d3348] mt-4 flex items-center justify-between text-xs text-slate-400">
+          <div className="pt-4 border-t border-slate-200 dark:border-[#2d3348] mt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>Dihasilkan secara real-time dari Firestore</span>
-            <span className="font-mono text-slate-300">SaveMe Engine</span>
+            <span className="font-mono text-slate-600 dark:text-slate-300">SaveMe Engine</span>
           </div>
         </div>
       </div>

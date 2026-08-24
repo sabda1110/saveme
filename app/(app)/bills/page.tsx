@@ -455,14 +455,14 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400">
               <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Cicilan &amp; Tagihan Rutin
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Kelola angsuran ber-tenor, pantau Debt Service Ratio (DSR), dan bayar tepat waktu
               </p>
             </div>
@@ -513,14 +513,14 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
       {/* 🛡️ 1. DSR (Debt Service Ratio) Meter & Sisa Pokok Hutang Banner */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* DSR Meter Card */}
-        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1f2038] to-[#1a1d27] border border-purple-500/30 shadow-2xl flex flex-col justify-between">
+        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-white dark:from-[#1a1d27] dark:via-[#1f2038] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-2xl flex flex-col justify-between text-slate-900 dark:text-white">
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+                <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300">
                   <ShieldCheck className="w-4 h-4" />
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Debt Service Ratio (DSR) Meter
                 </span>
               </div>
@@ -533,38 +533,38 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
               <span className={cn('text-3xl sm:text-4xl font-black font-mono', dsrHealth.color)}>
                 {dsrRatio}%
               </span>
-              <span className="text-xs text-slate-400 font-sans">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-sans">
                 dari gaji bulanan ({formatRupiah(monthlyIncome)})
               </span>
             </div>
 
             {/* DSR Visual Progress Bar */}
-            <div className="w-full h-3 bg-[#131620] rounded-full overflow-hidden border border-[#2d3348] p-0.5 mb-2.5">
+            <div className="w-full h-3 bg-slate-100 dark:bg-[#131620] rounded-full overflow-hidden border border-slate-200 dark:border-[#2d3348] p-0.5 mb-2.5">
               <div
                 className={cn('h-full rounded-full transition-all duration-700', dsrHealth.barColor)}
                 style={{ width: `${Math.min(100, Math.max(3, dsrRatio))}%` }}
               />
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">{dsrHealth.desc}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{dsrHealth.desc}</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#2d3348]/70 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-[#2d3348]/70 text-xs">
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-400">Cicilan Tenor / Bln</span>
-              <span className="font-bold font-mono text-purple-300">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">Cicilan Tenor / Bln</span>
+              <span className="font-bold font-mono text-purple-700 dark:text-purple-300">
                 {formatRupiah(totalInstallmentMonthly)}
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-400">Tagihan Rutin / Bln</span>
-              <span className="font-bold font-mono text-blue-300">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">Tagihan Rutin / Bln</span>
+              <span className="font-bold font-mono text-blue-700 dark:text-blue-300">
                 {formatRupiah(totalRecurringMonthly)}
               </span>
             </div>
             <div className="flex flex-col col-span-2 sm:col-span-1">
-              <span className="text-[10px] text-slate-400">Total Beban Wajib</span>
-              <span className="font-bold font-mono text-white">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">Total Beban Wajib</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-white">
                 {formatRupiah(totalMonthlyObligation)} ({totalBurdenRatio}%)
               </span>
             </div>
@@ -572,36 +572,36 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
         </div>
 
         {/* Total Sisa Pokok Hutang Card */}
-        <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#21263a] to-[#1a1d27] border border-[#2d3348] shadow-2xl flex flex-col justify-between">
+        <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#21263a] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-2xl flex flex-col justify-between text-slate-900 dark:text-white">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Total Sisa Pokok Hutang
               </span>
-              <DollarSign className="w-4 h-4 text-purple-400" />
+              <DollarSign className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-white tabular-nums">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white tabular-nums">
               {formatRupiah(totalRemainingDebt)}
             </div>
-            <span className="text-xs text-purple-300 mt-1 block">
+            <span className="text-xs text-purple-700 dark:text-purple-300 mt-1 block">
               Dari {activeInstallments.length} cicilan aktif yang sedang berjalan
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-[#131620]/70 border border-[#2d3348] mt-4 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-slate-300">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#131620]/70 border border-slate-200 dark:border-[#2d3348] mt-4 text-xs space-y-1.5 shadow-sm">
+            <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
               <span>Cicilan Berjalan:</span>
-              <span className="font-bold font-mono text-white">{activeInstallments.length} Pos</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-white">{activeInstallments.length} Pos</span>
             </div>
-            <div className="flex items-center justify-between text-slate-300">
+            <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
               <span>Cicilan Sudah Lunas:</span>
-              <span className="font-bold font-mono text-green-400">
+              <span className="font-bold font-mono text-green-700 dark:text-green-400">
                 {finishedInstallments.length} Selesai 🎉
               </span>
             </div>
-            <div className="flex items-center justify-between text-slate-300">
+            <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
               <span>Tagihan Rutin Tetap:</span>
-              <span className="font-bold font-mono text-blue-300">
+              <span className="font-bold font-mono text-blue-700 dark:text-blue-300">
                 {recurringBillsList.length} Layanan
               </span>
             </div>
@@ -610,22 +610,22 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
       </div>
 
       {/* 🤖 2. SaveMe AI Debt & Subscription Optimization Card */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1c1f30] to-[#1a1d27] border border-emerald-500/30 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-[#2d3348]/70">
+      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-emerald-50/70 via-white to-white dark:from-[#1a1d27] dark:via-[#1c1f30] dark:to-[#1a1d27] border border-emerald-500/30 shadow-sm dark:shadow-xl relative overflow-hidden text-slate-900 dark:text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-slate-200 dark:border-[#2d3348]/70">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/20 border border-green-500/30 text-green-400 shrink-0">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/20 border border-green-500/30 text-green-600 dark:text-green-400 shrink-0">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Audit Cicilan &amp; Langganan SaveMe AI
                 </h3>
-                <span className="px-2 py-0.5 rounded-md bg-green-500/20 text-green-300 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-md bg-green-500/20 text-green-700 dark:text-green-300 text-[10px] font-bold">
                   AI Debt Coach
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Evaluasi efisiensi tagihan langganan dan strategi pelunasan cicilan tercepat
               </p>
             </div>
@@ -644,38 +644,38 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
         </div>
 
         {aiError && (
-          <div className="mt-3.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+          <div className="mt-3.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
             {aiError}
           </div>
         )}
 
         {isAiLoading && (
           <div className="py-8 flex flex-col items-center justify-center gap-2.5 animate-in fade-in">
-            <div className="w-7 h-7 border-3 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin" />
-            <span className="text-xs text-emerald-300 font-mono">
+            <div className="w-7 h-7 border-3 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+            <span className="text-xs text-emerald-700 dark:text-emerald-300 font-mono">
               SaveMe AI Coach sedang menganalisis DSR dan strategi pelunasan...
             </span>
           </div>
         )}
 
         {!isAiLoading && aiAdvice && (
-          <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-[#131620]/90 border border-green-500/20 text-xs sm:text-sm text-slate-200 leading-relaxed animate-in fade-in">
+          <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#131620]/90 border border-slate-200 dark:border-green-500/20 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed animate-in fade-in shadow-sm">
             <MarkdownView content={aiAdvice} />
           </div>
         )}
 
         {!isAiLoading && !aiAdvice && (
-          <div className="mt-3.5 p-3.5 rounded-2xl bg-[#131620]/40 border border-[#2d3348]/60 text-xs text-slate-400 flex items-center justify-between">
+          <div className="mt-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#131620]/40 border border-slate-200 dark:border-[#2d3348]/60 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>
               Klik tombol di atas untuk melihat audit pintar apakah ada langganan yang boros dan strategi pelunasan cicilan tercepat (Debt Snowball/Avalanche).
             </span>
-            <Sparkles className="w-4 h-4 text-emerald-400/60 shrink-0 ml-2" />
+            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400/60 shrink-0 ml-2" />
           </div>
         )}
       </div>
 
       {/* 3. Filter Tabs */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
         <div className="flex items-center gap-1 min-w-max">
           {(
             [
@@ -699,8 +699,8 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
               className={cn(
                 'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
                 activeTab === tab.id
-                  ? 'bg-purple-600 text-white font-bold shadow-lg shadow-purple-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white dark:bg-purple-600 text-purple-700 dark:text-white font-bold shadow-sm dark:shadow-purple-500/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
               {tab.label}
@@ -711,9 +711,9 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
       {/* 4. List of Bills & Installments */}
       {filteredBills.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-[#1a1d27] border border-[#2d3348] text-center flex flex-col items-center justify-center">
-          <CreditCard className="w-12 h-12 text-slate-600 mb-3" />
-          <h3 className="text-base font-bold text-slate-200 mb-1">
+        <div className="p-12 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] text-center flex flex-col items-center justify-center shadow-sm dark:shadow-xl">
+          <CreditCard className="w-12 h-12 text-slate-400 mb-3" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-200 mb-1">
             Belum ada data pada tab ini
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mb-4">
@@ -750,13 +750,13 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
               <div
                 key={bill.id}
                 className={cn(
-                  'p-5 rounded-3xl bg-[#1a1d27] border transition-all shadow-xl flex flex-col justify-between relative overflow-hidden',
+                  'p-5 rounded-3xl bg-white dark:bg-[#1a1d27] border transition-all shadow-sm dark:shadow-xl flex flex-col justify-between relative overflow-hidden text-slate-900 dark:text-white',
                   isCompleted
-                    ? 'border-green-500/40 bg-gradient-to-br from-[#1a1d27] to-[#162320]'
+                    ? 'border-green-500/40 bg-gradient-to-br from-emerald-50 via-white to-white dark:from-[#1a1d27] dark:to-[#162320]'
                     : isPaid
-                    ? 'border-[#2d3348]'
+                    ? 'border-slate-200 dark:border-[#2d3348]'
                     : hasInsufficientBalance
-                    ? 'border-red-500/50 bg-gradient-to-br from-red-950/20 via-[#1a1d27] to-[#1a1d27]'
+                    ? 'border-red-500/50 bg-gradient-to-br from-red-50 via-white to-white dark:from-red-950/20 dark:via-[#1a1d27] dark:to-[#1a1d27]'
                     : isDueOrPastDue
                     ? 'border-amber-500/40'
                     : 'border-purple-500/30'
@@ -766,12 +766,12 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   {/* Card Header: Icon + Name + Badge */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-2xl bg-[#21263a] border border-[#2d3348] flex items-center justify-center text-xl shrink-0">
+                      <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center text-xl shrink-0">
                         {bill.categoryIcon || '📄'}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <h4 className="text-base font-bold text-white truncate">{bill.name}</h4>
-                        <span className="text-xs text-slate-400 truncate">
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white truncate">{bill.name}</h4>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
                           {bill.categoryName || 'Tagihan'}
                         </span>
                       </div>
@@ -788,12 +788,12 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                           Lunas Bln Ini
                         </Badge>
                       ) : hasInsufficientBalance ? (
-                        <Badge variant="expense" size="sm" className="bg-red-500/20 text-red-300 border border-red-500/40">
-                          <AlertTriangle className="w-3 h-3 mr-1 text-red-400" />
+                        <Badge variant="expense" size="sm" className="bg-red-500/20 text-red-700 dark:text-red-300 border border-red-500/40">
+                          <AlertTriangle className="w-3 h-3 mr-1 text-red-500 dark:text-red-400" />
                           Saldo Kurang (Tgl {bill.dueDay})
                         </Badge>
                       ) : isDueOrPastDue ? (
-                        <Badge variant="warning" size="sm" className="bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        <Badge variant="warning" size="sm" className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40">
                           <Clock className="w-3 h-3 mr-1" />
                           Jatuh Tempo (Tgl {bill.dueDay})
                         </Badge>
@@ -808,20 +808,20 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
                   {/* Insufficient Balance Alert for Due Bills */}
                   {hasInsufficientBalance && (
-                    <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs text-red-300 mb-3.5 space-y-1.5 animate-in fade-in">
+                    <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs text-red-800 dark:text-red-300 mb-3.5 space-y-1.5 animate-in fade-in">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold flex items-center gap-1.5 text-red-400">
+                        <span className="font-bold flex items-center gap-1.5 text-red-700 dark:text-red-400">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Gagal Autodebet (Saldo Kurang)
                         </span>
                       </div>
-                      <p className="text-[11px] text-red-200/90 leading-relaxed">
+                      <p className="text-[11px] text-red-900/90 dark:text-red-200/90 leading-relaxed">
                         Saldo di <strong>{targetWallet?.name || 'Kantong Utama'}</strong> ({formatRupiah(targetWallet?.balance || 0)}) tidak cukup untuk autodebet tagihan ini ({formatRupiah(bill.amount)}).
                       </p>
                       <div className="flex items-center gap-2 pt-0.5">
                         <Link
                           href="/wallets"
-                          className="text-[11px] font-bold text-amber-300 hover:text-amber-200 underline inline-flex items-center gap-1"
+                          className="text-[11px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 underline inline-flex items-center gap-1"
                         >
                           Pindahkan Dana dari Kantong Lain →
                         </Link>
@@ -830,10 +830,10 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   )}
 
                   {/* Monthly Amount */}
-                  <div className="p-3.5 rounded-2xl bg-[#21263a]/50 border border-[#2d3348] mb-3.5">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#21263a]/50 border border-slate-200 dark:border-[#2d3348] mb-3.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400">Angsuran / Tagihan:</span>
-                      <span className="text-base sm:text-lg font-black font-mono text-purple-300">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Angsuran / Tagihan:</span>
+                      <span className="text-base sm:text-lg font-black font-mono text-purple-700 dark:text-purple-300">
                         {formatRupiah(bill.amount)}
                         <span className="text-[10px] text-slate-400 font-sans font-normal ml-1">
                           /bln
@@ -843,24 +843,24 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
                     {/* Installment Tenor Progress */}
                     {isInstallment && (
-                      <div className="mt-2.5 pt-2.5 border-t border-[#2d3348]/60">
+                      <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-[#2d3348]/60">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-slate-300 font-medium">
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">
                             Progres: <strong>{paidCount}</strong> dari {totalCount} Bulan
                           </span>
-                          <span className="font-mono font-bold text-green-400">
+                          <span className="font-mono font-bold text-green-600 dark:text-green-400">
                             {progressPercent}%
                           </span>
                         </div>
-                        <div className="w-full h-2 bg-[#131620] rounded-full overflow-hidden border border-[#2d3348]/60 p-0.5">
+                        <div className="w-full h-2 bg-slate-100 dark:bg-[#131620] rounded-full overflow-hidden border border-slate-200 dark:border-[#2d3348]/60 p-0.5">
                           <div
                             className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500"
                             style={{ width: `${progressPercent}%` }}
                           />
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                           <span>Sisa: {remainingTenor}x bayar</span>
-                          <span className="font-mono text-slate-200">
+                          <span className="font-mono text-slate-700 dark:text-slate-200">
                             Sisa Pokok: {formatRupiah(remainingPrincipal)}
                           </span>
                         </div>
@@ -869,11 +869,11 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   </div>
 
                   {/* Meta Details: Auto-deduct & Wallet */}
-                  <div className="flex items-center justify-between text-xs text-slate-400 mb-4 px-1">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-4 px-1">
                     <span className="flex items-center gap-1">
                       {bill.autoDeduct ? (
                         <>
-                          <Zap className="w-3.5 h-3.5 text-amber-400" />
+                          <Zap className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           <span>Auto-Deduct Aktif</span>
                         </>
                       ) : (
@@ -881,8 +881,8 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                       )}
                     </span>
                     {bill.walletName && (
-                      <span className="flex items-center gap-1 text-slate-300 truncate max-w-[140px]">
-                        <WalletIcon className="w-3 h-3 text-blue-400 shrink-0" />
+                      <span className="flex items-center gap-1 text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                        <WalletIcon className="w-3 h-3 text-blue-500 dark:text-blue-400 shrink-0" />
                         <span className="truncate">{bill.walletName}</span>
                       </span>
                     )}
@@ -890,14 +890,14 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                 </div>
 
                 {/* Card Actions */}
-                <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#2d3348]">
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-[#2d3348]">
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenEdit(bill)}
                       title="Edit Tagihan"
-                      className="text-slate-400 hover:text-white p-2"
+                      className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-2"
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -906,7 +906,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                       size="sm"
                       onClick={() => setBillToDelete(bill.id)}
                       title="Hapus Tagihan"
-                      className="text-slate-400 hover:text-red-400 p-2"
+                      className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 p-2"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -935,26 +935,26 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
       {/* 5. Modal: Add / Edit Tagihan & Cicilan */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#2d3348]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2.5">
-                <CreditCard className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-bold text-white">
+                <CreditCard className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   {editingBill ? 'Edit Tagihan / Cicilan' : 'Tambah Tagihan Baru'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Type Switcher: Tagihan Rutin vs Cicilan Ber-Tenor */}
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#21263a] border border-[#2d3348] mb-5">
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] mb-5">
               <button
                 type="button"
                 onClick={() => setFormType('RECURRING')}
@@ -962,7 +962,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   'py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5',
                   formType === 'RECURRING'
                     ? 'bg-purple-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -975,7 +975,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   'py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5',
                   formType === 'INSTALLMENT'
                     ? 'bg-purple-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -984,7 +984,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
             </div>
 
             {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400">
                 {formError}
               </div>
             )}
@@ -1031,7 +1031,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
               {/* Installment Specific Fields */}
               {formType === 'INSTALLMENT' && (
-                <div className="p-4 rounded-2xl bg-[#21263a]/60 border border-purple-500/20 space-y-3">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200 dark:border-purple-500/20 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <FormField label="Total Tenor (Bulan)" required>
                       <Input
@@ -1056,9 +1056,9 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   </div>
 
                   {Number(formAmount) > 0 && Number(formTotalTenor) > 0 && (
-                    <div className="p-2.5 rounded-xl bg-[#131620] text-xs flex items-center justify-between text-slate-300">
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-[#131620] border border-slate-200 dark:border-transparent text-xs flex items-center justify-between text-slate-700 dark:text-slate-300">
                       <span>Estimasi Total Pokok:</span>
-                      <span className="font-mono font-bold text-purple-300">
+                      <span className="font-mono font-bold text-purple-700 dark:text-purple-300">
                         {formatRupiah(Number(formAmount) * Number(formTotalTenor))}
                       </span>
                     </div>
@@ -1069,11 +1069,11 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Category Selector */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-300">Kategori</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Kategori</label>
                   <select
                     value={formCategoryId}
                     onChange={(e) => setFormCategoryId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -1085,11 +1085,11 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
                 {/* Default Wallet Selector */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-300">Sumber Dompet Default</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Sumber Dompet Default</label>
                   <select
                     value={formWalletId}
                     onChange={(e) => setFormWalletId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
                   >
                     <option value="">Pilih saat pembayaran</option>
                     {spendingWallets.map((w) => (
@@ -1102,7 +1102,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
               </div>
 
               {/* Auto Deduct Toggle */}
-              <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#21263a]/40 border border-[#2d3348] cursor-pointer">
+              <label className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#21263a]/40 border border-slate-200 dark:border-[#2d3348] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formAutoDeduct}
@@ -1110,14 +1110,14 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
                   className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600"
                 />
                 <div className="flex flex-col text-xs">
-                  <span className="font-bold text-slate-200">Auto-Deduct Otomatis</span>
-                  <span className="text-slate-400">
+                  <span className="font-bold text-slate-900 dark:text-slate-200">Auto-Deduct Otomatis</span>
+                  <span className="text-slate-500 dark:text-slate-400">
                     Otomatis catat transaksi pengeluaran saat tanggal jatuh tempo tiba
                   </span>
                 </div>
               </label>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#2d3348]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-[#2d3348]">
                 <Button
                   type="button"
                   variant="ghost"
@@ -1143,40 +1143,40 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
       {/* 6. Modal: Konfirmasi Pembayaran Tagihan & Pilihan Dompet */}
       {billToPay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300">
+                <div className="p-2 rounded-xl bg-purple-500/20 text-purple-700 dark:text-purple-300">
                   <CreditCard className="w-5 h-5" />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Konfirmasi Pembayaran
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setBillToPay(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="p-4 rounded-2xl bg-[#21263a] border border-[#2d3348] space-y-2">
-                <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <span>Nama Tagihan:</span>
-                  <span className="font-bold text-white">{billToPay.name}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{billToPay.name}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-400">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <span>Nominal Pembayaran:</span>
-                  <span className="font-mono font-bold text-lg text-purple-300">
+                  <span className="font-mono font-bold text-lg text-purple-700 dark:text-purple-300">
                     {formatRupiah(billToPay.amount)}
                   </span>
                 </div>
                 {billToPay.billType === 'INSTALLMENT' && (
-                  <div className="flex items-center justify-between text-xs text-green-400 pt-2 border-t border-[#2d3348]">
+                  <div className="flex items-center justify-between text-xs text-green-700 dark:text-green-400 pt-2 border-t border-slate-200 dark:border-[#2d3348]">
                     <span>Akan mencatat angsuran:</span>
                     <span className="font-bold">
                       Ke-{(billToPay.paidTenor || 0) + 1} dari {billToPay.totalTenor || 1} Bulan
@@ -1187,14 +1187,14 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
 
               {/* Wallet Selector */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <WalletIcon className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
                   Pilih Dompet Sumber Pembayaran
                 </label>
                 <select
                   value={payWalletId}
                   onChange={(e) => setPayWalletId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
                 >
                   <option value="">Tanpa potong dompet (Hanya catat transaksi)</option>
                   {spendingWallets.map((w) => (

@@ -19,27 +19,27 @@ export function StatBadge({
   icon,
 }: StatBadgeProps) {
   const trendColors = {
-    positive: 'text-green-400 bg-green-500/10 border-green-500/20',
-    negative: 'text-red-400 bg-red-500/10 border-red-500/20',
-    neutral: 'text-slate-400 bg-slate-500/10 border-slate-500/20',
+    positive: 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20',
+    negative: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20',
+    neutral: 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/20',
   }
 
   return (
     <div
       className={cn(
-        'glass-card rounded-xl p-3 flex items-center gap-3 border border-[#2d3348]',
+        'glass-card rounded-xl p-3 flex items-center gap-3 border border-slate-200 dark:border-[#2d3348]',
         className
       )}
     >
       {icon && (
-        <div className="w-9 h-9 rounded-lg bg-[#21263a] flex items-center justify-center text-green-400 shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-[#21263a] flex items-center justify-center text-green-600 dark:text-green-400 shrink-0">
           {icon}
         </div>
       )}
       <div className="flex flex-col">
-        <span className="text-xs text-slate-400 font-medium">{label}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{label}</span>
         <div className="flex items-center gap-2">
-          <span className="text-base font-bold text-white tracking-tight tabular-nums font-mono">
+          <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight tabular-nums font-mono">
             {value}
           </span>
           {trend && (

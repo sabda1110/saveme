@@ -35,17 +35,17 @@ export function PlaygroundSlider({
     : `${value}%`
 
   const colorStyles = {
-    green: 'text-green-400',
-    red: 'text-red-400',
-    blue: 'text-blue-400',
+    green: 'text-green-600 dark:text-green-400',
+    red: 'text-red-600 dark:text-red-400',
+    blue: 'text-blue-600 dark:text-blue-400',
   }
 
   return (
-    <div className={cn('flex flex-col gap-2 p-4 rounded-xl bg-[#21263a]/50 border border-[#2d3348]', className)}>
+    <div className={cn('flex flex-col gap-2 p-4 rounded-xl bg-slate-50 dark:bg-[#21263a]/50 border border-slate-200 dark:border-[#2d3348]', className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {icon && <span className="text-slate-400">{icon}</span>}
-          <span className="text-xs sm:text-sm font-medium text-slate-300">{label}</span>
+          {icon && <span className="text-slate-500 dark:text-slate-400">{icon}</span>}
+          <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
         </div>
         <span className={cn('text-sm sm:text-base font-bold font-mono tabular-nums', colorStyles[color])}>
           {formattedValue}
@@ -59,7 +59,7 @@ export function PlaygroundSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-2 bg-[#1a1d27] rounded-lg appearance-none cursor-pointer border border-[#2d3348]"
+        className="w-full h-2 bg-slate-200 dark:bg-[#1a1d27] rounded-lg appearance-none cursor-pointer border border-slate-300 dark:border-[#2d3348]"
       />
 
       <div className="flex justify-between text-[10px] text-slate-500 font-mono">

@@ -19,7 +19,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative flex items-center w-full">
         {leftIcon && (
-          <div className="absolute left-3.5 text-slate-400 pointer-events-none flex items-center justify-center">
+          <div className="absolute left-3.5 text-slate-400 dark:text-slate-500 pointer-events-none flex items-center justify-center">
             {leftIcon}
           </div>
         )}
@@ -29,12 +29,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={inputType}
           disabled={disabled}
           className={cn(
-            'w-full bg-[#21263a] text-slate-100 placeholder:text-slate-500 rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed',
+            'w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm dark:shadow-none',
             leftIcon ? 'pl-11' : 'pl-4',
             isPassword ? 'pr-11' : 'pr-4',
             error
               ? 'border-red-500/80 focus:border-red-500 focus:ring-red-500/20'
-              : 'border-[#2d3348] focus:border-green-500 focus:ring-green-500/20 hover:border-slate-600',
+              : 'border-slate-200 dark:border-[#2d3348] focus:border-green-500 focus:ring-green-500/20 hover:border-slate-300 dark:hover:border-slate-600',
             className
           )}
           {...props}
@@ -44,7 +44,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3.5 text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-lg focus:outline-none cursor-pointer"
+            className="absolute right-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 rounded-lg focus:outline-none cursor-pointer"
             aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

@@ -44,7 +44,7 @@ export function BottomNav() {
   ]
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#131620]/95 backdrop-blur-xl border-t border-[#2d3348] px-2 py-2 shadow-2xl safe-area-pb">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#131620]/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#2d3348] px-2 py-2 shadow-lg dark:shadow-2xl safe-area-pb transition-colors">
       <nav className="flex items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href
@@ -55,8 +55,8 @@ export function BottomNav() {
               className={cn(
                 'flex flex-col items-center justify-center gap-1 py-1.5 px-2.5 rounded-2xl transition-all duration-150 relative min-w-[54px]',
                 isActive
-                  ? 'text-green-400 font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'text-green-600 dark:text-green-400 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               )}
             >
               {/* Active glow indicator */}

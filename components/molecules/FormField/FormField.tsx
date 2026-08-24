@@ -30,11 +30,11 @@ export function FormField({
       )}
       {children}
       {error ? (
-        <span className="text-xs text-red-400 font-medium flex items-center gap-1 mt-0.5">
+        <span className="text-xs text-red-500 dark:text-red-400 font-medium flex items-center gap-1 mt-0.5">
           {error}
         </span>
       ) : hint ? (
-        <span className="text-[11px] text-slate-500 mt-0.5">{hint}</span>
+        <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{hint}</span>
       ) : null}
     </div>
   )

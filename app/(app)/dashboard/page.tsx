@@ -469,7 +469,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Halo, {userProfile?.name?.split(' ')[0] || 'Teman SaveMe'}! 👋
             </h1>
             <Badge variant="brand" size="sm">
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                 : userProfile?.role || 'USER'}
             </Badge>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             Berikut perhitungan terpadu dan analisis keuangan pribadimu secara real-time.
           </p>
         </div>
@@ -502,8 +502,8 @@ export default function DashboardPage() {
             <Button
               variant="secondary"
               size="sm"
-              className="text-xs sm:text-sm text-purple-300 border-purple-500/30 hover:bg-purple-500/10 cursor-pointer"
-              leftIcon={<DollarSign className="w-4 h-4 text-purple-400" />}
+              className="text-xs sm:text-sm text-purple-700 dark:text-purple-300 border-purple-500/30 hover:bg-purple-500/10 cursor-pointer"
+              leftIcon={<DollarSign className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
             >
               {userIncomeType === 'STUDENT_ALLOWANCE' ? 'Alokasi Uang Saku' : 'Alokasi Gaji'}
             </Button>
@@ -524,8 +524,8 @@ export default function DashboardPage() {
             variant="secondary"
             size="sm"
             onClick={() => setIsScanModalOpen(true)}
-            className="text-xs sm:text-sm text-purple-300 border-purple-500/30 hover:bg-purple-500/10"
-            leftIcon={<Camera className="w-4 h-4 text-purple-400" />}
+            className="text-xs sm:text-sm text-purple-700 dark:text-purple-300 border-purple-500/30 hover:bg-purple-500/10"
+            leftIcon={<Camera className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
           >
             Scan Struk AI
           </Button>
@@ -545,12 +545,12 @@ export default function DashboardPage() {
       {/* 💰 Payday & Income Mode Adaptive Hub Banner */}
       <div
         className={cn(
-          'p-5 sm:p-6 rounded-3xl border shadow-2xl relative overflow-hidden transition-all',
+          'p-5 sm:p-6 rounded-3xl border shadow-xl relative overflow-hidden transition-all',
           isPaydayToday
-            ? 'bg-gradient-to-r from-emerald-950/80 via-[#1a1d27] to-[#1a1d27] border-green-500/50 shadow-green-500/10'
+            ? 'bg-gradient-to-r from-emerald-50 via-white to-white dark:from-emerald-950/80 dark:via-[#1a1d27] dark:to-[#1a1d27] border-green-500/50 shadow-green-500/10'
             : userIncomeType === 'STUDENT_ALLOWANCE'
-            ? 'bg-gradient-to-r from-emerald-950/40 via-[#1a1d27] to-[#1a1d27] border-emerald-500/30'
-            : 'bg-gradient-to-r from-purple-950/40 via-[#1a1d27] to-[#1a1d27] border-[#2d3348]'
+            ? 'bg-gradient-to-r from-emerald-50 via-white to-white dark:from-emerald-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border-emerald-500/30'
+            : 'bg-gradient-to-r from-purple-50 via-white to-white dark:from-purple-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348]'
         )}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -559,10 +559,10 @@ export default function DashboardPage() {
               className={cn(
                 'p-3 rounded-2xl border shrink-0',
                 isPaydayToday
-                  ? 'bg-green-500/20 border-green-500/40 text-green-400 animate-pulse'
+                  ? 'bg-green-500/20 border-green-500/40 text-green-600 dark:text-green-400 animate-pulse'
                   : userIncomeType === 'STUDENT_ALLOWANCE'
-                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
-                  : 'bg-purple-500/20 border-purple-500/30 text-purple-300'
+                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-600 dark:text-emerald-300'
+                  : 'bg-purple-500/20 border-purple-500/30 text-purple-600 dark:text-purple-300'
               )}
             >
               {userIncomeType === 'STUDENT_ALLOWANCE' ? (
@@ -575,7 +575,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   {userIncomeType === 'STUDENT_ALLOWANCE'
                     ? 'Hub Uang Saku & Celengan Pelajar'
                     : userIncomeType === 'FREELANCE_VARIABLE'
@@ -587,20 +587,20 @@ export default function DashboardPage() {
                     🎉 HARI INI GAJIAN! (Tgl {effectivePayday})
                   </Badge>
                 ) : userIncomeType === 'SALARIED' ? (
-                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 text-[11px] font-bold">
                     H-{daysUntilPayday} Menuju Gajian ({isEndOfMonth ? 'Akhir Bulan' : isStartOfMonth ? 'Awal Bulan (Tgl 1)' : `Tgl ${effectivePayday}`})
                   </span>
                 ) : userIncomeType === 'STUDENT_ALLOWANCE' ? (
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
                     🎒 Mode Pelajar / Uang Saku
                   </span>
                 ) : (
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] font-bold">
                     ⚡ Mode Pemasukan Bebas
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
                 {isPaydayToday
                   ? 'Gaji bulan ini sudah masuk! Segera alokasikan ke Kas Belanja, Tabungan Beku, dan Celengan Impian.'
                   : userIncomeType === 'STUDENT_ALLOWANCE'
@@ -650,10 +650,10 @@ export default function DashboardPage() {
         <Link
           href="/daily"
           className={cn(
-            'p-5 rounded-2xl shadow-xl flex items-center justify-between transition-all hover:-translate-y-0.5 group',
+            'p-5 rounded-2xl shadow-md dark:shadow-xl flex items-center justify-between transition-all hover:-translate-y-0.5 group',
             isOverToday
-              ? 'bg-gradient-to-br from-amber-500/15 via-[#1a1d27] to-[#1a1d27] border border-amber-500/40'
-              : 'bg-gradient-to-br from-emerald-500/15 via-[#1a1d27] to-[#1a1d27] border border-green-500/30'
+              ? 'bg-amber-50/80 dark:bg-gradient-to-br dark:from-amber-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-amber-500/40'
+              : 'bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-green-500/30'
           )}
         >
           <div className="flex items-center gap-3.5">
@@ -661,8 +661,8 @@ export default function DashboardPage() {
               className={cn(
                 'w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0',
                 isOverToday
-                  ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
-                  : 'bg-green-500/20 border-green-500/30 text-green-400'
+                  ? 'bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                  : 'bg-green-500/20 border-green-500/30 text-green-600 dark:text-green-400'
               )}
             >
               <Compass className="w-6 h-6" />
@@ -672,91 +672,91 @@ export default function DashboardPage() {
                 <span
                   className={cn(
                     'text-xs font-bold uppercase tracking-wider',
-                    isOverToday ? 'text-amber-400' : 'text-green-400'
+                    isOverToday ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'
                   )}
                 >
                   {isOverToday ? '⚠️ Lewat Jatah Hari Ini' : 'Jatah Belanja Hari Ini'}
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
                   ({daysRemainingInMonth} hari sisa)
                 </span>
               </div>
 
               {isOverToday ? (
                 <>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-300 tabular-nums tracking-tight mt-0.5">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-800 dark:text-amber-300 tabular-nums tracking-tight mt-0.5">
                     +{formatRupiah(todayExcessAmount)}
-                    <span className="text-xs text-slate-400 font-sans font-normal ml-1">lebih</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">lebih</span>
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-1">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                     Jatah hari ini:{' '}
-                    <span className="text-amber-300 font-semibold">{formatRupiah(dailyLimit)}</span>
+                    <span className="text-amber-800 dark:text-amber-300 font-semibold">{formatRupiah(dailyLimit)}</span>
                     {' '}· Sudah:{' '}
-                    <span className="text-amber-300 font-semibold">{formatRupiah(todayExpense)}</span>
+                    <span className="text-amber-800 dark:text-amber-300 font-semibold">{formatRupiah(todayExpense)}</span>
                   </p>
-                  <p className="text-[10px] text-amber-400/70 mt-0.5">
+                  <p className="text-[10px] text-amber-700 dark:text-amber-400/70 mt-0.5">
                     💡 Tidak apa-apa — jatah besok otomatis menyesuaikan
                   </p>
                 </>
               ) : isUsedToday ? (
                 <>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tabular-nums tracking-tight mt-0.5">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums tracking-tight mt-0.5">
                     {formatRupiah(dailyLimit)}
-                    <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-1">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                     Sudah belanja:{' '}
-                    <span className="text-green-300 font-semibold">{formatRupiah(todayExpense)}</span>
+                    <span className="text-green-700 dark:text-green-300 font-semibold">{formatRupiah(todayExpense)}</span>
                     {' '}· Sisa:{' '}
-                    <span className="text-green-300 font-semibold">{formatRupiah(todayRemainingAllowance)}</span>
+                    <span className="text-green-700 dark:text-green-300 font-semibold">{formatRupiah(todayRemainingAllowance)}</span>
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tabular-nums tracking-tight mt-0.5">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums tracking-tight mt-0.5">
                     {formatRupiah(dailyLimit)}
-                    <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-1">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                     {`Dari saldo aktif ÷ ${daysRemainingInMonth} hari · Belum ada belanja hari ini`}
                   </p>
                 </>
               )}
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors shrink-0" />
+          <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors shrink-0" />
         </Link>
 
         {/* Daily Required Savings for Goals */}
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-500/15 via-[#1a1d27] to-[#1a1d27] border border-purple-500/30 shadow-xl flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-purple-500/30 shadow-md dark:shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
               <Target className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
                   Wajib Disisihkan per Hari
                 </span>
-                <span className="text-[10px] text-slate-400">({savingsGoals.length} Celengan)</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">({savingsGoals.length} Celengan)</span>
               </div>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-300 tabular-nums tracking-tight mt-0.5">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-700 dark:text-purple-300 tabular-nums tracking-tight mt-0.5">
                 {formatRupiah(totalDailySavingsRequired)}
-                <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
               </div>
-              <p className="text-[11px] text-slate-300 mt-1">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                 Nominal yang perlu kamu tabung agar seluruh target impianmu tercapai tepat waktu.
               </p>
             </div>
           </div>
-          <Link href="/savings" className="p-2 rounded-xl bg-[#21263a] hover:bg-[#2d3348] text-slate-300 hover:text-white transition-colors">
+          <Link href="/savings" className="p-2 rounded-xl bg-white dark:bg-[#21263a] hover:bg-slate-100 dark:hover:bg-[#2d3348] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent transition-colors shadow-sm">
             <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
       </div>
 
       {/* Period Filter Tabs */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
         <div className="flex items-center gap-1 min-w-max">
           <button
             type="button"
@@ -764,8 +764,8 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'today'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Hari Ini
@@ -776,8 +776,8 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'week'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Minggu Ini
@@ -788,8 +788,8 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'month'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Bulan Ini
@@ -800,8 +800,8 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'all'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Semua Riwayat
@@ -812,60 +812,60 @@ export default function DashboardPage() {
       {/* 3 Main Interconnected Balance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         {/* Total Kekayaan Bersih (Net Worth) */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#1e2333] to-[#1a1d27] border border-[#2d3348] relative overflow-hidden shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-gradient-to-b dark:from-[#1e2333] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] relative overflow-hidden shadow-md dark:shadow-xl">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Total Kekayaan Bersih
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tabular-nums tracking-tight mb-1 sm:mb-2">
+          <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums tracking-tight mb-1 sm:mb-2">
             {formatRupiah(totalNetWorth)}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span>Seluruh Kantong + Celengan</span>
           </div>
         </div>
 
         {/* Kas Operasional (Liquid Spending Cash) */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-green-500/30 shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-green-400 flex items-center gap-1">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-green-500/30 shadow-md dark:shadow-xl">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400 flex items-center gap-1">
               <Unlock className="w-3.5 h-3.5" /> Kas Operasional (Belanja)
             </span>
-            <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center">
               <WalletIcon className="w-4 h-4" />
             </div>
           </div>
           <div
             className={cn(
               'text-2xl sm:text-3xl font-extrabold font-mono tabular-nums tracking-tight mb-1 sm:mb-2',
-              effectiveOperatingCash >= 0 ? 'text-green-400' : 'text-red-400'
+              effectiveOperatingCash >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             )}
           >
             {formatRupiah(effectiveOperatingCash)}
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {spendingWallets.length > 0 ? `Uang cair dari ${spendingWallets.length} kantong aktif` : 'Uang cair siap dibelanjakan'}
           </span>
         </div>
 
         {/* Tabungan Beku & Celengan Impian */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-amber-500/30 shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1">
-              <Lock className="w-3.5 h-3.5" /> Tabungan Beku & Celengan
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-amber-500/30 shadow-md dark:shadow-xl">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1">
+              <Lock className="w-3.5 h-3.5" /> Tabungan Beku &amp; Celengan
             </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <PiggyBank className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-300 tabular-nums tracking-tight mb-1 sm:mb-2">
+          <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-700 dark:text-amber-300 tabular-nums tracking-tight mb-1 sm:mb-2">
             {formatRupiah(totalLockedBalance + totalSavingsInGoals)}
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {lockedWallets.length} Kantong Beku + {savingsGoals.length} Celengan
           </span>
         </div>
@@ -873,22 +873,22 @@ export default function DashboardPage() {
 
       {/* Quick Glance: Kantong & Rekening Widget */}
       {wallets.length > 0 && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2d3348]">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-[#2d3348]">
             <div className="flex items-center gap-2">
-              <WalletIcon className="w-5 h-5 text-blue-400" />
+              <WalletIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">
-                  Rincian Kantong Keuangan & Rekening
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Rincian Kantong Keuangan &amp; Rekening
                 </h3>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Saldo tersebar di {wallets.length} kantong aktif
                 </span>
               </div>
             </div>
             <Link
               href="/wallets"
-              className="text-xs text-blue-400 hover:underline flex items-center gap-1 font-semibold"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold"
             >
               <span>Kelola Kantong</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -902,28 +902,28 @@ export default function DashboardPage() {
                 <div
                   key={w.id}
                   className={cn(
-                    'p-3.5 rounded-xl border flex items-center justify-between transition-all bg-[#21263a]/60',
-                    isLockedWallet ? 'border-amber-500/30' : 'border-[#2d3348]'
+                    'p-3.5 rounded-xl border flex items-center justify-between transition-all bg-slate-50 dark:bg-[#21263a]/60',
+                    isLockedWallet ? 'border-amber-500/30' : 'border-slate-200 dark:border-[#2d3348]'
                   )}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="text-xl shrink-0">{w.icon || '💳'}</span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-white truncate max-w-[110px]">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[110px]">
                           {w.name}
                         </span>
                         {isLockedWallet ? (
-                          <span className="text-[9px] bg-amber-500/20 text-amber-400 font-bold px-1 rounded">
+                          <span className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold px-1 rounded">
                             🔒 Beku
                           </span>
                         ) : (
-                          <span className="text-[9px] bg-green-500/20 text-green-400 font-bold px-1 rounded">
+                          <span className="text-[9px] bg-green-500/20 text-green-700 dark:text-green-400 font-bold px-1 rounded">
                             🟢 Kas
                           </span>
                         )}
                       </div>
-                      <span className="text-xs font-bold font-mono text-slate-200 block mt-0.5">
+                      <span className="text-xs font-bold font-mono text-slate-700 dark:text-slate-200 block mt-0.5">
                         {formatRupiah(w.balance)}
                       </span>
                     </div>
@@ -937,15 +937,15 @@ export default function DashboardPage() {
 
       {/* Mini Celengan Impian Preview Widget */}
       {savingsGoals.length > 0 && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2d3348]">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-[#2d3348]">
             <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-sm sm:text-base font-bold text-white">
+              <Target className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 Progres Celengan Impian Aktif
               </h3>
             </div>
-            <Link href="/savings" className="text-xs text-green-400 hover:underline flex items-center gap-1 font-semibold">
+            <Link href="/savings" className="text-xs text-green-600 dark:text-green-400 hover:underline flex items-center gap-1 font-semibold">
               <span>Kelola Semua</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
@@ -959,17 +959,17 @@ export default function DashboardPage() {
                   : 0
 
               return (
-                <div key={goal.id} className="p-3.5 rounded-xl bg-[#21263a]/60 border border-[#2d3348] flex flex-col justify-between">
+                <div key={goal.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200 dark:border-[#2d3348] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-xl">{goal.icon || '🎯'}</span>
-                        <span className="text-xs font-bold text-white truncate">{goal.name}</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{goal.name}</span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-emerald-400">{pct}%</span>
+                      <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{pct}%</span>
                     </div>
 
-                    <div className="w-full h-2 bg-[#131620] rounded-full overflow-hidden mb-2">
+                    <div className="w-full h-2 bg-slate-200 dark:bg-[#131620] rounded-full overflow-hidden mb-2">
                       <div
                         className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full"
                         style={{ width: `${Math.max(4, pct)}%` }}
@@ -977,7 +977,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                     <span>{formatRupiah(goal.currentAmount)}</span>
                     <span>Target: {formatRupiah(goal.targetAmount)}</span>
                   </div>
@@ -1000,12 +1000,12 @@ export default function DashboardPage() {
       {/* Breakdown per Kategori & Feed Transaksi */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Category Breakdown (5 Cols) */}
-        <div className="lg:col-span-5 p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-green-400" />
-                <h3 className="text-base font-bold text-white">Alokasi Pengeluaran</h3>
+                <Tag className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Alokasi Pengeluaran</h3>
               </div>
               <span className="text-xs text-slate-500 font-mono">
                 {summary.categoryBreakdown.length} Kategori
@@ -1021,12 +1021,12 @@ export default function DashboardPage() {
                 {summary.categoryBreakdown.map((cat, idx) => (
                   <div key={idx} className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between text-xs sm:text-sm">
-                      <span className="text-slate-200 flex items-center gap-2">
+                      <span className="text-slate-700 dark:text-slate-200 flex items-center gap-2">
                         <span className="text-base">{cat.icon}</span>
                         <span className="font-medium truncate max-w-[120px] sm:max-w-none">{cat.name}</span>
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-slate-300 tabular-nums font-semibold">
+                        <span className="font-mono text-slate-800 dark:text-slate-300 tabular-nums font-semibold">
                           {formatRupiah(cat.amount)}
                         </span>
                         <span className="text-xs text-slate-500 font-mono">
@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="w-full h-2 bg-[#21263a] rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-slate-100 dark:bg-[#21263a] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, Math.max(4, cat.percentage))}%` }}
@@ -1047,23 +1047,23 @@ export default function DashboardPage() {
           </div>
 
           {/* Savings Ratio Indicator */}
-          <div className="mt-6 pt-4 border-t border-[#2d3348] flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-[#2d3348] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
-              <PiggyBank className="w-4 h-4 text-green-400" />
+              <PiggyBank className="w-4 h-4 text-green-600 dark:text-green-400" />
               <span>Rasio Tabungan:</span>
             </span>
-            <span className="font-bold text-green-400 font-mono text-sm">
+            <span className="font-bold text-green-600 dark:text-green-400 font-mono text-sm">
               {summary.savingsRate}%
             </span>
           </div>
         </div>
 
         {/* Live Transaction Table / List (7 Cols) */}
-        <div className="lg:col-span-7 p-5 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col">
+        <div className="lg:col-span-7 p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-green-400" />
-              <h3 className="text-base font-bold text-white">
+              <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 Daftar Transaksi ({summary.transactions.length})
               </h3>
             </div>
@@ -1073,7 +1073,7 @@ export default function DashboardPage() {
           {summary.transactions.length === 0 ? (
             <div className="py-12 sm:py-16 flex flex-col items-center justify-center text-center">
               <div className="text-4xl mb-3">📝</div>
-              <h4 className="text-sm font-semibold text-slate-300 mb-1">
+              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Belum ada transaksi di periode ini
               </h4>
               <p className="text-xs text-slate-500 mb-4 max-w-xs">
@@ -1095,22 +1095,22 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-[#21263a]/60 hover:bg-[#21263a] border border-[#2d3348]/70 transition-all duration-150 group"
+                    className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-[#21263a]/60 dark:hover:bg-[#21263a] border border-slate-200 dark:border-[#2d3348]/70 transition-all duration-150 group"
                   >
                     <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-center text-base sm:text-lg shrink-0 shadow-inner">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center text-base sm:text-lg shrink-0 shadow-sm">
                         {tx.categoryIcon || '📦'}
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <span className="text-xs sm:text-sm font-semibold text-slate-100 truncate max-w-[120px] sm:max-w-[200px]">
+                          <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[120px] sm:max-w-[200px]">
                             {tx.description}
                           </span>
                           <Badge variant={isIncome ? 'income' : 'expense'} size="sm">
                             {tx.categoryName}
                           </Badge>
                         </div>
-                        <span className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{tx.transactionDate}</span>
+                        <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">{tx.transactionDate}</span>
                       </div>
                     </div>
 
@@ -1118,7 +1118,7 @@ export default function DashboardPage() {
                       <span
                         className={cn(
                           'text-xs sm:text-base font-bold font-mono tabular-nums tracking-tight',
-                          isIncome ? 'text-green-400' : 'text-red-400'
+                          isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                         )}
                       >
                         {isIncome ? `+${formatRupiah(tx.amount)}` : `-${formatRupiah(tx.amount)}`}
@@ -1127,7 +1127,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => setTxToDelete(tx.id)}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-[#1a1d27] transition-all cursor-pointer"
+                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-white dark:hover:bg-[#1a1d27] transition-all cursor-pointer"
                         title="Hapus transaksi"
                       >
                         <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1140,6 +1140,7 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
 
       {/* Custom Confirmation Modal for Deleting Transaction */}
       <ConfirmModal
@@ -1156,39 +1157,39 @@ export default function DashboardPage() {
 
       {/* Modal Add Transaction */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-8 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200">
-            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-[#2d3348]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-8 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200 text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-green-400" />
-                <h3 className="text-base sm:text-lg font-bold text-white">Catat Transaksi Baru</h3>
+                <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Catat Transaksi Baru</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a]"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
                 {formError}
               </div>
             )}
 
             <form onSubmit={handleCreateTransaction} className="flex flex-col gap-3.5 sm:gap-4">
               {/* Type Switcher */}
-              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#21263a] border border-[#2d3348]">
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348]">
                 <button
                   type="button"
                   onClick={() => handleSwitchType('EXPENSE')}
                   className={cn(
                     'py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer',
                     type === 'EXPENSE'
-                      ? 'bg-red-500 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-red-600 dark:bg-red-500 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   )}
                 >
                   Pengeluaran
@@ -1199,8 +1200,8 @@ export default function DashboardPage() {
                   className={cn(
                     'py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer',
                     type === 'INCOME'
-                      ? 'bg-green-500 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-green-600 dark:bg-green-500 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   )}
                 >
                   Pemasukan
@@ -1209,13 +1210,13 @@ export default function DashboardPage() {
 
               {/* Quick Template Auto-Fill Selector */}
               {templates.length > 0 && type === 'EXPENSE' && (
-                <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-[#131620]/60 border border-[#2d3348]/60">
+                <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-[#131620]/60 border border-slate-200 dark:border-[#2d3348]/60">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300 flex items-center gap-1.5 font-semibold">
-                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-semibold">
+                      <Zap className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                       Pakai Template Cepat:
                     </span>
-                    <Link href="/templates" className="text-amber-400 hover:underline text-[11px]">
+                    <Link href="/templates" className="text-amber-600 dark:text-amber-400 hover:underline text-[11px]">
                       Atur Template
                     </Link>
                   </div>
@@ -1225,7 +1226,7 @@ export default function DashboardPage() {
                         key={t.id}
                         type="button"
                         onClick={() => handleSelectTemplate(t.id)}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#21263a] border border-[#2d3348] hover:border-amber-500/60 hover:bg-[#2a3048] text-xs text-slate-200 transition-all shrink-0 cursor-pointer active:scale-95"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] hover:border-amber-500/60 hover:bg-slate-50 dark:hover:bg-[#2a3048] text-xs text-slate-700 dark:text-slate-200 transition-all shrink-0 cursor-pointer active:scale-95 shadow-sm"
                       >
                         <span>{t.icon}</span>
                         <span className="font-medium">{t.name}</span>
@@ -1237,7 +1238,7 @@ export default function DashboardPage() {
 
               {/* Celengan Impian Direct Deposit Selector */}
               {savingsGoals.length > 0 && type === 'EXPENSE' && (
-                <div className="p-3.5 rounded-2xl bg-[#131620]/60 border border-[#2d3348] space-y-2.5">
+                <div className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-[#131620]/60 border border-purple-200 dark:border-[#2d3348] space-y-2.5">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1262,21 +1263,21 @@ export default function DashboardPage() {
                       }}
                       className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600 cursor-pointer"
                     />
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
-                      <Target className="w-4 h-4 text-purple-400" />
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       <span>Alokasikan / Setor ke Celengan Impian</span>
                     </div>
                   </label>
 
                   {isSavingsDeposit && (
                     <div className="space-y-1.5 pt-1 animate-in fade-in">
-                      <label className="text-[11px] font-semibold text-slate-400">
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                         Pilih Celengan Tujuan:
                       </label>
                       <select
                         value={targetGoalId}
                         onChange={(e) => setTargetGoalId(e.target.value)}
-                        className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-2.5 text-xs border border-[#2d3348] focus:border-purple-500 focus:outline-none cursor-pointer"
+                        className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs border border-slate-200 dark:border-[#2d3348] focus:border-purple-500 focus:outline-none cursor-pointer"
                       >
                         {savingsGoals.map((g) => {
                           const remaining = Math.max(0, g.targetAmount - g.currentAmount)
@@ -1305,7 +1306,7 @@ export default function DashboardPage() {
 
               {/* Category Selector */}
               <FormField label="Kategori" required>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-[#2d3348]/40 rounded-xl bg-[#131620]/50">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-slate-200 dark:border-[#2d3348]/40 rounded-xl bg-slate-50 dark:bg-[#131620]/50">
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
@@ -1314,8 +1315,8 @@ export default function DashboardPage() {
                       className={cn(
                         'flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-medium transition-all cursor-pointer',
                         categoryId === cat.id
-                          ? 'bg-green-500/20 border-green-500/50 text-white font-bold'
-                          : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:border-slate-500'
+                          ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-white font-bold'
+                          : 'bg-white dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:border-slate-400'
                       )}
                     >
                       <span className="text-xl">{cat.icon}</span>
@@ -1333,7 +1334,7 @@ export default function DashboardPage() {
                   <select
                     value={walletId}
                     onChange={(e) => setWalletId(e.target.value)}
-                    className="w-full bg-[#21263a] text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
+                    className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-slate-200 dark:border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
                   >
                     {wallets
                       .filter((w) => (type === 'EXPENSE' ? !w.isLocked : true))
@@ -1344,7 +1345,7 @@ export default function DashboardPage() {
                       ))}
                   </select>
                   {type === 'EXPENSE' && (
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                       🔒 Kantong yang terkunci otomatis disembunyikan agar tabungan/dana darurat tidak terpakai belanja.
                     </p>
                   )}
@@ -1370,7 +1371,7 @@ export default function DashboardPage() {
                 />
               </FormField>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348] mt-1">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-[#2d3348] mt-1">
                 <Button
                   type="button"
                   variant="ghost"
@@ -1396,46 +1397,46 @@ export default function DashboardPage() {
 
       {/* Daily Overbudget Warning Modal */}
       {overbudgetWarning.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-amber-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-amber-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-150 text-slate-900 dark:text-white">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0">
                 ⚠️
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Melebihi Batas Aman Harian
                 </h3>
-                <span className="text-xs text-amber-400 font-medium">Peringatan Pengeluaran</span>
+                <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Peringatan Pengeluaran</span>
               </div>
             </div>
 
-            <div className="space-y-3 my-4 p-4 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs">
-              <div className="flex items-center justify-between text-slate-300">
+            <div className="space-y-3 my-4 p-4 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs">
+              <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                 <span>Batas Belanja Hari Ini:</span>
-                <span className="font-mono font-bold text-green-400">
+                <span className="font-mono font-bold text-green-600 dark:text-green-400">
                   {formatRupiah(overbudgetWarning.limit)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                 <span>Nominal Pengeluaran:</span>
-                <span className="font-mono font-bold text-red-400">
+                <span className="font-mono font-bold text-red-600 dark:text-red-400">
                   {formatRupiah(overbudgetWarning.amount)}
                 </span>
               </div>
-              <div className="pt-2 border-t border-[#2d3348] flex items-center justify-between font-bold text-amber-300">
+              <div className="pt-2 border-t border-slate-200 dark:border-[#2d3348] flex items-center justify-between font-bold text-amber-800 dark:text-amber-300">
                 <span>Selisih Lebih (Overbudget):</span>
-                <span className="font-mono text-amber-400">
+                <span className="font-mono text-amber-700 dark:text-amber-400">
                   + {formatRupiah(overbudgetWarning.excess)}
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed mb-5">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-5">
               Pengeluaran ini akan mengurangi jatah belanja hari-hari berikutnya. Apakah Anda tetap ingin menyimpan transaksi ini?
             </p>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#2d3348]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
                 type="button"
                 variant="ghost"

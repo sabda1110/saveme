@@ -37,8 +37,8 @@ export function BrandLogo({
         <WalletCards className="w-full h-full text-slate-950 stroke-[2.2]" />
       </div>
       <div className="flex items-baseline">
-        <span className={cn('font-bold tracking-tight text-white', textSizes[size])}>
-          Save<span className="text-green-400">Me</span>
+        <span className={cn('font-bold tracking-tight text-slate-900 dark:text-white', textSizes[size])}>
+          Save<span className="text-green-600 dark:text-green-400">Me</span>
         </span>
       </div>
     </div>

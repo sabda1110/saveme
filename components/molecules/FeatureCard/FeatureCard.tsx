@@ -37,7 +37,7 @@ export function FeatureCard({
   return (
     <div
       className={cn(
-        'group relative bg-[#1a1d27]/90 rounded-2xl p-6 sm:p-8 border border-[#2d3348] transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between overflow-hidden',
+        'group relative bg-white dark:bg-[#1a1d27]/90 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-[#2d3348] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-2xl flex flex-col justify-between overflow-hidden shadow-xs',
         gradientAccents[gradient],
         className
       )}
@@ -56,21 +56,21 @@ export function FeatureCard({
             {icon}
           </div>
           {badge && (
-            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#21263a] text-slate-300 border border-[#2d3348]">
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#21263a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#2d3348]">
               {badge}
             </span>
           )}
         </div>
 
-        <h3 className="text-xl font-bold text-white mb-2 tracking-tight group-hover:text-green-300 transition-colors">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight group-hover:text-green-600 dark:group-hover:text-green-300 transition-colors">
           {title}
         </h3>
-        <p className="text-sm text-slate-400 leading-relaxed font-normal">
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
           {description}
         </p>
       </div>
 
-      {children && <div className="mt-6 pt-4 border-t border-[#2d3348]/60">{children}</div>}
+      {children && <div className="mt-6 pt-4 border-t border-slate-200 dark:border-[#2d3348]/60">{children}</div>}
     </div>
   )
 }

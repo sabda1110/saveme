@@ -211,18 +211,18 @@ export function OnboardingWizard({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-      <div className="bg-[#1a1d27] border border-[#2d3348] rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+      <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-900 dark:text-white">
         {/* Glow ambient header */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-green-500/15 rounded-full blur-[80px] pointer-events-none" />
 
         {/* Step Progress Bar */}
         <div className="flex items-center justify-between gap-2 mb-6">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 text-green-400 text-xs font-bold flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 text-green-700 dark:text-green-400 text-xs font-bold flex items-center justify-center">
               {step}
             </span>
-            <span className="text-xs font-semibold text-slate-300">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Langkah {step} dari 4
             </span>
           </div>
@@ -232,7 +232,7 @@ export function OnboardingWizard({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors cursor-pointer"
                 title="Tutup"
               >
                 <X className="w-5 h-5" />
@@ -241,7 +241,7 @@ export function OnboardingWizard({
               <button
                 type="button"
                 onClick={() => handleFinish(true)}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer"
               >
                 Lewati Setup
               </button>
@@ -253,25 +253,25 @@ export function OnboardingWizard({
           <div
             className={cn(
               'h-1.5 rounded-full transition-all duration-300',
-              step >= 1 ? 'bg-green-500' : 'bg-[#21263a]'
+              step >= 1 ? 'bg-green-500' : 'bg-slate-200 dark:bg-[#21263a]'
             )}
           />
           <div
             className={cn(
               'h-1.5 rounded-full transition-all duration-300',
-              step >= 2 ? 'bg-green-500' : 'bg-[#21263a]'
+              step >= 2 ? 'bg-green-500' : 'bg-slate-200 dark:bg-[#21263a]'
             )}
           />
           <div
             className={cn(
               'h-1.5 rounded-full transition-all duration-300',
-              step >= 3 ? 'bg-green-500' : 'bg-[#21263a]'
+              step >= 3 ? 'bg-green-500' : 'bg-slate-200 dark:bg-[#21263a]'
             )}
           />
           <div
             className={cn(
               'h-1.5 rounded-full transition-all duration-300',
-              step >= 4 ? 'bg-green-500' : 'bg-[#21263a]'
+              step >= 4 ? 'bg-green-500' : 'bg-slate-200 dark:bg-[#21263a]'
             )}
           />
         </div>
@@ -280,14 +280,14 @@ export function OnboardingWizard({
         {step === 1 && (
           <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-400 flex items-center justify-center text-xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 flex items-center justify-center text-xl shrink-0">
                 <Wallet className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Halo, {userName || 'Teman SaveMe'}! Saldo Awalmu?
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Total uang tunai & saldo rekening yang siap kamu kelola di SaveMe.
                 </p>
               </div>
@@ -315,21 +315,21 @@ export function OnboardingWizard({
                   onClick={() =>
                     setInitialBalance(nominal === 0 ? '' : nominal.toString())
                   }
-                  className="px-3 py-1.5 rounded-xl bg-[#21263a] hover:bg-[#2d3348] border border-[#2d3348] text-xs text-slate-300 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#21263a] hover:bg-slate-200 dark:hover:bg-[#2d3348] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                 >
                   {nominal === 0 ? 'Mulai dari Rp 0' : formatRupiahPreview(nominal)}
                 </button>
               ))}
             </div>
 
-            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-start gap-2.5">
-              <HelpCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2.5">
+              <HelpCircle className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
               <span>
                 Saldo awal ini otomatis dicatat sebagai pemasukan perdana di dompetmu agar kalkulasi saldo tetap akurat.
               </span>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#2d3348]">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
                 variant="glow"
                 size="md"
@@ -346,14 +346,14 @@ export function OnboardingWizard({
         {step === 2 && (
           <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl shrink-0">
                 <TrendingUp className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Berapa Pemasukan Rutinmu?
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Estimasi gaji bulanan, uang saku, atau omset usaha per bulan.
                 </p>
               </div>
@@ -379,21 +379,21 @@ export function OnboardingWizard({
                   key={nominal}
                   type="button"
                   onClick={() => setMonthlyIncome(nominal.toString())}
-                  className="px-3 py-1.5 rounded-xl bg-[#21263a] hover:bg-[#2d3348] border border-[#2d3348] text-xs text-slate-300 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#21263a] hover:bg-slate-200 dark:hover:bg-[#2d3348] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                 >
                   {formatRupiahPreview(nominal)}/bulan
                 </button>
               ))}
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
               <span>
                 SaveMe akan membagi pemasukan ini menjadi jatah belanja harian agar kamu tidak boncos sebelum akhir bulan!
               </span>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-[#2d3348]">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
                 variant="ghost"
                 size="md"
@@ -418,14 +418,14 @@ export function OnboardingWizard({
         {step === 3 && (
           <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center text-xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl shrink-0">
                 <CreditCard className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Punya Cicilan Bulanan?
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Seperti cicilan motor, HP, KPR, atau pinjaman lainnya (bisa lebih dari satu).
                 </p>
               </div>
@@ -439,13 +439,13 @@ export function OnboardingWizard({
                 className={cn(
                   'p-4 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
                   !hasInstallment
-                    ? 'bg-green-500/20 border-green-500 text-white shadow-lg'
-                    : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:border-slate-500'
+                    ? 'bg-green-500/20 border-green-500 text-slate-900 dark:text-white shadow-md'
+                    : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
                 )}
               >
                 <span className="text-xl">🎉</span>
-                <span className="text-sm font-bold text-slate-100">Bebas Cicilan</span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Bebas Cicilan</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Tidak ada cicilan bulanan yang wajib dibayar
                 </span>
               </button>
@@ -456,13 +456,13 @@ export function OnboardingWizard({
                 className={cn(
                   'p-4 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
                   hasInstallment
-                    ? 'bg-purple-500/20 border-purple-500 text-white shadow-lg'
-                    : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:border-slate-500'
+                    ? 'bg-purple-500/20 border-purple-500 text-slate-900 dark:text-white shadow-md'
+                    : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
                 )}
               >
                 <span className="text-xl">🛵</span>
-                <span className="text-sm font-bold text-slate-100">Ada Cicilan</span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Ada Cicilan</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Ada 1 atau lebih cicilan yang harus dipotong
                 </span>
               </button>
@@ -474,17 +474,17 @@ export function OnboardingWizard({
                 {installments.map((item, index) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-2xl bg-[#21263a] border border-[#2d3348] flex flex-col gap-2.5 relative"
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex flex-col gap-2.5 relative"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-purple-300">
+                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
                         Cicilan #{index + 1}
                       </span>
                       {installments.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveInstallment(item.id)}
-                          className="p-1 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
+                          className="p-1 rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
                           title="Hapus Cicilan Ini"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -494,7 +494,7 @@ export function OnboardingWizard({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[11px] text-slate-400 block mb-1">
+                        <label className="text-[11px] text-slate-600 dark:text-slate-400 block mb-1">
                           Nama Cicilan
                         </label>
                         <Input
@@ -506,7 +506,7 @@ export function OnboardingWizard({
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] text-slate-400 block mb-1">
+                        <label className="text-[11px] text-slate-600 dark:text-slate-400 block mb-1">
                           Nominal per Bulan (Rp)
                         </label>
                         <Input
@@ -527,7 +527,7 @@ export function OnboardingWizard({
                 <button
                   type="button"
                   onClick={handleAddInstallment}
-                  className="w-full py-2.5 rounded-xl border border-dashed border-purple-500/40 hover:border-purple-400 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-2.5 rounded-xl border border-dashed border-purple-500/40 hover:border-purple-400 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Tambah Cicilan Lain
@@ -535,30 +535,30 @@ export function OnboardingWizard({
 
                 {/* Live Total Installments Calculation */}
                 {totalInstallments > 0 && (
-                  <div className="p-3 rounded-xl bg-[#131620] border border-[#2d3348] flex items-center justify-between text-xs">
+                  <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between text-xs">
                     <div>
-                      <span className="text-[11px] text-slate-400">Total {validInstallmentCount} Cicilan:</span>
-                      <p className="font-bold font-mono text-red-400">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Total {validInstallmentCount} Cicilan:</span>
+                      <p className="font-bold font-mono text-red-600 dark:text-red-400">
                         - {formatRupiahPreview(totalInstallments)}/bln
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[11px] text-slate-400">Sisa Gaji Bersih:</span>
-                      <p className="font-bold font-mono text-emerald-300">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Sisa Gaji Bersih:</span>
+                      <p className="font-bold font-mono text-emerald-600 dark:text-emerald-300">
                         {formatRupiahPreview(effectiveBaseIncome)}/bln
                       </p>
                     </div>
                   </div>
                 )}
 
-                <p className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <Receipt className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <Receipt className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
                   Semua cicilan ini langsung otomatis tersinkron ke menu Cicilan & Tagihan (/bills).
                 </p>
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t border-[#2d3348]">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
                 variant="ghost"
                 size="md"
@@ -583,14 +583,14 @@ export function OnboardingWizard({
         {step === 4 && (
           <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
                 <Target className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Mau Disisihkan Berapa Buat Tabungan?
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   {totalInstallments > 0
                     ? `Dihitung dari sisa uang bersihmu (${formatRupiahPreview(effectiveBaseIncome)} / bulan).`
                     : 'Pilih nominal uang yang nyaman kamu tabung setiap bulan.'}
@@ -611,20 +611,20 @@ export function OnboardingWizard({
                   className={cn(
                     'p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
                     !isCustomSavings && savingsTarget === opt.pct
-                      ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-lg'
-                      : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:border-slate-500'
+                      ? 'bg-emerald-500/20 border-emerald-500 text-slate-900 dark:text-white shadow-md'
+                      : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-extrabold font-mono text-emerald-400">
+                    <span className="text-sm font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
                       {formatRupiahPreview(opt.amount)}
                     </span>
                     {!isCustomSavings && savingsTarget === opt.pct && (
-                      <Check className="w-4 h-4 text-emerald-400" />
+                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     )}
                   </div>
-                  <span className="text-xs font-bold text-slate-200">{opt.label}</span>
-                  <span className="text-[10px] text-slate-400">{opt.sub}</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-200">{opt.label}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">{opt.sub}</span>
                 </button>
               ))}
             </div>
@@ -637,8 +637,8 @@ export function OnboardingWizard({
                 className={cn(
                   'px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer',
                   isCustomSavings
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                    : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:text-white'
+                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 ✍️ Ketik Nominal Sendiri
@@ -653,7 +653,7 @@ export function OnboardingWizard({
                     placeholder="Nominal tabungan per bulan"
                     value={customSavingsAmount}
                     onChange={(e) => setCustomSavingsAmount(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-white text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-emerald-500"
                     autoFocus
                   />
                 </div>
@@ -661,48 +661,48 @@ export function OnboardingWizard({
             </div>
 
             {/* Outcome Summary Breakdown */}
-            <div className="p-4 rounded-2xl bg-[#131620] border border-[#2d3348] space-y-2">
-              <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] space-y-2">
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                 Hasil Perhitungan Uangmu:
               </div>
-              <div className="space-y-1.5 pt-1 border-t border-[#2d3348] text-xs">
+              <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-[#2d3348] text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">💼 Pemasukan Bulanan:</span>
-                  <span className="font-semibold font-mono text-white">
+                  <span className="text-slate-500 dark:text-slate-400">💼 Pemasukan Bulanan:</span>
+                  <span className="font-semibold font-mono text-slate-900 dark:text-white">
                     {formatRupiahPreview(numIncome)}
                   </span>
                 </div>
                 {totalInstallments > 0 && (
-                  <div className="flex justify-between text-red-400">
+                  <div className="flex justify-between text-red-600 dark:text-red-400">
                     <span>🛵 Total Cicilan ({validInstallmentCount} item):</span>
                     <span className="font-mono font-semibold">
                       - {formatRupiahPreview(totalInstallments)}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between text-emerald-400">
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                   <span>🏦 Uang Ditabung:</span>
                   <span className="font-mono font-semibold">
                     - {formatRupiahPreview(chosenSavingsAmount)}
                   </span>
                 </div>
-                <div className="border-t border-[#2d3348] pt-1.5 flex justify-between">
-                  <span className="text-slate-300 font-bold">🛍️ Budget Belanja Bulanan:</span>
-                  <span className="font-extrabold font-mono text-white">
+                <div className="border-t border-slate-200 dark:border-[#2d3348] pt-1.5 flex justify-between">
+                  <span className="text-slate-700 dark:text-slate-300 font-bold">🛍️ Budget Belanja Bulanan:</span>
+                  <span className="font-extrabold font-mono text-slate-900 dark:text-white">
                     {formatRupiahPreview(operatingMonthlyBudget)}
                   </span>
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
                 <span className="text-[11px] font-medium">📅 Jatah Belanja Harian:</span>
-                <span className="font-extrabold font-mono text-emerald-300 text-sm">
+                <span className="font-extrabold font-mono text-emerald-700 dark:text-emerald-300 text-sm">
                   {formatRupiahPreview(estimatedDailyBudget)} / hari
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-[#2d3348]">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
                 variant="ghost"
                 size="md"

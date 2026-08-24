@@ -50,7 +50,7 @@ export function GettingStartedWidget({
         <button
           type="button"
           onClick={onAddTransactionClick}
-          className="text-xs text-green-400 hover:text-green-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+          className="text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
         >
           <PlusCircle className="w-3.5 h-3.5" /> Catat Sekarang
         </button>
@@ -82,21 +82,21 @@ export function GettingStartedWidget({
   }
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#1a1d27] to-[#1e2333] border border-[#2d3348] shadow-xl relative overflow-hidden animate-in fade-in">
+    <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-[#1a1d27] dark:to-[#1e2333] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl relative overflow-hidden animate-in fade-in">
       {/* Background flare */}
       <div className="absolute top-0 right-0 w-64 h-32 bg-green-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header & Dismiss */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-green-500/10 text-green-400">
+          <div className="p-1.5 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-white">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
               Panduan Memulai SaveMe ({completedCount}/{tasks.length} Selesai)
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Langkah awal menuju pengelolaan keuangan yang tertata dan bebas stres.
             </p>
           </div>
@@ -105,7 +105,7 @@ export function GettingStartedWidget({
         <button
           type="button"
           onClick={handleDismiss}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-[#21263a] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors cursor-pointer"
           title="Tutup panduan"
         >
           <X className="w-4 h-4" />
@@ -113,7 +113,7 @@ export function GettingStartedWidget({
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full h-2 bg-[#21263a] rounded-full overflow-hidden mb-5">
+      <div className="w-full h-2 bg-slate-100 dark:bg-[#21263a] rounded-full overflow-hidden mb-5">
         <div
           className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500"
           style={{ width: `${progressPercent}%` }}
@@ -128,25 +128,25 @@ export function GettingStartedWidget({
             className={cn(
               'p-3 rounded-xl border flex items-start gap-3 transition-all',
               task.completed
-                ? 'bg-green-500/5 border-green-500/20 text-slate-300'
-                : 'bg-[#21263a]/40 border-[#2d3348] text-slate-400'
+                ? 'bg-green-500/10 border-green-500/20 text-slate-700 dark:text-slate-300'
+                : 'bg-slate-50 dark:bg-[#21263a]/40 border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400'
             )}
           >
             {task.completed ? (
-              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
             ) : (
-              <Circle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+              <Circle className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
             )}
             <div className="flex flex-col min-w-0">
               <span
                 className={cn(
                   'text-xs font-semibold',
-                  task.completed ? 'text-slate-100 line-through opacity-80' : 'text-slate-200'
+                  task.completed ? 'text-slate-500 dark:text-slate-400 line-through opacity-80' : 'text-slate-900 dark:text-slate-200'
                 )}
               >
                 {task.title}
               </span>
-              <span className="text-[11px] text-slate-500">{task.description}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{task.description}</span>
               {task.action && <div className="mt-1.5">{task.action}</div>}
             </div>
           </div>

@@ -36,17 +36,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/30',
+        'bg-green-500 hover:bg-green-600 text-white shadow-md shadow-green-500/20 hover:shadow-green-500/30',
       secondary:
-        'bg-[#21263a] hover:bg-[#2d3348] text-slate-200 border border-[#2d3348] hover:border-slate-600',
+        'bg-slate-100 dark:bg-[#21263a] hover:bg-slate-200 dark:hover:bg-[#2d3348] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#2d3348] hover:border-slate-300 dark:hover:border-slate-600',
       danger:
-        'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20',
+        'bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20',
       ghost:
-        'text-slate-400 hover:text-slate-100 hover:bg-[#21263a]',
+        'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-[#21263a]',
       glow:
-        'relative bg-gradient-to-r from-green-500 to-emerald-400 text-white font-semibold shadow-xl shadow-green-500/30 hover:shadow-green-500/50 hover:brightness-110 border border-green-400/30',
+        'relative bg-gradient-to-r from-green-500 to-emerald-400 text-white font-semibold shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:brightness-105 border border-green-400/30',
       outline:
-        'border border-green-500/40 text-green-400 hover:bg-green-500/10 hover:border-green-400',
+        'border border-green-600/40 dark:border-green-500/40 text-green-600 dark:text-green-400 hover:bg-green-500/10 hover:border-green-600 dark:hover:border-green-400',
     }
 
     return (

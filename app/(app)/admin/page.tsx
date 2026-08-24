@@ -129,14 +129,14 @@ export default function AdminConsolePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Super Admin Console
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Pusat kontrol sistem, manajemen hak akses, dan metrik global SaveMe
               </p>
             </div>
@@ -179,34 +179,34 @@ export default function AdminConsolePage() {
 
       {/* 3 Global Platform Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm text-slate-900 dark:text-white">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Pengguna</span>
-            <Users className="w-4 h-4 text-blue-400" />
+            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-3xl font-bold font-mono text-white tabular-nums">
+          <div className="text-3xl font-bold font-mono text-slate-900 dark:text-white tabular-nums">
             {stats?.totalUsers || 0}
           </div>
           <span className="text-xs text-slate-500 mt-1 block">Akun terdaftar di Firestore</span>
         </div>
 
-        <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm text-slate-900 dark:text-white">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Transaksi</span>
-            <ReceiptText className="w-4 h-4 text-green-400" />
+            <ReceiptText className="w-4 h-4 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-3xl font-bold font-mono text-green-400 tabular-nums">
+          <div className="text-3xl font-bold font-mono text-green-600 dark:text-green-400 tabular-nums">
             {stats?.totalTransactions || 0}
           </div>
           <span className="text-xs text-slate-500 mt-1 block">Seluruh data pengguna</span>
         </div>
 
-        <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm text-slate-900 dark:text-white">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Volume Dana</span>
-            <DollarSign className="w-4 h-4 text-amber-400" />
+            <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-amber-300 tabular-nums">
+          <div className="text-2xl sm:text-3xl font-bold font-mono text-amber-600 dark:text-amber-300 tabular-nums">
             {formatRupiah(stats?.totalVolume || 0)}
           </div>
           <span className="text-xs text-slate-500 mt-1 block">Akumulasi seluruh perputaran</span>
@@ -214,12 +214,12 @@ export default function AdminConsolePage() {
       </div>
 
       {/* User Management & RBAC Table */}
-      <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#2d3348]">
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-amber-400" />
-            <h3 className="text-base font-bold text-white">
-              Manajemen Pengguna & Hak Akses ({usersList.length})
+            <UserCheck className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Manajemen Pengguna &amp; Hak Akses ({usersList.length})
             </h3>
           </div>
           <span className="text-xs text-slate-500">
@@ -230,25 +230,25 @@ export default function AdminConsolePage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[#2d3348] text-slate-400 uppercase tracking-wider">
+              <tr className="border-b border-slate-200 dark:border-[#2d3348] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="pb-3 px-3 font-semibold">Pengguna</th>
                 <th className="pb-3 px-3 font-semibold">Email</th>
                 <th className="pb-3 px-3 font-semibold">Role Saat Ini</th>
                 <th className="pb-3 px-3 font-semibold text-right">Aksi Kelola Role</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2d3348]/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-[#2d3348]/60">
               {usersList.map((usr) => (
-                <tr key={usr.uid} className="hover:bg-[#21263a]/40 transition-colors">
-                  <td className="py-3.5 px-3 font-medium text-slate-200">
+                <tr key={usr.uid} className="hover:bg-slate-50 dark:hover:bg-[#21263a]/40 transition-colors">
+                  <td className="py-3.5 px-3 font-medium text-slate-900 dark:text-slate-200">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center font-bold text-[11px]">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-[11px]">
                         {usr.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <span>{usr.name || 'Pengguna'}</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 font-mono text-slate-400">{usr.email}</td>
+                  <td className="py-3.5 px-3 font-mono text-slate-500 dark:text-slate-400">{usr.email}</td>
                   <td className="py-3.5 px-3">
                     <Badge
                       variant={
@@ -270,7 +270,7 @@ export default function AdminConsolePage() {
                           <button
                             type="button"
                             onClick={() => handleRoleChange(usr.uid, 'USER')}
-                            className="px-2 py-1 rounded bg-[#21263a] hover:bg-slate-700 text-slate-300 text-[10px] font-semibold border border-[#2d3348]"
+                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-[#21263a] dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-semibold border border-slate-200 dark:border-[#2d3348]"
                           >
                             Set USER
                           </button>
@@ -279,7 +279,7 @@ export default function AdminConsolePage() {
                           <button
                             type="button"
                             onClick={() => handleRoleChange(usr.uid, 'ADMIN')}
-                            className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-semibold border border-amber-500/40"
+                            className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold border border-amber-500/40"
                           >
                             Set ADMIN
                           </button>
@@ -288,7 +288,7 @@ export default function AdminConsolePage() {
                           <button
                             type="button"
                             onClick={() => handleRoleChange(usr.uid, 'SUPER_ADMIN')}
-                            className="px-2 py-1 rounded bg-green-500/20 hover:bg-green-500/30 text-green-300 text-[10px] font-semibold border border-green-500/40"
+                            className="px-2 py-1 rounded bg-green-500/20 hover:bg-green-500/30 text-green-700 dark:text-green-300 text-[10px] font-semibold border border-green-500/40"
                           >
                             Set SUPER_ADMIN
                           </button>

@@ -118,9 +118,9 @@ export function LiveDashboardPreview() {
         />
 
         {/* Dashboard Mock Container with Browser Shell */}
-        <div className="relative rounded-2xl border border-[#2d3348] bg-[#1a1d27] shadow-2xl overflow-hidden">
+        <div className="relative rounded-2xl border border-slate-200 dark:border-[#2d3348] bg-white dark:bg-[#1a1d27] shadow-xl dark:shadow-2xl overflow-hidden text-slate-900 dark:text-white">
           {/* Browser Top Bar */}
-          <div className="bg-[#0f1117] px-4 py-3 border-b border-[#2d3348] flex items-center justify-between">
+          <div className="bg-slate-100 dark:bg-[#0f1117] px-4 py-3 border-b border-slate-200 dark:border-[#2d3348] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500/80" />
               <div className="w-3 h-3 rounded-full bg-amber-500/80" />
@@ -139,9 +139,9 @@ export function LiveDashboardPreview() {
           {/* Inner App Mockup */}
           <div className="grid grid-cols-1 md:grid-cols-12 min-h-[500px]">
             {/* Sidebar Mock (3 Cols on Desktop) */}
-            <div className="hidden md:flex md:col-span-3 bg-[#131620] p-5 border-r border-[#2d3348] flex-col justify-between">
+            <div className="hidden md:flex md:col-span-3 bg-white dark:bg-[#131620] p-5 border-r border-slate-200 dark:border-[#2d3348] flex-col justify-between">
               <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-2 font-bold text-white tracking-tight">
+                <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white tracking-tight">
                   <div className="w-7 h-7 rounded-lg bg-green-500 flex items-center justify-center text-slate-950 text-xs font-black">
                     S
                   </div>
@@ -149,43 +149,43 @@ export function LiveDashboardPreview() {
                 </div>
 
                 <nav className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-green-500/15 text-green-400 font-semibold text-sm">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-green-500/15 text-green-700 dark:text-green-400 font-semibold text-sm">
                     <LayoutDashboard className="w-4 h-4" />
                     <span>Dashboard</span>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-slate-200 text-sm font-medium">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 text-sm font-medium">
                     <ReceiptText className="w-4 h-4" />
                     <span>Transaksi</span>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-slate-200 text-sm font-medium">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 text-sm font-medium">
                     <User className="w-4 h-4" />
                     <span>Profil Pengguna</span>
                   </div>
                 </nav>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#1a1d27] border border-[#2d3348] flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs font-bold">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-700 dark:text-green-400 flex items-center justify-center text-xs font-bold">
                   AK
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-white truncate">Andi Kurniawan</span>
-                  <span className="text-[10px] text-slate-400 truncate">andi@example.com</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">Andi Kurniawan</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">andi@example.com</span>
                 </div>
               </div>
             </div>
 
             {/* Main Content Area (9 Cols) */}
-            <div className="col-span-1 md:col-span-9 p-5 sm:p-7 bg-[#0f1117]/80 flex flex-col gap-6">
+            <div className="col-span-1 md:col-span-9 p-5 sm:p-7 bg-slate-50/70 dark:bg-[#0f1117]/80 flex flex-col gap-6">
               {/* Header inside Dashboard with interactive period filter */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-white">Ringkasan Keuangan</h3>
-                  <p className="text-xs text-slate-400">Pantau pergerakan kas masuk dan keluar</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Ringkasan Keuangan</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Pantau pergerakan kas masuk dan keluar</p>
                 </div>
 
                 {/* Period Selector Tabs */}
-                <div className="inline-flex p-1 rounded-xl bg-[#21263a] border border-[#2d3348] self-start sm:self-auto">
+                <div className="inline-flex p-1 rounded-xl bg-slate-200/70 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] self-start sm:self-auto">
                   <button
                     type="button"
                     onClick={() => setActivePeriod('today')}
@@ -193,7 +193,7 @@ export function LiveDashboardPreview() {
                       'px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
                       activePeriod === 'today'
                         ? 'bg-green-500 text-slate-950 font-bold shadow'
-                        : 'text-slate-400 hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     Hari Ini
@@ -205,7 +205,7 @@ export function LiveDashboardPreview() {
                       'px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
                       activePeriod === 'week'
                         ? 'bg-green-500 text-slate-950 font-bold shadow'
-                        : 'text-slate-400 hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     Minggu Ini
@@ -217,7 +217,7 @@ export function LiveDashboardPreview() {
                       'px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
                       activePeriod === 'month'
                         ? 'bg-green-500 text-slate-950 font-bold shadow'
-                        : 'text-slate-400 hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     Bulan Ini
@@ -225,47 +225,65 @@ export function LiveDashboardPreview() {
                 </div>
               </div>
 
+              {/* Payday Banner Mockup */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-blue-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">📅</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      H-6 Menuju Gajian
+                    </span>
+                    <span className="text-[11px] text-slate-600 dark:text-slate-300 ml-2">
+                      Jatah Safe-to-Spend: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">Rp 125.000/hari</strong>
+                    </span>
+                  </div>
+                </div>
+                <Badge variant="brand" size="sm">
+                  Keuangan Terkendali
+                </Badge>
+              </div>
+
               {/* 3 Summary Stat Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                {/* Balance Card */}
-                <div className="p-4 rounded-xl bg-[#1a1d27] border border-[#2d3348]">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-xs font-medium">Total Saldo</span>
-                    <Wallet className="w-4 h-4 text-green-400" />
+                {/* Total Balance / Net Worth Card */}
+                <div className="p-4 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xs">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span className="text-xs font-medium">Kas Operasional</span>
+                    <Wallet className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <div className="text-xl font-bold font-mono text-white tabular-nums">
+                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-white tabular-nums">
                     {formatRupiah(data.balance)}
                   </div>
-                  <span className="text-[10px] text-green-400 mt-1 block font-medium">
-                    Arus kas positif
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 block font-medium">
+                    Siap untuk belanja harian
                   </span>
                 </div>
 
-                {/* Income Card */}
-                <div className="p-4 rounded-xl bg-[#1a1d27] border border-[#2d3348]">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-xs font-medium">Total Pemasukan</span>
-                    <TrendingUp className="w-4 h-4 text-green-400" />
+                {/* Tabungan Beku Card */}
+                <div className="p-4 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xs">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span className="text-xs font-medium">Celengan Impian (Beku)</span>
+                    <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="text-xl font-bold font-mono text-green-400 tabular-nums">
-                    {formatRupiah(data.income)}
+                  <div className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 tabular-nums">
+                    {formatRupiah(data.balance * 1.5)}
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    {data.transactions.filter((t) => t.type === 'INCOME').length} transaksi masuk
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 block">
+                    🔒 Terkunci aman (Anti-Bocor)
                   </span>
                 </div>
 
                 {/* Expense Card */}
-                <div className="p-4 rounded-xl bg-[#1a1d27] border border-[#2d3348]">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-xs font-medium">Total Pengeluaran</span>
-                    <TrendingDown className="w-4 h-4 text-red-400" />
+                <div className="p-4 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xs">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span className="text-xs font-medium">Pengeluaran Periode Ini</span>
+                    <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />
                   </div>
-                  <div className="text-xl font-bold font-mono text-red-400 tabular-nums">
+                  <div className="text-xl font-bold font-mono text-red-600 dark:text-red-400 tabular-nums">
                     {formatRupiah(data.expense)}
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    {data.transactions.filter((t) => t.type === 'EXPENSE').length} transaksi keluar
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">
+                    {data.transactions.filter((t) => t.type === 'EXPENSE').length} transaksi tercatat
                   </span>
                 </div>
               </div>
@@ -273,24 +291,24 @@ export function LiveDashboardPreview() {
               {/* Bottom Section: Category Progress & Transactions */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 {/* Category Breakdown (5 Cols) */}
-                <div className="lg:col-span-5 p-4 rounded-xl bg-[#1a1d27] border border-[#2d3348] flex flex-col justify-between">
+                <div className="lg:col-span-5 p-4 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col justify-between shadow-xs">
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3">
                       Pengeluaran per Kategori
                     </h4>
                     <div className="flex flex-col gap-3">
                       {data.categories.map((cat, idx) => (
                         <div key={idx} className="flex flex-col gap-1">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-300 flex items-center gap-1.5">
+                            <span className="text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
                               <span>{cat.icon}</span>
                               <span>{cat.name}</span>
                             </span>
-                            <span className="font-mono text-slate-400 tabular-nums">
+                            <span className="font-mono text-slate-500 dark:text-slate-400 tabular-nums">
                               {cat.percent}%
                             </span>
                           </div>
-                          <div className="w-full h-1.5 bg-[#21263a] rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-slate-100 dark:bg-[#21263a] rounded-full overflow-hidden">
                             <div
                               className={cn('h-full rounded-full transition-all duration-300', cat.color)}
                               style={{ width: `${cat.percent}%` }}
@@ -301,38 +319,37 @@ export function LiveDashboardPreview() {
                     </div>
                   </div>
 
-                  <div className="pt-3 mt-3 border-t border-[#2d3348] text-[11px] text-slate-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                  <div className="pt-3 mt-3 border-t border-slate-200 dark:border-[#2d3348] text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                     <span>Auto-dikategorikan saat input transaksi</span>
                   </div>
                 </div>
 
                 {/* Recent Transaction List (7 Cols) */}
-                <div className="lg:col-span-7 p-4 rounded-xl bg-[#1a1d27] border border-[#2d3348]">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">
+                <div className="lg:col-span-7 p-4 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xs">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3">
                     Transaksi Terakhir
                   </h4>
                   <div className="flex flex-col gap-2">
                     {data.transactions.slice(0, 4).map((tx, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2.5 rounded-lg bg-[#21263a]/60 border border-[#2d3348]/60 text-xs"
+                        className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200/80 dark:border-[#2d3348]/60 text-xs"
                       >
                         <div className="flex items-center gap-2.5">
                           <span className="text-base">{tx.icon}</span>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-slate-200">{tx.title}</span>
-                            <span className="text-[10px] text-slate-400">{tx.date}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{tx.title}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400">{tx.date}</span>
                           </div>
                         </div>
                         <span
                           className={cn(
                             'font-mono font-bold tabular-nums',
-                            tx.type === 'INCOME' ? 'text-green-400' : 'text-red-400'
+                            tx.type === 'INCOME' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                           )}
                         >
-                          {tx.type === 'INCOME' ? '+' : '-'}
-                          {formatRupiah(tx.amount)}
+                          {tx.type === 'INCOME' ? `+${formatRupiah(tx.amount)}` : `-${formatRupiah(tx.amount)}`}
                         </span>
                       </div>
                     ))}

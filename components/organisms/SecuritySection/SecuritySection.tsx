@@ -7,24 +7,24 @@ import { Lock, KeyRound, Database, EyeOff } from 'lucide-react'
 export function SecuritySection() {
   const securityPillars = [
     {
-      icon: <Database className="w-5 h-5 text-green-400" />,
-      title: 'Database User Isolation',
-      desc: 'Setiap baris data transaksi terikat secara permanen pada session user terotentikasi. Sistem menolak query antar-user di level database.',
+      icon: <Database className="w-5 h-5 text-green-600 dark:text-green-400" />,
+      title: 'Firestore Rules Database Isolation',
+      desc: 'Setiap baris data transaksi terikat secara permanen pada request.auth.uid. Cloud Firestore Security Rules menolak query lintas-pengguna di level database terdalam.',
     },
     {
-      icon: <Lock className="w-5 h-5 text-emerald-400" />,
-      title: 'HTTP-Only JWT Cookie',
-      desc: 'Token login disimpan dalam cookie HTTP-only yang terlindungi dari serangan XSS dan pencurian skrip browser pihak ketiga.',
+      icon: <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+      title: 'Single-Tab Session Guard',
+      desc: 'Proteksi konkurensi tab aktif mencegah konflik mutasi saldo dan menjamin keakuratan perhitungan arus kas saat membuka aplikasi.',
     },
     {
-      icon: <KeyRound className="w-5 h-5 text-teal-400" />,
-      title: 'Bcrypt Password Hashing',
-      desc: 'Password akun di-hash dengan standar keamanan tinggi sebelum disimpan. Tidak ada seorang pun yang bisa melihat kata sandi aslimu.',
+      icon: <KeyRound className="w-5 h-5 text-teal-600 dark:text-teal-400" />,
+      title: 'Firebase Auth Enterprise Standard',
+      desc: 'Otentikasi pengguna ditangani oleh Google Firebase Authentication dengan enkripsi token berkala dan proteksi brute-force.',
     },
     {
-      icon: <EyeOff className="w-5 h-5 text-blue-400" />,
-      title: 'Nol Penjualan Data & Tanpa Iklan',
-      desc: 'SaveMe tidak terafiliasi dengan pinjaman online, broker asuransi, atau platform iklan. Datamu tidak akan pernah diperjualbelikan.',
+      icon: <EyeOff className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
+      title: 'Nol Penjualan Data & Bebas Pinjol',
+      desc: 'SaveMe tidak terafiliasi dengan pinjaman online, broker asuransi, atau platform iklan. Datamu murni milikmu dan tidak akan pernah dijual.',
     },
   ]
 
@@ -50,14 +50,14 @@ export function SecuritySection() {
           {securityPillars.map((pillar, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-2xl bg-[#1a1d27]/70 border border-[#2d3348] hover:border-green-500/30 transition-all duration-200 flex gap-4"
+              className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27]/70 border border-slate-200 dark:border-[#2d3348] hover:border-green-500/30 transition-all duration-200 flex gap-4 shadow-xs dark:shadow-md text-slate-900 dark:text-white"
             >
-              <div className="w-11 h-11 rounded-xl bg-[#21263a] border border-[#2d3348] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center shrink-0">
                 {pillar.icon}
               </div>
               <div className="flex flex-col">
-                <h3 className="text-base font-bold text-white mb-1.5">{pillar.title}</h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-normal">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1.5">{pillar.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
                   {pillar.desc}
                 </p>
               </div>

@@ -33,28 +33,28 @@ export function ConfirmModal({
   const getIcon = () => {
     switch (variant) {
       case 'danger':
-        return <Trash2 className="w-6 h-6 text-red-400" />
+        return <Trash2 className="w-6 h-6 text-red-500 dark:text-red-400" />
       case 'warning':
-        return <AlertTriangle className="w-6 h-6 text-amber-400" />
+        return <AlertTriangle className="w-6 h-6 text-amber-500 dark:text-amber-400" />
       default:
-        return <Info className="w-6 h-6 text-blue-400" />
+        return <Info className="w-6 h-6 text-blue-500 dark:text-blue-400" />
     }
   }
 
   const getIconBg = () => {
     switch (variant) {
       case 'danger':
-        return 'bg-red-500/10 border-red-500/20 text-red-400'
+        return 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
       case 'warning':
-        return 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+        return 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400'
       default:
-        return 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+        return 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-      <div className="bg-[#1a1d27] border border-[#2d3348] rounded-2xl w-full max-w-md p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+      <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl w-full max-w-md p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Glow ambient */}
         <div
           className={cn(
@@ -72,7 +72,7 @@ export function ConfirmModal({
           type="button"
           onClick={onClose}
           disabled={loading}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a] transition-colors cursor-pointer disabled:opacity-50"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors cursor-pointer disabled:opacity-50"
         >
           <X className="w-4 h-4" />
         </button>
@@ -88,10 +88,10 @@ export function ConfirmModal({
             {getIcon()}
           </div>
 
-          <h3 className="text-lg font-bold text-white mb-1.5">{title}</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">{title}</h3>
 
           {description && (
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xs leading-relaxed mb-6">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xs leading-relaxed mb-6">
               {description}
             </p>
           )}
@@ -116,7 +116,7 @@ export function ConfirmModal({
               onClick={onConfirm}
               className={cn(
                 variant === 'warning' &&
-                  'bg-amber-500 hover:bg-amber-600 border-amber-600 text-slate-950 font-bold'
+                  'bg-amber-500 hover:bg-amber-600 border-amber-600 text-white dark:text-slate-950 font-bold'
               )}
             >
               {confirmText}

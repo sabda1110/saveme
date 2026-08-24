@@ -413,14 +413,14 @@ export default function TransactionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400">
+            <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400">
               <ReceiptText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Daftar Transaksi
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Kelola, cari, filter, dan perbaiki seluruh catatan keuangan pribadimu
               </p>
             </div>
@@ -469,43 +469,43 @@ export default function TransactionsPage() {
 
       {/* 3 Summary Badges for Filtered Results */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="p-4 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between shadow-sm">
           <div className="flex flex-col">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Pemasukan (Terfilter)
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-green-400 tabular-nums">
+            <span className="text-base sm:text-lg font-bold font-mono text-green-600 dark:text-green-400 tabular-nums">
               +{formatRupiah(filteredIncome)}
             </span>
           </div>
-          <div className="p-2 rounded-xl bg-green-500/10 text-green-400">
+          <div className="p-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400">
             <TrendingUp className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between shadow-sm">
           <div className="flex flex-col">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Pengeluaran (Terfilter)
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-red-400 tabular-nums">
+            <span className="text-base sm:text-lg font-bold font-mono text-red-600 dark:text-red-400 tabular-nums">
               -{formatRupiah(filteredExpense)}
             </span>
           </div>
-          <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
+          <div className="p-2 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400">
             <TrendingDown className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between shadow-sm">
           <div className="flex flex-col">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Selisih Arus Kas
             </span>
             <span
               className={cn(
                 'text-base sm:text-lg font-bold font-mono tabular-nums',
-                filteredNet >= 0 ? 'text-white' : 'text-red-400'
+                filteredNet >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'
               )}
             >
               {formatRupiah(filteredNet)}
@@ -518,7 +518,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filter & Search Bar (Responsive Stack) */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-[#1a1d27] border border-[#2d3348] flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-sm">
         {/* Search Input */}
         <div className="w-full md:w-80">
           <Input
@@ -530,15 +530,15 @@ export default function TransactionsPage() {
         </div>
 
         {/* Type Filter Buttons */}
-        <div className="flex items-center gap-1 bg-[#21263a] p-1 rounded-xl border border-[#2d3348] w-full md:w-auto">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#21263a] p-1 rounded-xl border border-slate-200 dark:border-[#2d3348] w-full md:w-auto">
           <button
             type="button"
             onClick={() => setTypeFilter('ALL')}
             className={cn(
               'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 md:flex-none text-center',
               typeFilter === 'ALL'
-                ? 'bg-slate-700 text-white shadow'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Semua
@@ -549,8 +549,8 @@ export default function TransactionsPage() {
             className={cn(
               'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 md:flex-none text-center',
               typeFilter === 'INCOME'
-                ? 'bg-green-500 text-slate-950 font-bold shadow'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-green-500 text-slate-950 font-bold shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Pemasukan
@@ -561,8 +561,8 @@ export default function TransactionsPage() {
             className={cn(
               'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 md:flex-none text-center',
               typeFilter === 'EXPENSE'
-                ? 'bg-red-500 text-white shadow'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-red-500 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             Pengeluaran
@@ -574,7 +574,7 @@ export default function TransactionsPage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full bg-[#21263a] text-slate-200 text-xs rounded-xl px-3 py-2.5 border border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
+            className="w-full bg-slate-50 dark:bg-[#21263a] text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 border border-slate-200 dark:border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
           >
             <option value="ALL">Semua Kategori</option>
             {categories.map((cat) => (
@@ -589,20 +589,20 @@ export default function TransactionsPage() {
         <button
           type="button"
           onClick={() => setSortOrder((p) => (p === 'desc' ? 'asc' : 'desc'))}
-          className="px-3 py-2.5 rounded-xl bg-[#21263a] hover:bg-[#2d3348] border border-[#2d3348] text-xs text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer w-full md:w-auto justify-center shrink-0"
+          className="px-3 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-[#21263a] dark:hover:bg-[#2d3348] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer w-full md:w-auto justify-center shrink-0"
           title="Ubah Urutan Tanggal"
         >
-          <ArrowUpDown className="w-3.5 h-3.5 text-green-400" />
+          <ArrowUpDown className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
           <span>{sortOrder === 'desc' ? 'Terbaru' : 'Terlama'}</span>
         </button>
       </div>
 
       {/* Transaction Table / List */}
-      <div className="p-4 sm:p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2d3348]">
+      <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-green-400" />
-            <h3 className="text-xs sm:text-sm font-bold text-white">
+            <Filter className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
               Menampilkan {filteredTransactions.length} dari {transactions.length} Transaksi
             </h3>
           </div>
@@ -614,7 +614,7 @@ export default function TransactionsPage() {
                 setTypeFilter('ALL')
                 setCategoryFilter('ALL')
               }}
-              className="text-xs text-green-400 hover:underline cursor-pointer"
+              className="text-xs text-green-600 dark:text-green-400 hover:underline cursor-pointer"
             >
               Reset Filter
             </button>
@@ -624,7 +624,7 @@ export default function TransactionsPage() {
         {filteredTransactions.length === 0 ? (
           <div className="py-12 sm:py-16 flex flex-col items-center justify-center text-center">
             <div className="text-4xl mb-2">🔍</div>
-            <h4 className="text-sm font-semibold text-slate-300 mb-1">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Tidak ada transaksi yang cocok
             </h4>
             <p className="text-xs text-slate-500 max-w-sm">
@@ -638,16 +638,16 @@ export default function TransactionsPage() {
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-[#21263a]/50 hover:bg-[#21263a] border border-[#2d3348] transition-all group"
+                  className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#21263a]/50 dark:hover:bg-[#21263a] border border-slate-200/80 dark:border-[#2d3348] transition-all group"
                 >
                   {/* Left info */}
                   <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#1a1d27] border border-[#2d3348] text-base sm:text-lg flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] text-base sm:text-lg flex items-center justify-center shrink-0 shadow-xs">
                       {tx.categoryIcon || '📦'}
                     </div>
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-1.5 sm:gap-2">
-                        <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[220px]">
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-[220px]">
                           {tx.description}
                         </span>
                         <Badge variant={isIncome ? 'income' : 'expense'} size="sm">
@@ -655,11 +655,11 @@ export default function TransactionsPage() {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] sm:text-xs text-slate-400">
+                        <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                           {tx.transactionDate}
                         </span>
                         {tx.walletName && (
-                          <span className="text-[10px] text-blue-300 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20 font-medium">
+                          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-500/20 font-medium">
                             {tx.walletName}
                           </span>
                         )}
@@ -672,7 +672,7 @@ export default function TransactionsPage() {
                     <span
                       className={cn(
                         'text-xs sm:text-base font-bold font-mono tabular-nums tracking-tight',
-                        isIncome ? 'text-green-400' : 'text-red-400'
+                        isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       )}
                     >
                       {isIncome ? `+${formatRupiah(tx.amount)}` : `-${formatRupiah(tx.amount)}`}
@@ -683,7 +683,7 @@ export default function TransactionsPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(tx)}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1a1d27] transition-all cursor-pointer"
+                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-[#1a1d27] transition-all cursor-pointer"
                         title="Edit transaksi"
                       >
                         <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -691,7 +691,7 @@ export default function TransactionsPage() {
                       <button
                         type="button"
                         onClick={() => setTxToDelete(tx.id)}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-[#1a1d27] transition-all cursor-pointer"
+                        className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white dark:hover:bg-[#1a1d27] transition-all cursor-pointer"
                         title="Hapus transaksi"
                       >
                         <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -720,12 +720,12 @@ export default function TransactionsPage() {
 
       {/* Modal Add / Edit Transaction (Responsive Bottom-sheet style on mobile) */}
       {(isAddModalOpen || editingTx !== null) && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-8 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200">
-            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-[#2d3348]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-8 shadow-2xl relative max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200 text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-green-400" />
-                <h3 className="text-base sm:text-lg font-bold text-white">
+                <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   {editingTx ? 'Edit Data Transaksi' : 'Catat Transaksi Baru'}
                 </h3>
               </div>
@@ -735,29 +735,29 @@ export default function TransactionsPage() {
                   setIsAddModalOpen(false)
                   setEditingTx(null)
                 }}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a]"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
                 {formError}
               </div>
             )}
 
             <form onSubmit={handleSubmitForm} className="flex flex-col gap-3.5 sm:gap-4">
               {/* Type Switcher */}
-              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#21263a] border border-[#2d3348]">
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348]">
                 <button
                   type="button"
                   onClick={() => handleSwitchFormType('EXPENSE')}
                   className={cn(
                     'py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer',
                     formType === 'EXPENSE'
-                      ? 'bg-red-500 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-red-500 text-white shadow-md font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   )}
                 >
                   Pengeluaran
@@ -768,8 +768,8 @@ export default function TransactionsPage() {
                   className={cn(
                     'py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer',
                     formType === 'INCOME'
-                      ? 'bg-green-500 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-green-500 text-slate-950 shadow-md font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   )}
                 >
                   Pemasukan
@@ -778,13 +778,13 @@ export default function TransactionsPage() {
 
               {/* Quick Template Auto-Fill Selector */}
               {templates.length > 0 && formType === 'EXPENSE' && (
-                <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-[#131620]/60 border border-[#2d3348]/60">
+                <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-[#131620]/60 border border-slate-200 dark:border-[#2d3348]/60">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300 flex items-center gap-1.5 font-semibold">
-                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-semibold">
+                      <Zap className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                       Pakai Template Cepat:
                     </span>
-                    <Link href="/templates" className="text-amber-400 hover:underline text-[11px]">
+                    <Link href="/templates" className="text-amber-600 dark:text-amber-400 hover:underline text-[11px] font-bold">
                       Atur Template
                     </Link>
                   </div>
@@ -794,7 +794,7 @@ export default function TransactionsPage() {
                         key={t.id}
                         type="button"
                         onClick={() => handleSelectTemplate(t.id)}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#21263a] border border-[#2d3348] hover:border-amber-500/60 hover:bg-[#2a3048] text-xs text-slate-200 transition-all shrink-0 cursor-pointer active:scale-95"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] hover:border-amber-500/60 hover:bg-amber-50 dark:hover:bg-[#2a3048] text-xs text-slate-800 dark:text-slate-200 transition-all shrink-0 cursor-pointer active:scale-95 shadow-2xs"
                       >
                         <span>{t.icon}</span>
                         <span className="font-medium">{t.name}</span>
@@ -806,7 +806,7 @@ export default function TransactionsPage() {
 
               {/* Celengan Impian Direct Deposit Selector */}
               {!editingTx && savingsGoals.length > 0 && formType === 'EXPENSE' && (
-                <div className="p-3.5 rounded-2xl bg-[#131620]/60 border border-[#2d3348] space-y-2.5">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#131620]/60 border border-slate-200 dark:border-[#2d3348] space-y-2.5">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -831,21 +831,21 @@ export default function TransactionsPage() {
                       }}
                       className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600 cursor-pointer"
                     />
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
-                      <Target className="w-4 h-4 text-purple-400" />
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       <span>Alokasikan / Setor ke Celengan Impian</span>
                     </div>
                   </label>
 
                   {isSavingsDeposit && (
                     <div className="space-y-1.5 pt-1 animate-in fade-in">
-                      <label className="text-[11px] font-semibold text-slate-400">
+                      <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                         Pilih Celengan Tujuan:
                       </label>
                       <select
                         value={targetGoalId}
                         onChange={(e) => setTargetGoalId(e.target.value)}
-                        className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-2.5 text-xs border border-[#2d3348] focus:border-purple-500 focus:outline-none cursor-pointer"
+                        className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs border border-slate-200 dark:border-[#2d3348] focus:border-purple-500 focus:outline-none cursor-pointer"
                       >
                         {savingsGoals.map((g) => {
                           const remaining = Math.max(0, g.targetAmount - g.currentAmount)
@@ -874,7 +874,7 @@ export default function TransactionsPage() {
 
               {/* Category Selector */}
               <FormField label="Kategori" required>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-[#2d3348]/40 rounded-xl bg-[#131620]/50">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-slate-200 dark:border-[#2d3348]/40 rounded-xl bg-slate-50 dark:bg-[#131620]/50">
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
@@ -883,8 +883,8 @@ export default function TransactionsPage() {
                       className={cn(
                         'flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-medium transition-all cursor-pointer',
                         formCategoryId === cat.id
-                          ? 'bg-green-500/20 border-green-500/50 text-white font-bold'
-                          : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:border-slate-500'
+                          ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-white font-bold shadow-xs'
+                          : 'bg-white dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500'
                       )}
                     >
                       <span className="text-xl">{cat.icon}</span>
@@ -902,7 +902,7 @@ export default function TransactionsPage() {
                   <select
                     value={formWalletId}
                     onChange={(e) => setFormWalletId(e.target.value)}
-                    className="w-full bg-[#21263a] text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
+                    className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-slate-200 dark:border-[#2d3348] focus:border-green-500 focus:outline-none cursor-pointer"
                   >
                     {wallets
                       .filter((w) => (formType === 'EXPENSE' ? !w.isLocked : true))
@@ -913,7 +913,7 @@ export default function TransactionsPage() {
                       ))}
                   </select>
                   {formType === 'EXPENSE' && (
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                       🔒 Kantong yang terkunci otomatis disembunyikan agar tabungan/dana darurat tidak terpakai belanja.
                     </p>
                   )}
@@ -939,7 +939,7 @@ export default function TransactionsPage() {
                 />
               </FormField>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348] mt-1">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-[#2d3348] mt-1">
                 <Button
                   type="button"
                   variant="ghost"
@@ -968,46 +968,46 @@ export default function TransactionsPage() {
 
       {/* Daily Overbudget Warning Modal */}
       {overbudgetWarning.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-amber-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-amber-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-150 text-slate-900 dark:text-white">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-500 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0">
                 ⚠️
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   Melebihi Batas Aman Harian
                 </h3>
-                <span className="text-xs text-amber-400 font-medium">Peringatan Pengeluaran</span>
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Peringatan Pengeluaran</span>
               </div>
             </div>
 
-            <div className="space-y-3 my-4 p-4 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs">
-              <div className="flex items-center justify-between text-slate-300">
+            <div className="space-y-3 my-4 p-4 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs">
+              <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                 <span>Batas Belanja Hari Ini:</span>
-                <span className="font-mono font-bold text-green-400">
+                <span className="font-mono font-bold text-green-600 dark:text-green-400">
                   {formatRupiah(overbudgetWarning.limit)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                 <span>Nominal Pengeluaran:</span>
-                <span className="font-mono font-bold text-red-400">
+                <span className="font-mono font-bold text-red-600 dark:text-red-400">
                   {formatRupiah(overbudgetWarning.amount)}
                 </span>
               </div>
-              <div className="pt-2 border-t border-[#2d3348] flex items-center justify-between font-bold text-amber-300">
+              <div className="pt-2 border-t border-slate-200 dark:border-[#2d3348] flex items-center justify-between font-bold text-amber-700 dark:text-amber-300">
                 <span>Selisih Lebih (Overbudget):</span>
-                <span className="font-mono text-amber-400">
+                <span className="font-mono text-amber-600 dark:text-amber-400">
                   + {formatRupiah(overbudgetWarning.excess)}
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed mb-5">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-5">
               Pengeluaran ini akan mengurangi jatah belanja hari-hari berikutnya. Apakah Anda tetap ingin menyimpan transaksi ini?
             </p>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#2d3348]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
                 type="button"
                 variant="ghost"

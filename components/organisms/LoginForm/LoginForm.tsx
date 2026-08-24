@@ -73,22 +73,22 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-[#1a1d27]/90 border border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+    <div className="w-full max-w-md bg-white dark:bg-[#1a1d27]/90 border border-slate-200 dark:border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
           Selamat Datang Kembali
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Masuk ke akun SaveMe untuk mengelola keuanganmu
         </p>
       </div>
 
       {isSessionExpired && !serverError && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-xs sm:text-sm text-amber-200 animate-in fade-in">
-          <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-xs sm:text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
+          <ShieldAlert className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="flex flex-col">
-            <span className="font-bold text-amber-300">Sesi Login Telah Berakhir</span>
-            <span className="text-[11px] sm:text-xs text-amber-200/80 mt-0.5">
+            <span className="font-bold text-amber-800 dark:text-amber-300">Sesi Login Telah Berakhir</span>
+            <span className="text-[11px] sm:text-xs text-amber-700/80 dark:text-amber-200/80 mt-0.5">
               Demi keamanan data finansial Anda, sesi aktif dibatasi selama 7 hari. Silakan masuk kembali.
             </span>
           </div>
@@ -96,8 +96,8 @@ export function LoginForm() {
       )}
 
       {serverError && (
-        <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 text-xs sm:text-sm text-red-300 animate-in fade-in">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+        <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 text-xs sm:text-sm text-red-700 dark:text-red-300 animate-in fade-in">
+          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
           <span>{serverError}</span>
         </div>
       )}
@@ -140,9 +140,9 @@ export function LoginForm() {
       </form>
 
       {/* Register redirect link */}
-      <div className="mt-8 pt-6 border-t border-[#2d3348]/70 text-center text-xs sm:text-sm text-slate-400">
+      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-[#2d3348]/70 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
         Belum punya akun SaveMe?{' '}
-        <Link href="/register" className="text-green-400 hover:text-green-300 font-semibold hover:underline">
+        <Link href="/register" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold hover:underline">
           Daftar Gratis
         </Link>
       </div>

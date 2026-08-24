@@ -139,22 +139,22 @@ export function PaydayAllocationModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
-      <div className="w-full max-w-xl rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-md animate-in fade-in">
+      <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-2xl p-6 sm:p-7 relative overflow-hidden max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white">
         {/* Glow ambient background */}
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#2d3348] relative z-10">
+        <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200 dark:border-[#2d3348] relative z-10">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
+            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30">
               <DollarSign className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 Alokasi Gaji Cerdas (Payday Hub)
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Bagi gaji masuk ke kas belanja, tabungan beku, dan celengan impian
               </p>
             </div>
@@ -162,21 +162,21 @@ export function PaydayAllocationModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg"
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-[#21263a]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
             {error}
           </div>
         )}
 
         <form onSubmit={handleExecuteAllocation} className="flex flex-col gap-5 relative z-10">
           {/* 1. Input Total Gaji & Rekening Payroll */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-[#21263a]/60 border border-[#2d3348]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200 dark:border-[#2d3348]">
             <FormField label="Total Gaji Masuk (Rp)" required>
               <Input
                 type="number"
@@ -188,11 +188,11 @@ export function PaydayAllocationModal({
             </FormField>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-300">Rekening Payroll Utama</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Rekening Payroll Utama</label>
               <select
                 value={payrollWalletId}
                 onChange={(e) => setPayrollWalletId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500 cursor-pointer"
                 required
               >
                 {spendingWallets.map((w) => (
@@ -207,8 +207,8 @@ export function PaydayAllocationModal({
           {/* 2. Preset Alokasi Switcher */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
-                <Sliders className="w-3.5 h-3.5 text-purple-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                <Sliders className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 Pilih Rumus / Preset Alokasi Gaji:
               </span>
             </div>
@@ -219,8 +219,8 @@ export function PaydayAllocationModal({
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
                   preset === '50_30_20'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20'
-                    : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20 font-bold'
+                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <span className="text-xs font-bold">50 / 30 / 20</span>
@@ -233,8 +233,8 @@ export function PaydayAllocationModal({
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
                   preset === '70_20_10'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20'
-                    : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20 font-bold'
+                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <span className="text-xs font-bold">70 / 20 / 10</span>
@@ -247,8 +247,8 @@ export function PaydayAllocationModal({
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
                   preset === 'CUSTOM'
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20'
-                    : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20 font-bold'
+                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
                 <span className="text-xs font-bold">Kustom Split</span>
@@ -260,19 +260,19 @@ export function PaydayAllocationModal({
           {/* 3. Breakdown Pembagian 3 Pos Finansial */}
           <div className="space-y-3">
             {/* Pos 1: Kas Belanja Operasional */}
-            <div className="p-3.5 rounded-2xl bg-[#21263a]/80 border border-green-500/30 flex flex-col gap-2">
+            <div className="p-3.5 rounded-2xl bg-green-50/70 dark:bg-[#21263a]/80 border border-green-500/30 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Unlock className="w-4 h-4 text-green-400" />
-                  <span className="text-xs font-bold text-green-400">
+                  <Unlock className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-xs font-bold text-green-700 dark:text-green-400">
                     1. Kas Belanja Operasional ({operatingPct}%)
                   </span>
                 </div>
-                <span className="text-sm font-black font-mono text-green-400">
+                <span className="text-sm font-black font-mono text-green-700 dark:text-green-400">
                   {formatRupiah(operatingAmount)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 Uang untuk makan, transportasi, jajan, dan kebutuhan harian (dipakai dalam Jatah Belanja Harian).
               </p>
               {preset === 'CUSTOM' && (
@@ -288,28 +288,28 @@ export function PaydayAllocationModal({
             </div>
 
             {/* Pos 2: Tabungan Beku / Dana Darurat */}
-            <div className="p-3.5 rounded-2xl bg-[#21263a]/80 border border-purple-500/30 flex flex-col gap-2">
+            <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-[#21263a]/80 border border-purple-500/30 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-purple-400" />
-                  <span className="text-xs font-bold text-purple-400">
+                  <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-400">
                     2. Tabungan Beku &amp; Dana Darurat ({lockedPct}%)
                   </span>
                 </div>
-                <span className="text-sm font-black font-mono text-purple-400">
+                <span className="text-sm font-black font-mono text-purple-700 dark:text-purple-400">
                   {formatRupiah(lockedAmount)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
                 Uang yang langsung dikunci &amp; diamankan agar tidak terpakai belanja (*Pay Yourself First*).
               </p>
               {lockedWallets.length > 0 && (
                 <div className="flex items-center justify-between gap-2 mt-1">
-                  <span className="text-[11px] text-slate-400">Target Kantong Beku:</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Target Kantong Beku:</span>
                   <select
                     value={lockedWalletId}
                     onChange={(e) => setLockedWalletId(e.target.value)}
-                    className="px-2.5 py-1 rounded-lg bg-[#131620] border border-[#2d3348] text-xs text-purple-300 focus:outline-none"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] text-xs text-purple-700 dark:text-purple-300 focus:outline-none cursor-pointer"
                   >
                     {lockedWallets.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -332,25 +332,25 @@ export function PaydayAllocationModal({
             </div>
 
             {/* Pos 3: Tabungan Impian (Savings Goals) */}
-            <div className="p-3.5 rounded-2xl bg-[#21263a]/80 border border-blue-500/30 flex flex-col gap-2">
+            <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-[#21263a]/80 border border-blue-500/30 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-blue-400" />
-                  <span className="text-xs font-bold text-blue-400">
+                  <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
                     3. Celengan Impian / Keinginan ({goalsPct}%)
                   </span>
                 </div>
-                <span className="text-sm font-black font-mono text-blue-400">
+                <span className="text-sm font-black font-mono text-blue-700 dark:text-blue-400">
                   {formatRupiah(goalsAmount)}
                 </span>
               </div>
               {savingsGoals.length > 0 ? (
                 <div className="flex items-center justify-between gap-2 mt-1">
-                  <span className="text-[11px] text-slate-400">Target Celengan:</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Target Celengan:</span>
                   <select
                     value={selectedGoalId}
                     onChange={(e) => setSelectedGoalId(e.target.value)}
-                    className="px-2.5 py-1 rounded-lg bg-[#131620] border border-[#2d3348] text-xs text-blue-300 focus:outline-none"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] text-xs text-blue-700 dark:text-blue-300 focus:outline-none cursor-pointer"
                   >
                     {savingsGoals.map((g) => (
                       <option key={g.id} value={g.id}>
@@ -378,7 +378,7 @@ export function PaydayAllocationModal({
           </div>
 
           {/* Footer Action */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#2d3348]">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#2d3348]">
             <Button type="button" variant="ghost" size="md" onClick={onClose} disabled={submitting}>
               Batal
             </Button>

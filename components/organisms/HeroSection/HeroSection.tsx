@@ -25,26 +25,25 @@ export function HeroSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
           {/* Release Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1a1d27] border border-[#2d3348] text-xs text-slate-300 mb-8 shadow-inner hover:border-green-500/40 transition-colors">
-            <span className="flex h-2 w-2 rounded-full bg-green-400 animate-ping" />
-            <span className="font-semibold text-green-400">SaveMe 1.0</span>
-            <span className="text-slate-500">|</span>
-            <span>Aplikasi Pencatat Keuangan Pribadi yang Sebenarnya</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 mb-8 shadow-xs dark:shadow-inner hover:border-green-500/40 transition-colors">
+            <span className="flex h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 animate-ping" />
+            <span className="font-bold text-green-600 dark:text-green-400">SaveMe 2.0</span>
+            <span className="text-slate-400 dark:text-slate-500">|</span>
+            <span>AI Receipt Scanner, Segregasi Kas &amp; Smart Payroll</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
-            Kendalikan Keuangan,{' '}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-emerald-300 to-teal-400">
-              Raih Masa Depan
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-6">
+            Kendalikan Kas,{' '}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 dark:from-green-400 dark:via-emerald-300 dark:to-teal-400">
+              Amankan Tabungan,
             </span>{' '}
-            Bebas Finansial.
+            Bebas Overspending.
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-slate-400 font-normal leading-relaxed mb-10 max-w-2xl">
-            Catat pemasukan dan pengeluaran harian dalam hitungan detik. Tanpa iklan,
-            tanpa ribet, dan dengan garansi <strong className="text-slate-200">100% privasi data terisolasi</strong>.
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 font-normal leading-relaxed mb-10 max-w-2xl">
+            Solusi cerdas kelola keuangan harian dengan <strong className="text-slate-900 dark:text-slate-200">AI Receipt Scanner</strong>, segregasi kas belanja vs tabungan beku, jatah harian dinamis, dan distribusi gajian otomatis.
           </p>
 
           {/* Action CTAs */}
@@ -66,10 +65,10 @@ export function HeroSection() {
                 <Button
                   variant="glow"
                   size="lg"
-                  className="w-full sm:w-auto text-base"
+                  className="w-full sm:w-auto text-base px-7"
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                 >
-                  Mulai Catat Gratis
+                  Mulai Bebas Finansial
                 </Button>
               </Link>
             )}
@@ -78,8 +77,8 @@ export function HeroSection() {
               <Button
                 variant="secondary"
                 size="lg"
-                className="w-full sm:w-auto text-base"
-                leftIcon={<Sparkles className="w-4 h-4 text-green-400" />}
+                className="w-full sm:w-auto text-base px-6"
+                leftIcon={<Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />}
               >
                 Coba Simulator Finansial
               </Button>
@@ -87,18 +86,22 @@ export function HeroSection() {
           </div>
 
           {/* Trust Value Props Checklist */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-6 text-xs sm:text-sm text-slate-300 font-medium pt-6 border-t border-[#2d3348]/60 w-full max-w-xl">
-            <div className="flex items-center justify-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-green-400 shrink-0" />
-              <span>Privasi Terisolasi</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 gap-x-4 text-xs sm:text-xs text-slate-700 dark:text-slate-300 font-medium pt-6 border-t border-slate-200 dark:border-[#2d3348]/60 w-full max-w-2xl">
+            <div className="flex items-center justify-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>AI Receipt Scanner</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Catat &lt; 10 Detik</span>
+            <div className="flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+              <span>Kas &amp; Celengan Terpisah</span>
             </div>
-            <div className="flex items-center justify-center gap-2 col-span-2 sm:col-span-1">
-              <Lock className="w-4 h-4 text-blue-400 shrink-0" />
-              <span>Enkripsi Aman</span>
+            <div className="flex items-center justify-center gap-1.5">
+              <Zap className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
+              <span>Jatah Harian Dinamis</span>
+            </div>
+            <div className="flex items-center justify-center gap-1.5">
+              <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span>100% Data Terisolasi</span>
             </div>
           </div>
         </div>

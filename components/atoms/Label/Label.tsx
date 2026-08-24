@@ -13,11 +13,11 @@ export function Label({
 }: LabelProps) {
   return (
     <label
-      className={cn('text-xs sm:text-sm font-medium text-slate-300 flex items-center gap-1', className)}
+      className={cn('text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1', className)}
       {...props}
     >
       {children}
-      {required && <span className="text-red-400 font-bold">*</span>}
+      {required && <span className="text-red-500 font-bold">*</span>}
     </label>
   )
 }

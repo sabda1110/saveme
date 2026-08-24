@@ -68,19 +68,19 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-[#1a1d27]/90 border border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+    <div className="w-full max-w-md bg-white dark:bg-[#1a1d27]/90 border border-slate-200 dark:border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
           Mulai Bebas Finansial
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Buat akun SaveMe baru secara gratis dalam 30 detik
         </p>
       </div>
 
       {serverError && (
-        <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 text-xs sm:text-sm text-red-300 animate-in fade-in">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+        <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 text-xs sm:text-sm text-red-700 dark:text-red-300 animate-in fade-in">
+          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
           <span>{serverError}</span>
         </div>
       )}
@@ -133,8 +133,8 @@ export function RegisterForm() {
           />
         </FormField>
 
-        <div className="flex items-center gap-2 text-[11px] text-slate-400 py-1">
-          <ShieldCheck className="w-4 h-4 text-green-400 shrink-0" />
+        <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 py-1">
+          <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
           <span>Data dienkripsi dan diisolasi dengan standar keamanan Firebase.</span>
         </div>
 
@@ -151,9 +151,9 @@ export function RegisterForm() {
       </form>
 
       {/* Login redirect link */}
-      <div className="mt-8 pt-6 border-t border-[#2d3348]/70 text-center text-xs sm:text-sm text-slate-400">
+      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-[#2d3348]/70 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
         Sudah punya akun SaveMe?{' '}
-        <Link href="/login" className="text-green-400 hover:text-green-300 font-semibold hover:underline">
+        <Link href="/login" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold hover:underline">
           Masuk di Sini
         </Link>
       </div>

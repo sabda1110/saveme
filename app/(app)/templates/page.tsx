@@ -176,14 +176,14 @@ export default function TemplatesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Zap className="w-4 h-4" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Template Pengeluaran
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             Simpan pengeluaran rutin Anda (seperti rokok/vape, parkir, kopi, bensin) agar form catatan transaksi otomatis terisi.
           </p>
         </div>
@@ -216,19 +216,19 @@ export default function TemplatesPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 rounded-2xl bg-[#1a1d27] animate-pulse border border-[#2d3348]" />
+            <div key={i} className="h-44 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] animate-pulse border border-slate-200 dark:border-[#2d3348]" />
           ))}
         </div>
       ) : templates.length === 0 ? (
         /* Empty State */
-        <div className="p-8 sm:p-12 text-center bg-[#1a1d27] rounded-3xl border border-[#2d3348] flex flex-col items-center justify-center max-w-lg mx-auto mt-6 shadow-xl">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mb-4">
+        <div className="p-8 sm:p-12 text-center bg-white dark:bg-[#1a1d27] rounded-3xl border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center max-w-lg mx-auto mt-6 shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 dark:text-amber-400 flex items-center justify-center text-3xl mb-4">
             ⚡
           </div>
-          <h3 className="text-lg font-bold text-white mb-1.5">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">
             Belum Ada Template Pengeluaran
           </h3>
-          <p className="text-xs text-slate-400 leading-relaxed mb-6">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
             Buat template untuk pengeluaran yang sering Anda beli (misalnya: rokok/vape, parkir harian, kopi pagi, atau makan warteg) agar saat mencatat pengeluaran Anda tinggal 1 kali klik!
           </p>
           <Button
@@ -246,20 +246,20 @@ export default function TemplatesPage() {
           {templates.map((tpl) => (
             <div
               key={tpl.id}
-              className="p-5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] hover:border-amber-500/50 flex flex-col justify-between transition-all duration-200 shadow-lg hover:shadow-amber-500/5 group"
+              className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] hover:border-amber-500/50 flex flex-col justify-between transition-all duration-200 shadow-sm dark:shadow-lg hover:shadow-amber-500/5 group text-slate-900 dark:text-white"
             >
               <div>
                 {/* Card Top */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl w-11 h-11 rounded-xl bg-[#21263a] border border-[#2d3348] flex items-center justify-center shrink-0">
+                    <span className="text-2xl w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center shrink-0">
                       {tpl.icon}
                     </span>
                     <div>
-                      <h3 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
                         {tpl.name}
                       </h3>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         {tpl.categoryName || 'Pengeluaran'}
                       </span>
                     </div>
@@ -270,7 +270,7 @@ export default function TemplatesPage() {
                       type="button"
                       onClick={() => setTemplateToDelete(tpl)}
                       title="Hapus template"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-[#21263a] transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -278,18 +278,18 @@ export default function TemplatesPage() {
                 </div>
 
                 {/* Amount */}
-                <div className="my-3 p-3 rounded-xl bg-[#21263a] border border-[#2d3348] flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Nominal:</span>
-                  <span className="text-lg font-extrabold font-mono text-amber-400 tabular-nums">
+                <div className="my-3 p-3 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Nominal:</span>
+                  <span className="text-lg font-extrabold font-mono text-amber-600 dark:text-amber-400 tabular-nums">
                     {formatRupiah(tpl.amount)}
                   </span>
                 </div>
 
                 {/* Wallet Badge if set */}
                 {tpl.walletName && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-300 mb-2">
-                    <span className="text-slate-400">Kantong default:</span>
-                    <span className="px-2 py-0.5 rounded-md bg-[#21263a] border border-[#2d3348] font-medium text-slate-200">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 mb-2">
+                    <span className="text-slate-500 dark:text-slate-400">Kantong default:</span>
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] font-medium text-slate-700 dark:text-slate-200">
                       {tpl.walletName}
                     </span>
                   </div>
@@ -297,7 +297,7 @@ export default function TemplatesPage() {
               </div>
 
               {/* Action Button */}
-              <div className="pt-3 border-t border-[#2d3348] mt-2">
+              <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] mt-2">
                 <Button
                   variant="glow"
                   size="sm"
@@ -315,16 +315,16 @@ export default function TemplatesPage() {
 
       {/* Record Transaction Pre-filled Modal */}
       {isTxModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#1a1d27] border border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200 text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{selectedTemplateForTx?.icon || '⚡'}</span>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                     Catat Pengeluaran
                   </h3>
-                  <p className="text-[11px] text-amber-400 font-medium">
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                     Data telah terisi otomatis dari template
                   </p>
                 </div>
@@ -332,7 +332,7 @@ export default function TemplatesPage() {
               <button
                 type="button"
                 onClick={() => setIsTxModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -340,7 +340,7 @@ export default function TemplatesPage() {
 
             <form onSubmit={handleSubmitTransaction} className="flex flex-col gap-4">
               {txError && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
                   {txError}
                 </div>
               )}
@@ -370,7 +370,7 @@ export default function TemplatesPage() {
                   <select
                     value={txCategoryId}
                     onChange={(e) => setTxCategoryId(e.target.value)}
-                    className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-[#2d3348] focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-slate-200 dark:border-[#2d3348] focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -384,7 +384,7 @@ export default function TemplatesPage() {
                   <select
                     value={txWalletId}
                     onChange={(e) => setTxWalletId(e.target.value)}
-                    className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-[#2d3348] focus:outline-none focus:border-amber-500"
+                    className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-slate-200 dark:border-[#2d3348] focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     {wallets
                       .filter((w) => !w.isLocked)
@@ -406,7 +406,7 @@ export default function TemplatesPage() {
                 />
               </FormField>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-[#2d3348]">
                 <Button
                   type="button"
                   variant="ghost"

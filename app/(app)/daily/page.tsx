@@ -433,19 +433,19 @@ export default function DailyBudgetPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400">
+            <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400">
               <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   Jatah Belanja &amp; AI Coach
                 </h1>
                 <Badge variant="brand" size="sm">
                   SaveMe AI Coach
                 </Badge>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Perhitungan dinamis berbasis kas operasional riil, proteksi tabungan beku, dan SaveMe AI Coach
               </p>
             </div>
@@ -468,41 +468,41 @@ export default function DailyBudgetPage() {
 
       {/* Multi-Wallet Segregation Status Bar */}
       {wallets.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-[#1a1d27] border border-[#2d3348]">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#21263a]/60 border border-green-500/20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-green-500/20">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center">
                 <Unlock className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-green-400 block">
+                <span className="text-[10px] uppercase font-bold text-green-700 dark:text-green-400 block">
                   Kas Operasional (Siap Belanja)
                 </span>
-                <span className="text-sm sm:text-base font-bold font-mono text-white tabular-nums">
+                <span className="text-sm sm:text-base font-bold font-mono text-slate-900 dark:text-white tabular-nums">
                   {formatRupiah(totalSpendingCash)}
                 </span>
               </div>
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
               {spendingWallets.length} Kantong
             </span>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#21263a]/60 border border-amber-500/20">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-amber-500/20">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold text-amber-400 block">
+                <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 block">
                   Tabungan Beku (Terlindungi)
                 </span>
-                <span className="text-sm sm:text-base font-bold font-mono text-amber-300 tabular-nums">
+                <span className="text-sm sm:text-base font-bold font-mono text-amber-700 dark:text-amber-300 tabular-nums">
                   {formatRupiah(totalLockedSavings)}
                 </span>
               </div>
             </div>
-            <span className="text-[10px] text-amber-400/80 font-medium">
+            <span className="text-[10px] text-amber-700 dark:text-amber-400/80 font-medium">
               {lockedWallets.length} Kantong
             </span>
           </div>
@@ -510,15 +510,15 @@ export default function DailyBudgetPage() {
       )}
 
       {/* Auto-Generated Gemini AI Coach Briefing Card */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#1a1d27] to-[#1a1d27] border border-green-500/40 shadow-2xl flex items-start gap-4">
-        <div className="p-3 rounded-2xl bg-green-500/10 text-green-400 border border-green-500/20 shrink-0">
+      <div className="p-5 sm:p-6 rounded-2xl bg-emerald-50/70 dark:bg-gradient-to-r dark:from-emerald-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-green-500/40 shadow-sm dark:shadow-2xl flex items-start gap-4">
+        <div className="p-3 rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 shrink-0">
           <Bot className={cn('w-6 h-6', aiLoading && 'animate-pulse')} />
         </div>
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold text-green-400 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-300" />
+              <span className="text-xs sm:text-sm font-bold text-green-700 dark:text-green-400 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                 SaveMe AI Financial Coach
               </span>
             </div>
@@ -528,8 +528,8 @@ export default function DailyBudgetPage() {
           </div>
 
           {aiLoading && !aiAdvice ? (
-            <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
-              <div className="w-4 h-4 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin" />
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 py-2">
+              <div className="w-4 h-4 border-2 border-green-500/30 border-t-green-600 dark:border-t-green-400 rounded-full animate-spin" />
               <span>SaveMe AI Coach sedang menghitung jatah belanja &amp; strategi tabunganmu hari ini...</span>
             </div>
           ) : (
@@ -541,56 +541,56 @@ export default function DailyBudgetPage() {
       {/* 2 Core Strategic Indicators (Target Sisihkan per Hari vs Batas Belanja Hari Ini) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Card 1: Wajib Disisihkan untuk Tabungan Impian */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-500/15 via-[#1a1d27] to-[#1a1d27] border border-purple-500/30 shadow-xl flex items-center justify-between">
+        <div className="p-5 sm:p-6 rounded-2xl bg-purple-50/80 dark:bg-gradient-to-br dark:from-purple-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
               <Target className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-400 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 block">
                 Wajib Disisihkan per Hari
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-300 tabular-nums tracking-tight mt-0.5">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-purple-700 dark:text-purple-300 tabular-nums tracking-tight mt-0.5">
                 {formatRupiah(totalDailySavingsRequired)}
-                <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
               </div>
-              <p className="text-[11px] text-slate-300 mt-1">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                 Alokasi wajib untuk mencapai {savingsGoals.length} celengan impianmu tepat waktu.
               </p>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
             <PiggyBank className="w-5 h-5" />
           </div>
         </div>
 
         {/* Card 2: Sisa Uang Bebas yang Boleh Dibelanjakan Hari Ini */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-[#1a1d27] to-[#1a1d27] border border-green-500/30 shadow-xl flex items-center justify-between">
+        <div className="p-5 sm:p-6 rounded-2xl bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-green-500/30 shadow-sm dark:shadow-xl flex items-center justify-between">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/30 text-green-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
               <Compass className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-green-400 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400 block">
                 Batas Aman Belanja Hari Ini
               </span>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tabular-nums tracking-tight mt-0.5">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums tracking-tight mt-0.5">
                 {formatRupiah(dynamicSafeToSpendDaily)}
-                <span className="text-xs text-slate-400 font-sans font-normal ml-1">/ hari</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-sans font-normal ml-1">/ hari</span>
               </div>
-              <p className="text-[11px] text-slate-300 mt-1">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
                 Dihitung murni dari saldo kas operasional dibagi {daysRemainingInMonth} hari tersisa.
               </p>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-green-500/10 text-green-400 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
             <WalletIcon className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* Mode Switcher Filter Tabs: Daily vs Weekly vs Monthly */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-[#1a1d27] border border-[#2d3348] self-start overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] self-start overflow-x-auto max-w-full no-scrollbar">
         <div className="flex items-center gap-1 min-w-max">
           <button
             type="button"
@@ -598,8 +598,8 @@ export default function DailyBudgetPage() {
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
               viewMode === 'daily'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             <Calendar className="w-3.5 h-3.5" />
@@ -611,8 +611,8 @@ export default function DailyBudgetPage() {
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
               viewMode === 'weekly'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -624,8 +624,8 @@ export default function DailyBudgetPage() {
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
               viewMode === 'monthly'
-                ? 'bg-green-500 text-slate-950 font-bold shadow-lg shadow-green-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             <WalletIcon className="w-3.5 h-3.5" />
@@ -635,18 +635,18 @@ export default function DailyBudgetPage() {
       </div>
 
       {/* Main Budget Card with Live Meter */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#1a1d27] via-[#1e2436] to-[#131620] border border-[#2d3348] shadow-2xl relative overflow-hidden flex flex-col gap-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#1e2436] dark:to-[#131620] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-2xl relative overflow-hidden flex flex-col gap-6 text-slate-900 dark:text-white">
         {/* Glow ambient */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-green-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-[#21263a] border border-[#2d3348] text-green-400 shrink-0 shadow-inner">
+            <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-green-600 dark:text-green-400 shrink-0 shadow-inner">
               {statusInfo.icon}
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {viewMode === 'daily'
                     ? 'Sisa Jatah Belanja Hari Ini'
                     : viewMode === 'weekly'
@@ -662,24 +662,24 @@ export default function DailyBudgetPage() {
                 <span
                   className={cn(
                     'text-3xl sm:text-5xl font-black font-mono tracking-tight tabular-nums',
-                    remainingCurrent >= 0 ? 'text-white' : 'text-red-400'
+                    remainingCurrent >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600 dark:text-red-400'
                   )}
                 >
                   {formatRupiah(remainingCurrent)}
                 </span>
-                <span className="text-xs sm:text-sm text-slate-400 font-sans">
+                <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-sans">
                   tersisa dari batas {formatRupiah(currentLimit)}
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-2 max-w-lg leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 max-w-lg leading-relaxed">
                 {statusInfo.desc}
               </p>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#21263a]/80 border border-[#2d3348] flex flex-col items-start md:items-end justify-center shrink-0 gap-1">
-            <span className="text-xs text-slate-400">Total Terpakai:</span>
-            <span className="text-xl sm:text-2xl font-bold font-mono text-purple-300">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/80 border border-slate-200 dark:border-[#2d3348] flex flex-col items-start md:items-end justify-center shrink-0 gap-1">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Total Terpakai:</span>
+            <span className="text-xl sm:text-2xl font-bold font-mono text-purple-700 dark:text-purple-300">
               {formatRupiah(currentSpent)}
             </span>
             <span className="text-[11px] text-slate-500 font-mono">
@@ -690,7 +690,7 @@ export default function DailyBudgetPage() {
 
         {/* Live Progress Bar */}
         <div className="relative z-10 flex flex-col gap-2">
-          <div className="w-full h-3 bg-[#131620] rounded-full overflow-hidden border border-[#2d3348]/60 p-0.5">
+          <div className="w-full h-3 bg-slate-100 dark:bg-[#131620] rounded-full overflow-hidden border border-slate-200 dark:border-[#2d3348]/60 p-0.5">
             <div
               className={cn(
                 'h-full rounded-full transition-all duration-700',
@@ -709,15 +709,15 @@ export default function DailyBudgetPage() {
       {/* 2 Interactive AI Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Feature 1: Spending Decision Checker ("Boleh Beli Gak Ya?") */}
-        <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <ShoppingBag className="w-5 h-5 text-purple-400" />
-              <h3 className="text-base font-bold text-white">
+              <ShoppingBag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 Boleh Beli Gak Ya? (AI Spending Checker)
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Punya rencana belanja? Tanyakan ke SaveMe AI Coach untuk memeriksa apakah barang tersebut aman dibeli hari ini tanpa merusak target tabungan impianmu.
             </p>
 
@@ -755,22 +755,22 @@ export default function DailyBudgetPage() {
           </div>
 
           {itemDecision && (
-            <div className="mt-4 p-4 rounded-xl bg-[#21263a] border border-purple-500/30 text-xs text-slate-200 animate-in fade-in leading-relaxed">
+            <div className="mt-4 p-4 rounded-xl bg-purple-50/50 dark:bg-[#21263a] border border-purple-200 dark:border-purple-500/30 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in leading-relaxed">
               <MarkdownView content={itemDecision} />
             </div>
           )}
         </div>
 
         {/* Feature 2: Custom AI Question Box */}
-        <div className="p-6 rounded-2xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Bot className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-base font-bold text-white">
+              <Bot className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 Konsultasi Finansial dengan AI Coach
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Tanyakan strategi menabung, cara melunasi cicilan lebih cepat, atau tips hemat harian kepada asisten keuangan pribadimu.
             </p>
 
@@ -781,7 +781,7 @@ export default function DailyBudgetPage() {
                   value={customQuery}
                   onChange={(e) => setCustomQuery(e.target.value)}
                   placeholder="Contoh: Bagaimana cara terbaik membagi sisa saldo agar bisa beli laptop dalam 3 bulan?"
-                  className="w-full bg-[#21263a] text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-[#2d3348] focus:border-green-500 focus:outline-none resize-none"
+                  className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-4 py-3 text-xs sm:text-sm border border-slate-200 dark:border-[#2d3348] focus:border-green-500 focus:outline-none resize-none"
                   required
                 />
               </FormField>
@@ -799,7 +799,7 @@ export default function DailyBudgetPage() {
           </div>
 
           {queryAnswer && (
-            <div className="mt-4 p-4 rounded-xl bg-[#21263a] border border-green-500/30 text-xs text-slate-200 animate-in fade-in leading-relaxed max-h-60 overflow-y-auto">
+            <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-green-500/30 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in leading-relaxed max-h-60 overflow-y-auto">
               <MarkdownView content={queryAnswer} />
             </div>
           )}

@@ -171,19 +171,19 @@ export function ManageTemplatesModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-      <div className="bg-[#1a1d27] border border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+      <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200 text-slate-900 dark:text-white">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-white">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 Kelola Template Catat Cepat
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Atur nominal rokok/vape, parkir, kopi, dan kebutuhan rutin lainnya
               </p>
             </div>
@@ -191,7 +191,7 @@ export function ManageTemplatesModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#21263a] transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -200,22 +200,22 @@ export function ManageTemplatesModal({
         {/* Add / Edit Form Mode */}
         {isAdding ? (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 animate-in fade-in">
-            <div className="flex items-center justify-between pb-2 border-b border-[#2d3348]">
-              <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#2d3348]">
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
                 {editingTemplate ? 'Edit Template' : 'Tambah Template Baru'}
               </span>
               <button
                 type="button"
                 onClick={handleCancelForm}
-                className="text-xs text-slate-400 hover:text-white"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               >
                 Batal
               </button>
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
                 {error}
               </div>
             )}
@@ -231,8 +231,8 @@ export function ManageTemplatesModal({
                     className={cn(
                       'w-10 h-10 rounded-xl text-xl flex items-center justify-center border transition-all cursor-pointer',
                       icon === emoji
-                        ? 'bg-amber-500/20 border-amber-500 text-white shadow-md scale-110'
-                        : 'bg-[#21263a] border-[#2d3348] hover:border-slate-500'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-white shadow-md scale-110'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-800 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500'
                     )}
                   >
                     {emoji}
@@ -266,7 +266,7 @@ export function ManageTemplatesModal({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-[#2d3348] focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-slate-200 dark:border-[#2d3348] focus:outline-none focus:border-amber-500 cursor-pointer"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -280,7 +280,7 @@ export function ManageTemplatesModal({
                 <select
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
-                  className="w-full bg-[#21263a] text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-[#2d3348] focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-slate-200 dark:border-[#2d3348] focus:outline-none focus:border-amber-500 cursor-pointer"
                 >
                   <option value="">-- Pilih Kantong (Opsional) --</option>
                   {wallets
@@ -294,7 +294,7 @@ export function ManageTemplatesModal({
               </FormField>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348]">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-[#2d3348]">
               <Button type="button" variant="ghost" size="md" onClick={handleCancelForm}>
                 Batal
               </Button>
@@ -313,7 +313,7 @@ export function ManageTemplatesModal({
           /* Template List View */
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {templates.length} Template Aktif
               </span>
               <Button
@@ -328,10 +328,10 @@ export function ManageTemplatesModal({
             </div>
 
             {templates.length === 0 ? (
-              <div className="p-8 text-center bg-[#21263a]/50 rounded-2xl border border-[#2d3348]">
+              <div className="p-8 text-center bg-slate-50 dark:bg-[#21263a]/50 rounded-2xl border border-slate-200 dark:border-[#2d3348]">
                 <span className="text-3xl mb-2 block">⚡</span>
-                <p className="text-sm font-bold text-white">Belum Ada Template</p>
-                <p className="text-xs text-slate-400 mt-1 mb-4">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Belum Ada Template</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
                   Buat template cepat untuk rokok, parkir, kopi, dll.
                 </p>
                 <Button variant="glow" size="sm" onClick={handleOpenAdd}>
@@ -343,22 +343,22 @@ export function ManageTemplatesModal({
                 {templates.map((tpl) => (
                   <div
                     key={tpl.id}
-                    className="p-3.5 rounded-xl bg-[#21263a] border border-[#2d3348] hover:border-amber-500/40 flex items-center justify-between transition-all"
+                    className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#21263a] border border-slate-200/80 dark:border-[#2d3348] hover:border-amber-500/40 flex items-center justify-between transition-all"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-2xl w-9 h-9 rounded-xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-center shrink-0">
+                      <span className="text-2xl w-9 h-9 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center shrink-0 shadow-2xs">
                         {tpl.icon}
                       </span>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-white truncate">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {tpl.name}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs font-extrabold font-mono text-amber-400">
+                          <span className="text-xs font-extrabold font-mono text-amber-600 dark:text-amber-400">
                             {formatRupiah(tpl.amount)}
                           </span>
                           {tpl.walletName && (
-                            <span className="text-[10px] text-slate-400 bg-[#1a1d27] px-1.5 py-0.5 rounded border border-[#2d3348]">
+                            <span className="text-[10px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-[#1a1d27] px-1.5 py-0.5 rounded border border-slate-200 dark:border-[#2d3348]">
                               {tpl.walletName}
                             </span>
                           )}
@@ -370,7 +370,7 @@ export function ManageTemplatesModal({
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(tpl)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1a1d27] transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-[#1a1d27] transition-colors"
                         title="Edit Template"
                       >
                         <Pencil className="w-4 h-4" />
@@ -378,7 +378,7 @@ export function ManageTemplatesModal({
                       <button
                         type="button"
                         onClick={() => setTemplateToDelete(tpl)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-[#1a1d27] transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white dark:hover:bg-[#1a1d27] transition-colors"
                         title="Hapus Template"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -389,7 +389,7 @@ export function ManageTemplatesModal({
               </div>
             )}
 
-            <div className="pt-3 border-t border-[#2d3348] flex justify-end">
+            <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] flex justify-end">
               <Button variant="secondary" size="md" onClick={onClose}>
                 Tutup
               </Button>

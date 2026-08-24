@@ -32,24 +32,24 @@ export function MockTransaction({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-3.5 rounded-xl bg-[#21263a]/70 hover:bg-[#21263a] border border-[#2d3348]/70 transition-colors duration-150',
+        'flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#21263a]/70 dark:hover:bg-[#21263a] border border-slate-200/80 dark:border-[#2d3348]/70 transition-colors duration-150 text-slate-900 dark:text-white',
         className
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-xl bg-[#1a1d27] border border-[#2d3348] flex items-center justify-center text-lg shrink-0 shadow-inner">
+        <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center text-lg shrink-0 shadow-2xs">
           {icon}
         </div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-100 truncate">
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
               {description || category}
             </span>
             <Badge variant={isIncome ? 'income' : 'expense'} size="sm">
               {category}
             </Badge>
           </div>
-          <span className="text-xs text-slate-400 mt-0.5">{date}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{date}</span>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ export function MockTransaction({
         <span
           className={cn(
             'text-sm sm:text-base font-bold font-mono tabular-nums tracking-tight',
-            isIncome ? 'text-green-400' : 'text-red-400'
+            isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           )}
         >
           {isIncome ? `+${formattedAmount}` : `-${formattedAmount}`}

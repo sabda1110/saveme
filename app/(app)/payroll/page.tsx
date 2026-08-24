@@ -401,14 +401,14 @@ export default function PayrollPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400">
               <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Alokasi Pemasukan &amp; Payroll
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Pusat distribusi gaji, uang saku pelajar, dan pemisahan kas belanja vs tabungan beku
               </p>
             </div>
@@ -458,10 +458,10 @@ export default function PayrollPage() {
       {/* 🛡️ 1. Monthly Allocation Status & Cycle Banner */}
       <div
         className={cn(
-          'p-5 sm:p-7 rounded-3xl border shadow-2xl relative overflow-hidden transition-all',
+          'p-5 sm:p-7 rounded-3xl border shadow-md dark:shadow-2xl relative overflow-hidden transition-all',
           isAlreadyAllocatedThisMonth
-            ? 'bg-gradient-to-br from-emerald-950/70 via-[#1a1d27] to-[#1a1d27] border-green-500/40'
-            : 'bg-gradient-to-br from-purple-950/50 via-[#1a1d27] to-[#1a1d27] border-purple-500/30'
+            ? 'bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/70 dark:via-[#1a1d27] dark:to-[#1a1d27] border-green-500/40'
+            : 'bg-gradient-to-br from-purple-50 via-white to-white dark:from-purple-950/50 dark:via-[#1a1d27] dark:to-[#1a1d27] border-purple-500/30'
         )}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -470,8 +470,8 @@ export default function PayrollPage() {
               className={cn(
                 'p-3.5 rounded-2xl border shrink-0',
                 isAlreadyAllocatedThisMonth
-                  ? 'bg-green-500/20 border-green-500/40 text-green-400'
-                  : 'bg-purple-500/20 border-purple-500/40 text-purple-300 animate-pulse'
+                  ? 'bg-green-500/20 border-green-500/40 text-green-600 dark:text-green-400'
+                  : 'bg-purple-500/20 border-purple-500/40 text-purple-600 dark:text-purple-300 animate-pulse'
               )}
             >
               {isAlreadyAllocatedThisMonth ? (
@@ -483,7 +483,7 @@ export default function PayrollPage() {
 
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Status Alokasi Periode {monthName}
                 </span>
                 {isAlreadyAllocatedThisMonth ? (
@@ -491,13 +491,13 @@ export default function PayrollPage() {
                     ✅ Sudah Dialokasikan (Terkunci 1x/Bulan)
                   </Badge>
                 ) : (
-                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[11px] font-bold border border-purple-500/30">
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[11px] font-bold border border-purple-500/30">
                     ⚠️ Belum Dialokasikan
                   </span>
                 )}
               </div>
 
-              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
                 {isAlreadyAllocatedThisMonth && currentMonthAllocation
                   ? `Pemasukan bulan ${monthName} sebesar ${formatRupiah(currentMonthAllocation.totalSalary)} telah didistribusikan ke Kas Belanja (${formatRupiah(currentMonthAllocation.operatingAmount)}), Tabungan Beku (${formatRupiah(currentMonthAllocation.lockedAmount)}), dan Celengan Impian.`
                   : isAlreadyAllocatedThisMonth
@@ -506,7 +506,7 @@ export default function PayrollPage() {
               </p>
 
               {!isAlreadyAllocatedThisMonth && (
-                <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200 leading-relaxed">
+                <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
                   💡 <strong>Baru bergabung bulan ini?</strong> Jika kamu sudah menerima gaji dan saldo sudah dicatat manual lewat Saldo Awal, klik <strong>&quot;Lewati Bulan Ini&quot;</strong> agar notifikasi ini tidak muncul lagi.
                 </div>
               )}
@@ -520,7 +520,7 @@ export default function PayrollPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setResetModalOpen(true)}
-                className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/30 text-xs cursor-pointer"
+                className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/30 text-xs cursor-pointer"
                 leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
               >
                 Koreksi / Reset Alokasi
@@ -532,7 +532,7 @@ export default function PayrollPage() {
                 size="sm"
                 onClick={handleSkipThisMonth}
                 loading={skipping}
-                className="text-slate-400 hover:text-slate-200 hover:bg-slate-500/10 border border-slate-500/30 text-xs cursor-pointer"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-500/10 border border-slate-300 dark:border-slate-500/30 text-xs cursor-pointer"
                 leftIcon={<ChevronRight className="w-3.5 h-3.5" />}
               >
                 Lewati Bulan Ini
@@ -543,39 +543,39 @@ export default function PayrollPage() {
 
         {/* Breakdown Card if Already Allocated */}
         {isAlreadyAllocatedThisMonth && currentMonthAllocation && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-[#2d3348]/70">
-            <div className="p-3.5 rounded-2xl bg-[#131620]/80 border border-green-500/20 flex flex-col">
-              <span className="text-[11px] font-bold text-green-400 flex items-center gap-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-slate-200 dark:border-[#2d3348]/70">
+            <div className="p-3.5 rounded-2xl bg-white dark:bg-[#131620]/80 border border-green-500/30 flex flex-col shadow-sm">
+              <span className="text-[11px] font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
                 <Unlock className="w-3.5 h-3.5" /> 1. Kas Belanja Harian
               </span>
-              <span className="text-base font-black font-mono text-white mt-1">
+              <span className="text-base font-black font-mono text-slate-900 dark:text-white mt-1">
                 {formatRupiah(currentMonthAllocation.operatingAmount)}
               </span>
-              <span className="text-[10px] text-slate-400 mt-0.5">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                 Masuk ke {currentMonthAllocation.primaryWalletName}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#131620]/80 border border-purple-500/20 flex flex-col">
-              <span className="text-[11px] font-bold text-purple-400 flex items-center gap-1.5">
+            <div className="p-3.5 rounded-2xl bg-white dark:bg-[#131620]/80 border border-purple-500/30 flex flex-col shadow-sm">
+              <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5" /> 2. Tabungan Beku (*Safe*)
               </span>
-              <span className="text-base font-black font-mono text-white mt-1">
+              <span className="text-base font-black font-mono text-slate-900 dark:text-white mt-1">
                 {formatRupiah(currentMonthAllocation.lockedAmount)}
               </span>
-              <span className="text-[10px] text-slate-400 mt-0.5">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                 Terkunci di {currentMonthAllocation.lockedWalletName || 'Kantong Beku'}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#131620]/80 border border-blue-500/20 flex flex-col">
-              <span className="text-[11px] font-bold text-blue-400 flex items-center gap-1.5">
+            <div className="p-3.5 rounded-2xl bg-white dark:bg-[#131620]/80 border border-blue-500/30 flex flex-col shadow-sm">
+              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                 <Target className="w-3.5 h-3.5" /> 3. Celengan Impian
               </span>
-              <span className="text-base font-black font-mono text-white mt-1">
+              <span className="text-base font-black font-mono text-slate-900 dark:text-white mt-1">
                 {formatRupiah(currentMonthAllocation.goalsAmount)}
               </span>
-              <span className="text-[10px] text-slate-400 mt-0.5">
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                 Disetor ke target impian aktif
               </span>
             </div>
@@ -585,12 +585,12 @@ export default function PayrollPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ⚙️ 2. Konfigurasi Profil Finansial & Siklus (Col-span-5) */}
-        <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between text-slate-900 dark:text-white">
           <div>
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-purple-400" />
-                <h3 className="text-base font-bold text-white">Mode Finansial &amp; Siklus</h3>
+                <Sliders className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Mode Finansial &amp; Siklus</h3>
               </div>
               <Badge variant="brand" size="sm">
                 {incomeType === 'SALARIED'
@@ -604,7 +604,7 @@ export default function PayrollPage() {
             <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
               {/* Income Type Selector */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-300">Pilih Profil Pengguna:</label>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Pilih Profil Pengguna:</label>
                 <div className="grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
@@ -616,7 +616,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1',
                       incomeType === 'SALARIED'
                         ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <Briefcase className="w-4 h-4" />
@@ -633,7 +633,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1',
                       incomeType === 'STUDENT_ALLOWANCE'
                         ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <GraduationCap className="w-4 h-4" />
@@ -650,7 +650,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1',
                       incomeType === 'FREELANCE_VARIABLE'
                         ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-400 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <Zap className="w-4 h-4" />
@@ -686,8 +686,8 @@ export default function PayrollPage() {
 
               {/* Salaried Specific Payday Cycle */}
               {incomeType === 'SALARIED' && (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-[#21263a]/50 border border-[#2d3348] space-y-3">
-                  <label className="text-xs font-bold text-slate-300">Pilih Jadwal Siklus Gajian:</label>
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/50 border border-slate-200 dark:border-[#2d3348] space-y-3">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Pilih Jadwal Siklus Gajian:</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     <button
                       type="button"
@@ -696,10 +696,10 @@ export default function PayrollPage() {
                         'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1',
                         paydayScheduleType === 'START_OF_MONTH'
                           ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                          : 'bg-[#1a1d27] border-[#2d3348] text-slate-400 hover:text-white'
+                          : 'bg-white dark:bg-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       )}
                     >
-                      <Sunrise className="w-4 h-4 text-amber-400" />
+                      <Sunrise className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       <span className="text-[11px] font-bold">Awal Bulan</span>
                       <span className="text-[9px] opacity-75">Tgl 1</span>
                     </button>
@@ -711,10 +711,10 @@ export default function PayrollPage() {
                         'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1',
                         paydayScheduleType === 'END_OF_MONTH'
                           ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                          : 'bg-[#1a1d27] border-[#2d3348] text-slate-400 hover:text-white'
+                          : 'bg-white dark:bg-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       )}
                     >
-                      <Moon className="w-4 h-4 text-indigo-400" />
+                      <Moon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                       <span className="text-[11px] font-bold">Akhir Bulan</span>
                       <span className="text-[9px] opacity-75">Tgl 28-31</span>
                     </button>
@@ -726,10 +726,10 @@ export default function PayrollPage() {
                         'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1',
                         paydayScheduleType === 'CUSTOM'
                           ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                          : 'bg-[#1a1d27] border-[#2d3348] text-slate-400 hover:text-white'
+                          : 'bg-white dark:bg-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       )}
                     >
-                      <Calendar className="w-4 h-4 text-emerald-400" />
+                      <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       <span className="text-[11px] font-bold">Kustom</span>
                       <span className="text-[9px] opacity-75">Input Tgl</span>
                     </button>
@@ -750,13 +750,13 @@ export default function PayrollPage() {
                   )}
 
                   {paydayScheduleType === 'START_OF_MONTH' && (
-                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300">
                       🌅 Gaji masuk otomatis setiap tanggal 1 di awal bulan.
                     </div>
                   )}
 
                   {paydayScheduleType === 'END_OF_MONTH' && (
-                    <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300">
+                    <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-800 dark:text-indigo-300">
                       🌙 Gaji masuk otomatis di hari terakhir bulan berjalan (tgl 28/29 Feb, 30, atau 31).
                     </div>
                   )}
@@ -766,13 +766,13 @@ export default function PayrollPage() {
               {/* Student Specific Allowance Frequency */}
               {incomeType === 'STUDENT_ALLOWANCE' && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-300">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Frekuensi Penerimaan Uang Saku
                   </label>
                   <select
                     value={allowanceFreq}
                     onChange={(e) => setAllowanceFreq(e.target.value as AllowanceFrequency)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
                   >
                     <option value="MONTHLY">Bulanan (Setiap Awal Bulan)</option>
                     <option value="WEEKLY">Mingguan (Setiap Hari Senin)</option>
@@ -783,7 +783,7 @@ export default function PayrollPage() {
 
               {/* Primary Payroll Wallet */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   {incomeType === 'STUDENT_ALLOWANCE'
                     ? 'Dompet / Rekening Penampung Uang Saku'
                     : 'Rekening Payroll / Dompet Gaji Utama'}
@@ -791,7 +791,7 @@ export default function PayrollPage() {
                 <select
                   value={primaryWalletId}
                   onChange={(e) => setPrimaryWalletId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
                 >
                   <option value="">Pilih dompet penampung...</option>
                   {spendingWallets.map((w) => (
@@ -803,7 +803,7 @@ export default function PayrollPage() {
               </div>
 
               {settingsErrorMsg && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
                   {settingsErrorMsg}
                 </div>
               )}
@@ -822,16 +822,16 @@ export default function PayrollPage() {
         </div>
 
         {/* 💰 3. Simulator & Eksekutor Alokasi Cerdas 1x/Bulan (Col-span-7) */}
-        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between text-slate-900 dark:text-white">
           <div>
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">
+                <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Simulator &amp; Eksekutor Alokasi Dana
                 </h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">Periode {monthName}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Periode {monthName}</span>
             </div>
 
             <form onSubmit={handleExecuteAllocation} className="flex flex-col gap-4">
@@ -852,12 +852,12 @@ export default function PayrollPage() {
                 </FormField>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-slate-300">Rekening Tujuan Masuk</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Rekening Tujuan Masuk</label>
                   <select
                     value={allocPrimaryWalletId}
                     onChange={(e) => setAllocPrimaryWalletId(e.target.value)}
                     disabled={isAlreadyAllocatedThisMonth}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#21263a] border border-[#2d3348] text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-purple-500 disabled:opacity-50"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500 disabled:opacity-50"
                   >
                     {spendingWallets.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -871,7 +871,7 @@ export default function PayrollPage() {
               {/* Preset Switcher */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Pilih Formula Alokasi:
                   </span>
                 </div>
@@ -884,7 +884,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 disabled:opacity-50',
                       preset === '100_0_0'
                         ? 'bg-green-600 border-green-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <span className="text-xs font-bold">100% Kas</span>
@@ -899,7 +899,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 disabled:opacity-50',
                       preset === '50_30_20'
                         ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <span className="text-xs font-bold">50 / 30 / 20</span>
@@ -914,7 +914,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 disabled:opacity-50',
                       preset === '60_30_10'
                         ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <span className="text-xs font-bold">60 / 30 / 10</span>
@@ -929,7 +929,7 @@ export default function PayrollPage() {
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 disabled:opacity-50',
                       preset === 'CUSTOM'
                         ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                        : 'bg-[#21263a] border-[#2d3348] text-slate-300 hover:text-white'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <span className="text-xs font-bold">Kustom Split</span>
@@ -941,8 +941,8 @@ export default function PayrollPage() {
               {/* 3 Allocation Output Cards */}
               <div className="space-y-3">
                 {wallets.length === 0 && !isAlreadyAllocatedThisMonth && (
-                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2.5">
-                    <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+                    <Info className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div className="leading-relaxed text-[11px]">
                       <span className="font-bold">Belum ada kantong/rekening aktif:</span> Saat Anda menekan tombol eksekusi, SaveMe akan <strong>otomatis membuatkan &quot;Dompet Tunai (Kas)&quot;</strong> sebagai penampung alokasi gaji ini.
                     </div>
@@ -950,16 +950,16 @@ export default function PayrollPage() {
                 )}
 
                 {/* 1. Kas Belanja */}
-                <div className="p-3.5 rounded-2xl bg-[#21263a]/70 border border-green-500/30 flex flex-col gap-1.5">
+                <div className="p-3.5 rounded-2xl bg-green-50/70 dark:bg-[#21263a]/70 border border-green-500/30 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-green-400 flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-green-700 dark:text-green-400 flex items-center gap-1.5">
                       <Unlock className="w-4 h-4" /> 1. Kas Belanja / Uang Jajan ({operatingPct}%)
                     </span>
-                    <span className="text-sm font-black font-mono text-green-400">
+                    <span className="text-sm font-black font-mono text-green-700 dark:text-green-400">
                       {formatRupiah(calcOperatingAmount)}
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
                     Masuk ke kas operasional untuk jatah harian (*Safe-to-Spend*).
                   </span>
                   {preset === 'CUSTOM' && !isAlreadyAllocatedThisMonth && (
@@ -975,25 +975,25 @@ export default function PayrollPage() {
                 </div>
 
                 {/* 2. Tabungan Beku */}
-                <div className="p-3.5 rounded-2xl bg-[#21263a]/70 border border-purple-500/30 flex flex-col gap-1.5">
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-[#21263a]/70 border border-purple-500/30 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
                       <Lock className="w-4 h-4" /> 2. Tabungan Beku &amp; Darurat ({lockedPct}%)
                     </span>
-                    <span className="text-sm font-black font-mono text-purple-400">
+                    <span className="text-sm font-black font-mono text-purple-700 dark:text-purple-400">
                       {formatRupiah(calcLockedAmount)}
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
                     Uang aman yang dikunci agar tidak terpotong saat belanja (*Pay Yourself First*).
                   </span>
                   {lockedWallets.length > 0 && !isAlreadyAllocatedThisMonth ? (
                     <div className="flex items-center justify-between gap-2 mt-1">
-                      <span className="text-[11px] text-slate-400">Target Kantong Beku:</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Target Kantong Beku:</span>
                       <select
                         value={allocLockedWalletId || lockedWallets[0]?.id || ''}
                         onChange={(e) => setAllocLockedWalletId(e.target.value)}
-                        className="px-2.5 py-1 rounded-lg bg-[#131620] border border-[#2d3348] text-xs text-purple-300 focus:outline-none"
+                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] text-xs text-purple-700 dark:text-purple-300 focus:outline-none"
                       >
                         {lockedWallets.map((w) => (
                           <option key={w.id} value={w.id}>
@@ -1003,7 +1003,7 @@ export default function PayrollPage() {
                       </select>
                     </div>
                   ) : !isAlreadyAllocatedThisMonth ? (
-                    <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-300 flex items-center justify-between gap-2 mt-1">
+                    <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-800 dark:text-purple-300 flex items-center justify-between gap-2 mt-1">
                       <span>
                         💡 Belum punya Kantong Beku? Tenang, sistem akan <strong>otomatis membuatkan kantong &quot;🔒 Tabungan Beku &amp; Darurat&quot;</strong> saat kamu mengeksekusi alokasi ini.
                       </span>
@@ -1022,22 +1022,22 @@ export default function PayrollPage() {
                 </div>
 
                 {/* 3. Celengan Impian */}
-                <div className="p-3.5 rounded-2xl bg-[#21263a]/70 border border-blue-500/30 flex flex-col gap-1.5">
+                <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-[#21263a]/70 border border-blue-500/30 flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                       <Target className="w-4 h-4" /> 3. Celengan Impian / Keinginan ({goalsPct}%)
                     </span>
-                    <span className="text-sm font-black font-mono text-blue-400">
+                    <span className="text-sm font-black font-mono text-blue-700 dark:text-blue-400">
                       {formatRupiah(calcGoalsAmount)}
                     </span>
                   </div>
                   {savingsGoals.length > 0 && !isAlreadyAllocatedThisMonth ? (
                     <div className="flex items-center justify-between gap-2 mt-1">
-                      <span className="text-[11px] text-slate-400">Target Celengan:</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Target Celengan:</span>
                       <select
                         value={selectedGoalId || savingsGoals[0]?.id || ''}
                         onChange={(e) => setSelectedGoalId(e.target.value)}
-                        className="px-2.5 py-1 rounded-lg bg-[#131620] border border-[#2d3348] text-xs text-blue-300 focus:outline-none"
+                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] text-xs text-blue-700 dark:text-blue-300 focus:outline-none"
                       >
                         {savingsGoals.map((g) => (
                           <option key={g.id} value={g.id}>
@@ -1047,11 +1047,11 @@ export default function PayrollPage() {
                       </select>
                     </div>
                   ) : !isAlreadyAllocatedThisMonth ? (
-                    <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-300 flex items-center justify-between gap-2 mt-1">
+                    <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-800 dark:text-blue-300 flex items-center justify-between gap-2 mt-1">
                       <span>
                         💡 Belum ada Celengan Impian. Porsi ini akan tetap tersimpan aman di rekening utama sebagai cadangan belanja.
                       </span>
-                      <Link href="/savings" className="underline text-blue-400 hover:text-blue-300 shrink-0 font-bold">
+                      <Link href="/savings" className="underline text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 shrink-0 font-bold">
                         + Buat Celengan
                       </Link>
                     </div>
@@ -1080,7 +1080,7 @@ export default function PayrollPage() {
                   className={cn(
                     'w-full font-bold cursor-pointer',
                     isAlreadyAllocatedThisMonth
-                      ? 'bg-slate-700 text-slate-400 border-slate-600'
+                      ? 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600'
                       : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20'
                   )}
                   rightIcon={<ChevronRight className="w-4 h-4" />}
@@ -1096,20 +1096,20 @@ export default function PayrollPage() {
       </div>
 
       {/* 📜 4. Riwayat Alokasi Gaji Bulanan (History Table/Cards) */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-[#1a1d27] border border-[#2d3348] shadow-xl">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#2d3348]">
+      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-purple-400" />
-            <h3 className="text-base sm:text-lg font-bold text-white">
+            <History className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               Riwayat Alokasi Bulanan
             </h3>
           </div>
-          <span className="text-xs text-slate-400">{history.length} Catatan Periode</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{history.length} Catatan Periode</span>
         </div>
 
         {history.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-[#131620] border border-[#2d3348] text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-            <Info className="w-6 h-6 text-slate-500" />
+          <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] text-center text-slate-500 dark:text-slate-400 text-xs flex flex-col items-center gap-2">
+            <Info className="w-6 h-6 text-slate-400" />
             <span>Belum ada riwayat alokasi pemasukan yang tercatat.</span>
           </div>
         ) : (
@@ -1117,42 +1117,42 @@ export default function PayrollPage() {
             {history.map((record) => (
               <div
                 key={record.id}
-                className="p-4 rounded-2xl bg-[#21263a]/60 border border-[#2d3348] flex flex-col justify-between gap-3 shadow-md"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/60 border border-slate-200 dark:border-[#2d3348] flex flex-col justify-between gap-3 shadow-sm"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-white">{record.monthName}</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">{record.monthName}</span>
                     <Badge variant="brand" size="sm">
                       {record.incomeType === 'STUDENT_ALLOWANCE' ? 'Uang Saku' : 'Gaji'}
                     </Badge>
                   </div>
-                  <div className="text-lg font-black font-mono text-purple-300">
+                  <div className="text-lg font-black font-mono text-purple-700 dark:text-purple-300">
                     {formatRupiah(record.totalSalary)}
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-[#131620] border border-[#2d3348]/70 text-[11px] space-y-1">
-                  <div className="flex items-center justify-between text-slate-300">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348]/70 text-[11px] space-y-1 shadow-sm">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                     <span>Kas Belanja:</span>
-                    <span className="font-mono text-green-400 font-bold">
+                    <span className="font-mono text-green-700 dark:text-green-400 font-bold">
                       {formatRupiah(record.operatingAmount)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-300">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                     <span>Tabungan Beku:</span>
-                    <span className="font-mono text-purple-400 font-bold">
+                    <span className="font-mono text-purple-700 dark:text-purple-400 font-bold">
                       {formatRupiah(record.lockedAmount)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-300">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                     <span>Celengan:</span>
-                    <span className="font-mono text-blue-400 font-bold">
+                    <span className="font-mono text-blue-700 dark:text-blue-400 font-bold">
                       {formatRupiah(record.goalsAmount)}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-[10px] text-slate-500 font-mono">
+                <div className="text-[10px] text-slate-400 font-mono">
                   Dialokasikan: {new Date(record.allocatedAt).toLocaleDateString('id-ID')}
                 </div>
               </div>
