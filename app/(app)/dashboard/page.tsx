@@ -546,10 +546,10 @@ export default function DashboardPage() {
         className={cn(
           'p-5 sm:p-6 rounded-3xl border shadow-xl relative overflow-hidden transition-all',
           isPaydayToday
-            ? 'bg-gradient-to-r from-emerald-50 via-white to-white dark:from-emerald-950/80 dark:via-[#1a1d27] dark:to-[#1a1d27] border-green-500/50 shadow-green-500/10'
+            ? 'bg-gradient-to-r from-emerald-50 via-white to-white dark:from-emerald-950/80 dark:via-[#1a1d27] dark:to-[#161822] border-green-500/50 shadow-green-500/10'
             : userIncomeType === 'STUDENT_ALLOWANCE'
-            ? 'bg-gradient-to-r from-emerald-50 via-white to-white dark:from-emerald-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border-emerald-500/30'
-            : 'bg-gradient-to-r from-purple-50 via-white to-white dark:from-purple-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348]'
+            ? 'bg-gradient-to-r from-emerald-50 via-white to-white dark:from-emerald-950/40 dark:via-[#1a1d27] dark:to-[#161822] border-emerald-500/30'
+            : 'bg-gradient-to-r from-purple-50 via-white to-white dark:from-purple-950/50 dark:via-[#1a1d27] dark:to-[#161822] border-purple-500/30 dark:border-purple-500/40'
         )}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -651,8 +651,8 @@ export default function DashboardPage() {
           className={cn(
             'p-5 rounded-2xl shadow-md dark:shadow-xl flex items-center justify-between transition-all hover:-translate-y-0.5 group',
             isOverToday
-              ? 'bg-amber-50/80 dark:bg-gradient-to-br dark:from-amber-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-amber-500/40'
-              : 'bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-500/15 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-green-500/30'
+              ? 'bg-amber-50/80 dark:bg-gradient-to-br dark:from-amber-900/40 dark:via-amber-950/20 dark:to-[#1a1d27] border border-amber-500/40 shadow-sm dark:shadow-amber-950/30'
+              : 'bg-green-50/80 dark:bg-gradient-to-br dark:from-emerald-900/40 dark:via-emerald-950/20 dark:to-[#1a1d27] border border-green-500/30 dark:border-emerald-500/40 shadow-sm dark:shadow-emerald-950/30'
           )}
         >
           <div className="flex items-center gap-3.5">
@@ -755,7 +755,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Period Filter Tabs */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
         <div className="flex items-center gap-1 min-w-max">
           <button
             type="button"
@@ -763,7 +763,7 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'today'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -775,7 +775,7 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'week'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -787,7 +787,7 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'month'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -799,7 +799,7 @@ export default function DashboardPage() {
             className={cn(
               'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
               activePeriod === 'all'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -811,12 +811,12 @@ export default function DashboardPage() {
       {/* 3 Main Interconnected Balance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         {/* Total Kekayaan Bersih (Net Worth) */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-gradient-to-b dark:from-[#1e2333] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] relative overflow-hidden shadow-md dark:shadow-xl">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-[#1e2333] dark:via-[#1a1d27] dark:to-[#161822] border border-slate-200 dark:border-[#2d3348] relative overflow-hidden shadow-md dark:shadow-xl">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Total Kekayaan Bersih
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
@@ -829,19 +829,19 @@ export default function DashboardPage() {
         </div>
 
         {/* Kas Operasional (Liquid Spending Cash) */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-green-500/30 shadow-md dark:shadow-xl">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-emerald-950/30 dark:via-[#1a1d27] dark:to-[#161822] border border-green-500/30 dark:border-emerald-500/40 shadow-md dark:shadow-xl">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400 flex items-center gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-emerald-400 flex items-center gap-1">
               <Unlock className="w-3.5 h-3.5" /> Kas Operasional (Belanja)
             </span>
-            <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-green-500/10 dark:bg-emerald-500/20 text-green-600 dark:text-emerald-300 flex items-center justify-center">
               <WalletIcon className="w-4 h-4" />
             </div>
           </div>
           <div
             className={cn(
               'text-2xl sm:text-3xl font-extrabold font-mono tabular-nums tracking-tight mb-1 sm:mb-2',
-              effectiveOperatingCash >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+              effectiveOperatingCash >= 0 ? 'text-green-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
             )}
           >
             {formatRupiah(effectiveOperatingCash)}
@@ -852,12 +852,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabungan Beku & Celengan Impian */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-amber-500/30 shadow-md dark:shadow-xl">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-amber-950/30 dark:via-[#1a1d27] dark:to-[#161822] border border-amber-500/30 dark:border-amber-500/40 shadow-md dark:shadow-xl">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1">
               <Lock className="w-3.5 h-3.5" /> Tabungan Beku &amp; Celengan
             </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 flex items-center justify-center">
               <PiggyBank className="w-4 h-4" />
             </div>
           </div>

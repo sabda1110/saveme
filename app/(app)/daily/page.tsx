@@ -598,7 +598,7 @@ export default function DailyBudgetPage() {
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
               viewMode === 'daily'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -611,7 +611,7 @@ export default function DailyBudgetPage() {
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
               viewMode === 'weekly'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -624,7 +624,7 @@ export default function DailyBudgetPage() {
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
               viewMode === 'monthly'
-                ? 'bg-white dark:bg-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-green-500/20'
+                ? 'bg-white dark:bg-gradient-to-r dark:from-emerald-500 dark:to-green-500 text-slate-900 dark:text-slate-950 font-bold shadow-sm dark:shadow-emerald-500/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -635,13 +635,13 @@ export default function DailyBudgetPage() {
       </div>
 
       {/* Main Budget Card with Live Meter */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#1e2436] dark:to-[#131620] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-2xl relative overflow-hidden flex flex-col gap-6 text-slate-900 dark:text-white">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1e2333] dark:via-[#1a1d27] dark:to-[#161822] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-2xl relative overflow-hidden flex flex-col gap-6 text-slate-900 dark:text-white">
         {/* Glow ambient */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-green-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-green-600 dark:text-green-400 shrink-0 shadow-inner">
+            <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-green-600 dark:text-emerald-400 shrink-0 shadow-inner">
               {statusInfo.icon}
             </div>
             <div>
@@ -677,7 +677,7 @@ export default function DailyBudgetPage() {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/80 border border-slate-200 dark:border-[#2d3348] flex flex-col items-start md:items-end justify-center shrink-0 gap-1">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col items-start md:items-end justify-center shrink-0 gap-1">
             <span className="text-xs text-slate-500 dark:text-slate-400">Total Terpakai:</span>
             <span className="text-xl sm:text-2xl font-bold font-mono text-purple-700 dark:text-purple-300">
               {formatRupiah(currentSpent)}
@@ -709,7 +709,7 @@ export default function DailyBudgetPage() {
       {/* 2 Interactive AI Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Feature 1: Spending Decision Checker ("Boleh Beli Gak Ya?") */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-[#1e2235] dark:via-[#1a1d27] dark:to-[#161822] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <ShoppingBag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -762,7 +762,7 @@ export default function DailyBudgetPage() {
         </div>
 
         {/* Feature 2: Custom AI Question Box */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-[#1e2235] dark:via-[#1a1d27] dark:to-[#161822] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Bot className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
