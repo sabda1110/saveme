@@ -73,6 +73,7 @@ export interface Wallet {
   color?: string
   isDefault?: boolean
   isLocked?: boolean // true if frozen / savings-only (excluded from daily spending budget)
+  isEarmarked?: boolean // true if reserved for specific purpose (e.g. fuel, food allowance) — spendable but excluded from daily limit
   createdAt?: unknown
   updatedAt?: unknown
 }
@@ -85,6 +86,7 @@ export interface CreateWalletDto {
   icon: string
   color?: string
   isLocked?: boolean
+  isEarmarked?: boolean
 }
 
 export interface UpdateWalletDto {
@@ -95,6 +97,7 @@ export interface UpdateWalletDto {
   icon?: string
   color?: string
   isLocked?: boolean
+  isEarmarked?: boolean
 }
 
 export interface TransferWalletDto {

@@ -219,13 +219,13 @@ export default function TransactionsPage() {
     setIsAddModalOpen(true)
   }
 
-  // Dynamic Safe-to-Spend Daily from Operating Cash
+  // Dynamic Safe-to-Spend Daily from Operating Cash (excluding earmarked wallets)
   const dynamicSafeToSpendDaily = useMemo(() => {
     const now = new Date()
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
     const daysRemaining = Math.max(1, lastDayOfMonth - now.getDate() + 1)
     const operatingCash = wallets
-      .filter((w) => !w.isLocked)
+      .filter((w) => !w.isLocked && !w.isEarmarked)
       .reduce((sum, w) => sum + (Number(w.balance) || 0), 0)
     return Math.max(0, Math.round(operatingCash / daysRemaining))
   }, [wallets])

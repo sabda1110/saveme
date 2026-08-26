@@ -49,6 +49,7 @@ export default function WalletsPage() {
   const [accountNumber, setAccountNumber] = useState('')
   const [icon, setIcon] = useState('🏦')
   const [isLocked, setIsLocked] = useState(false)
+  const [isEarmarked, setIsEarmarked] = useState(false)
   const [walletError, setWalletError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -88,8 +89,10 @@ export default function WalletsPage() {
     }
   }, [user?.uid, refreshTrigger])
 
-  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
+  // Operating: unlocked & not earmarked — counts toward daily spending limit
+  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked && !w.isEarmarked), [wallets])
   const lockedWallets = useMemo(() => wallets.filter((w) => w.isLocked), [wallets])
+  const earmarkedWallets = useMemo(() => wallets.filter((w) => w.isEarmarked && !w.isLocked), [wallets])
 
   const totalSpendingBalance = useMemo(
     () => spendingWallets.reduce((sum, w) => sum + (Number(w.balance) || 0), 0),
@@ -99,6 +102,11 @@ export default function WalletsPage() {
   const totalLockedBalance = useMemo(
     () => lockedWallets.reduce((sum, w) => sum + (Number(w.balance) || 0), 0),
     [lockedWallets]
+  )
+
+  const totalEarmarkedBalance = useMemo(
+    () => earmarkedWallets.reduce((sum, w) => sum + (Number(w.balance) || 0), 0),
+    [earmarkedWallets]
   )
 
   const totalWalletBalance = useMemo(
@@ -154,6 +162,7 @@ export default function WalletsPage() {
     setAccountNumber('')
     setIcon('🏦')
     setIsLocked(false)
+    setIsEarmarked(false)
     setWalletError(null)
     setIsWalletModalOpen(true)
   }
@@ -166,6 +175,7 @@ export default function WalletsPage() {
     setAccountNumber(w.accountNumber || '')
     setIcon(w.icon)
     setIsLocked(Boolean(w.isLocked))
+    setIsEarmarked(Boolean(w.isEarmarked))
     setWalletError(null)
     setIsWalletModalOpen(true)
   }
@@ -188,6 +198,10 @@ export default function WalletsPage() {
       return
     }
 
+    // Guard: isEarmarked & isLocked tidak bisa bersamaan
+    const finalIsLocked = isLocked && !isEarmarked
+    const finalIsEarmarked = isEarmarked && !isLocked
+
     setSubmitting(true)
     try {
       if (editingWallet) {
@@ -198,7 +212,8 @@ export default function WalletsPage() {
           balance: numBal,
           accountNumber: accountNumber.trim(),
           icon,
-          isLocked,
+          isLocked: finalIsLocked,
+          isEarmarked: finalIsEarmarked,
         })
       } else {
         // CREATE
@@ -208,7 +223,8 @@ export default function WalletsPage() {
           balance: numBal,
           accountNumber: accountNumber.trim(),
           icon,
-          isLocked,
+          isLocked: finalIsLocked,
+          isEarmarked: finalIsEarmarked,
         }
         await walletService.createWallet(user.uid, payload)
       }
@@ -358,8 +374,8 @@ export default function WalletsPage() {
         </div>
       )}
 
-      {/* 3 Summary Breakdown Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 4 Summary Breakdown Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* 1. Kas Operasional Likuid */}
         <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-green-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
@@ -380,7 +396,27 @@ export default function WalletsPage() {
           </div>
         </div>
 
-        {/* 2. Simpanan & Dana Beku */}
+        {/* 2. Kantong Bertujuan Khusus (Earmarked) */}
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+              🎯 Kantong Bertujuan Khusus
+            </span>
+            <Badge variant="neutral" size="sm">
+              {earmarkedWallets.length} Kantong
+            </Badge>
+          </div>
+          <div>
+            <div className="text-xl sm:text-2xl font-extrabold font-mono text-blue-600 dark:text-blue-400 tabular-nums">
+              {formatRupiah(totalEarmarkedBalance)}
+            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
+              Bisa dipakai, tidak masuk jatah harian
+            </span>
+          </div>
+        </div>
+
+        {/* 3. Simpanan & Dana Beku */}
         <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-amber-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
@@ -440,6 +476,7 @@ export default function WalletsPage() {
             const isEwallet = w.type === 'EWALLET'
             const isCash = w.type === 'CASH'
             const isLockedWallet = Boolean(w.isLocked)
+            const isEarmarkedWallet = Boolean(w.isEarmarked) && !isLockedWallet
 
             return (
               <div
@@ -448,6 +485,8 @@ export default function WalletsPage() {
                   'p-6 rounded-2xl border shadow-sm dark:shadow-xl flex flex-col justify-between transition-all group relative overflow-hidden',
                   isLockedWallet
                     ? 'bg-white dark:bg-gradient-to-br dark:from-amber-950/20 dark:via-[#1a1d27] dark:to-[#1a1d27] border-amber-500/40 hover:border-amber-500/70'
+                    : isEarmarkedWallet
+                    ? 'bg-white dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-blue-500/40 hover:border-blue-500/70'
                     : isBank
                     ? 'bg-white dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-blue-500/30 hover:border-blue-500/60'
                     : isEwallet
@@ -468,6 +507,11 @@ export default function WalletsPage() {
                             <Lock className="w-3 h-3" />
                           </div>
                         )}
+                        {isEarmarkedWallet && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center shadow text-[10px]">
+                            🎯
+                          </div>
+                        )}
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-base font-bold text-slate-900 dark:text-white truncate">
@@ -483,6 +527,10 @@ export default function WalletsPage() {
                           {isLockedWallet ? (
                             <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold px-1.5 py-0.5 rounded border border-amber-500/30">
                               🔒 Beku / Tabungan
+                            </span>
+                          ) : isEarmarkedWallet ? (
+                            <span className="text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold px-1.5 py-0.5 rounded border border-blue-500/30">
+                              🎯 Bertujuan Khusus
                             </span>
                           ) : (
                             <span className="text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 font-bold px-1.5 py-0.5 rounded border border-green-500/30">
@@ -534,7 +582,11 @@ export default function WalletsPage() {
                     </div>
                   ) : (
                     <div className="mb-4 text-xs text-slate-400 dark:text-slate-500 italic">
-                      {isLockedWallet ? 'Tabungan Simpanan Khusus' : 'Kantong Belanja Harian'}
+                      {isLockedWallet
+                        ? 'Tabungan Simpanan Khusus'
+                        : isEarmarkedWallet
+                        ? 'Kantong Bertujuan Khusus (tidak dihitung ke jatah harian)'
+                        : 'Kantong Belanja Harian'}
                     </div>
                   )}
 
@@ -546,7 +598,11 @@ export default function WalletsPage() {
                     <span
                       className={cn(
                         'text-xl sm:text-2xl font-extrabold font-mono tabular-nums tracking-tight mt-0.5 block',
-                        isLockedWallet ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'
+                        isLockedWallet
+                          ? 'text-amber-700 dark:text-amber-400'
+                          : isEarmarkedWallet
+                          ? 'text-blue-700 dark:text-blue-400'
+                          : 'text-green-700 dark:text-green-400'
                       )}
                     >
                       {formatRupiah(w.balance)}
@@ -557,7 +613,7 @@ export default function WalletsPage() {
                 {/* Footer Transfer Action */}
                 <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] flex items-center justify-between mt-2">
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {isLockedWallet ? 'Hanya untuk simpanan' : 'Siap untuk jatah belanja'}
+                    {isLockedWallet ? 'Hanya untuk simpanan' : isEarmarkedWallet ? 'Bisa dipakai, bukan kas harian' : 'Siap untuk jatah belanja'}
                   </span>
                   <Button
                     variant="ghost"
@@ -655,12 +711,20 @@ export default function WalletsPage() {
               </FormField>
 
               {/* Locked / Frozen Wallet Toggle */}
-              <div className="p-3.5 rounded-xl bg-[#21263a] border border-[#2d3348] flex items-start gap-3">
+              <div className={cn(
+                'p-3.5 rounded-xl border flex items-start gap-3 transition-all',
+                isLocked
+                  ? 'bg-amber-950/20 border-amber-500/40'
+                  : 'bg-[#21263a] border-[#2d3348]'
+              )}>
                 <input
                   type="checkbox"
                   id="isLockedCheckbox"
                   checked={isLocked}
-                  onChange={(e) => setIsLocked(e.target.checked)}
+                  onChange={(e) => {
+                    setIsLocked(e.target.checked)
+                    if (e.target.checked) setIsEarmarked(false)
+                  }}
                   className="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-500 focus:ring-offset-0 bg-[#131620] border-[#2d3348] cursor-pointer"
                 />
                 <label htmlFor="isLockedCheckbox" className="cursor-pointer select-none text-xs">
@@ -669,6 +733,33 @@ export default function WalletsPage() {
                   </span>
                   <span className="text-slate-400 block text-[11px] mt-0.5 leading-relaxed">
                     Saldo di kantong ini <strong>TIDAK AKAN</strong> dihitung ke dalam jatah belanja harian (*Safe-to-Spend*). Cocok untuk Dana Darurat, Deposito, atau Tabungan Khusus.
+                  </span>
+                </label>
+              </div>
+
+              {/* Earmarked Wallet Toggle */}
+              <div className={cn(
+                'p-3.5 rounded-xl border flex items-start gap-3 transition-all',
+                isEarmarked
+                  ? 'bg-blue-950/20 border-blue-500/40'
+                  : 'bg-[#21263a] border-[#2d3348]'
+              )}>
+                <input
+                  type="checkbox"
+                  id="isEarmarkedCheckbox"
+                  checked={isEarmarked}
+                  onChange={(e) => {
+                    setIsEarmarked(e.target.checked)
+                    if (e.target.checked) setIsLocked(false)
+                  }}
+                  className="mt-1 w-4 h-4 rounded text-blue-500 focus:ring-blue-500 focus:ring-offset-0 bg-[#131620] border-[#2d3348] cursor-pointer"
+                />
+                <label htmlFor="isEarmarkedCheckbox" className="cursor-pointer select-none text-xs">
+                  <span className="font-bold text-blue-400 flex items-center gap-1">
+                    🎯 Kantong Bertujuan Khusus (Earmarked)
+                  </span>
+                  <span className="text-slate-400 block text-[11px] mt-0.5 leading-relaxed">
+                    Saldo <strong>BISA DIPAKAI</strong> seperti biasa, tapi <strong>TIDAK DIHITUNG</strong> ke jatah belanja harian. Cocok untuk: Uang Minyak, Uang Makan Rutin, Langganan Tetap, dll.
                   </span>
                 </label>
               </div>

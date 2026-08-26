@@ -43,6 +43,7 @@ export const walletService = {
         color: data.color || '#22c55e',
         isDefault: data.isDefault ?? false,
         isLocked: data.isLocked ?? false,
+        isEarmarked: data.isEarmarked ?? false,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       } as Wallet
@@ -123,6 +124,7 @@ export const walletService = {
     if (!data.name?.trim()) throw new Error('Nama kantong / rekening wajib diisi')
 
     const isLocked = Boolean(data.isLocked)
+    const isEarmarked = Boolean(data.isEarmarked)
 
     const docRef = await addDoc(collection(db, 'wallets'), {
       userId,
@@ -134,6 +136,7 @@ export const walletService = {
       color: data.color || '#22c55e',
       isDefault: false,
       isLocked,
+      isEarmarked,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -143,6 +146,7 @@ export const walletService = {
       userId,
       ...data,
       isLocked,
+      isEarmarked,
       balance: Number(data.balance) || 0,
     }
   },
@@ -171,6 +175,7 @@ export const walletService = {
     if (data.icon !== undefined) updatePayload.icon = data.icon
     if (data.color !== undefined) updatePayload.color = data.color
     if (data.isLocked !== undefined) updatePayload.isLocked = Boolean(data.isLocked)
+    if (data.isEarmarked !== undefined) updatePayload.isEarmarked = Boolean(data.isEarmarked)
 
     await updateDoc(docRef, updatePayload)
   },

@@ -195,9 +195,10 @@ export default function DailyBudgetPage() {
   const savingsTargetRate = userProfile?.savingsTarget || 20
   const totalBills = recurringBills.reduce((sum, b) => sum + b.amount, 0)
 
-  // Multi-Wallet Segregation: Spending vs Locked (Frozen)
-  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
+  // Multi-Wallet Segregation: Operating (unlocked & non-earmarked) / Earmarked / Locked
+  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked && !w.isEarmarked), [wallets])
   const lockedWallets = useMemo(() => wallets.filter((w) => w.isLocked), [wallets])
+  const earmarkedWallets = useMemo(() => wallets.filter((w) => w.isEarmarked && !w.isLocked), [wallets])
 
   const totalSpendingCash = useMemo(
     () => spendingWallets.reduce((s, w) => s + (Number(w.balance) || 0), 0),
@@ -207,6 +208,11 @@ export default function DailyBudgetPage() {
   const totalLockedSavings = useMemo(
     () => lockedWallets.reduce((s, w) => s + (Number(w.balance) || 0), 0),
     [lockedWallets]
+  )
+
+  const totalEarmarkedCash = useMemo(
+    () => earmarkedWallets.reduce((s, w) => s + (Number(w.balance) || 0), 0),
+    [earmarkedWallets]
   )
 
   // Liquid Balance fallback from all transactions if no wallets yet
@@ -220,7 +226,7 @@ export default function DailyBudgetPage() {
   )
   const txLiquidBalance = totalIncomeAll - totalExpenseAll
 
-  // Operating cash for daily budgeting: ONLY from unlocked spending wallets!
+  // Operating cash for daily budgeting: ONLY from unlocked, non-earmarked wallets!
   const effectiveOperatingCash = wallets.length > 0 ? totalSpendingCash : txLiquidBalance
 
   // Calendar dates
@@ -468,7 +474,10 @@ export default function DailyBudgetPage() {
 
       {/* Multi-Wallet Segregation Status Bar */}
       {wallets.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm">
+        <div className={cn(
+          'grid gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm',
+          earmarkedWallets.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+        )}>
           <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-green-500/20">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center">
@@ -487,6 +496,27 @@ export default function DailyBudgetPage() {
               {spendingWallets.length} Kantong
             </span>
           </div>
+
+          {earmarkedWallets.length > 0 && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/20">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <span className="text-sm">🎯</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-400 block">
+                    Kantong Bertujuan Khusus
+                  </span>
+                  <span className="text-sm sm:text-base font-bold font-mono text-blue-700 dark:text-blue-300 tabular-nums">
+                    {formatRupiah(totalEarmarkedCash)}
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] text-blue-700 dark:text-blue-400/80 font-medium">
+                {earmarkedWallets.length} Kantong
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-amber-500/20">
             <div className="flex items-center gap-2.5">

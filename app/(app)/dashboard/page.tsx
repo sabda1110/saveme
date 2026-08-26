@@ -347,8 +347,10 @@ export default function DashboardPage() {
   }
 
   // Multi-Wallet Breakdown & Segregation
-  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
+  // Operating: unlocked & not earmarked → counts toward daily limit
+  const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked && !w.isEarmarked), [wallets])
   const lockedWallets = useMemo(() => wallets.filter((w) => w.isLocked), [wallets])
+  const earmarkedWallets = useMemo(() => wallets.filter((w) => w.isEarmarked && !w.isLocked), [wallets])
 
   const totalSpendingBalance = useMemo(
     () => spendingWallets.reduce((s, w) => s + (Number(w.balance) || 0), 0),
@@ -360,18 +362,24 @@ export default function DashboardPage() {
     [lockedWallets]
   )
 
+  const totalEarmarkedBalance = useMemo(
+    () => earmarkedWallets.reduce((s, w) => s + (Number(w.balance) || 0), 0),
+    [earmarkedWallets]
+  )
+
   const totalSavingsInGoals = useMemo(
     () => savingsGoals.reduce((sum, g) => sum + g.currentAmount, 0),
     [savingsGoals]
   )
 
-  // Liquid Operating Cash for Daily Spending (ONLY Unlocked Wallets)
+  // Liquid Operating Cash for Daily Spending (ONLY unlocked, non-earmarked wallets)
   const effectiveOperatingCash = wallets.length > 0 ? totalSpendingBalance : summary.balance
 
-  // Total Net Worth (Operating Cash + Locked Savings + Goals)
+  // Total Net Worth = all wallets (operating + earmarked + locked) + goals
   const totalNetWorth =
-    (wallets.length > 0 ? totalSpendingBalance + totalLockedBalance : summary.balance) +
-    totalSavingsInGoals
+    (wallets.length > 0
+      ? totalSpendingBalance + totalEarmarkedBalance + totalLockedBalance
+      : summary.balance) + totalSavingsInGoals
 
   const now = useMemo(() => new Date(), [])
   const currentDay = now.getDate()
@@ -380,9 +388,8 @@ export default function DashboardPage() {
 
 
   // ── Real-time Saldo Bebas Daily Limit ────────────────────────────
-  // Formula: Saldo semua kantong non-locked ÷ Sisa hari bulan ini
-  // Cicilan yang dibayar (via /bills atau manual expense) langsung
-  // mengurangi saldo → batas harian besok otomatis turun. Zero double-counting.
+  // Formula: Saldo kantong non-locked, non-earmarked ÷ Sisa hari bulan ini
+  // Earmarked wallets (e.g. uang minyak, makan) dikecualikan dari perhitungan batas harian.
   const dailyLimit = Math.round(effectiveOperatingCash / daysRemainingInMonth)
 
   // Total EXPENSE transactions for today
@@ -897,12 +904,17 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {wallets.map((w) => {
               const isLockedWallet = Boolean(w.isLocked)
+              const isEarmarkedWallet = Boolean(w.isEarmarked) && !isLockedWallet
               return (
                 <div
                   key={w.id}
                   className={cn(
-                    'p-3.5 rounded-xl border flex items-center justify-between transition-all bg-slate-50 dark:bg-[#21263a]/60',
-                    isLockedWallet ? 'border-amber-500/30' : 'border-slate-200 dark:border-[#2d3348]'
+                    'p-3.5 rounded-xl border flex items-center justify-between transition-all',
+                    isLockedWallet
+                      ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-500/30'
+                      : isEarmarkedWallet
+                      ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-500/30 dark:border-blue-500/30'
+                      : 'bg-slate-50 dark:bg-[#21263a]/60 border-slate-200 dark:border-[#2d3348]'
                   )}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -915,6 +927,10 @@ export default function DashboardPage() {
                         {isLockedWallet ? (
                           <span className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold px-1 rounded">
                             🔒 Beku
+                          </span>
+                        ) : isEarmarkedWallet ? (
+                          <span className="text-[9px] bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold px-1 rounded">
+                            🎯 Khusus
                           </span>
                         ) : (
                           <span className="text-[9px] bg-green-500/20 text-green-700 dark:text-green-400 font-bold px-1 rounded">
