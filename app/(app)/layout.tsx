@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   Compass,
   Target,
+  Wallet as WalletIcon,
   ReceiptText,
   CreditCard,
   PieChart,
@@ -83,11 +84,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const drawerNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: 'Jatah Harian & AI', href: '/daily', icon: <Compass className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> },
-    { label: 'Alokasi Gaji & Uang Saku', href: '/payroll', icon: <DollarSign className="w-5 h-5 text-purple-600 dark:text-purple-400" /> },
-    { label: 'Kantong & Rekening', href: '/wallets', icon: <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" /> },
-    { label: 'Template Cepat', href: '/templates', icon: <Zap className="w-5 h-5 text-amber-500 dark:text-amber-400" /> },
-    { label: 'Celengan Impian', href: '/savings', icon: <Target className="w-5 h-5 text-green-600 dark:text-green-400" /> },
+    { label: 'Jatah Harian & AI', href: '/daily', icon: <Compass className="w-5 h-5" /> },
+    { label: 'Alokasi Gaji & Uang Saku', href: '/payroll', icon: <DollarSign className="w-5 h-5" /> },
+    { label: 'Kantong & Rekening', href: '/wallets', icon: <WalletIcon className="w-5 h-5" /> },
+    { label: 'Template Cepat', href: '/templates', icon: <Zap className="w-5 h-5" /> },
+    { label: 'Celengan Impian', href: '/savings', icon: <Target className="w-5 h-5" /> },
     { label: 'Daftar Transaksi', href: '/transactions', icon: <ReceiptText className="w-5 h-5" /> },
     { label: 'Cicilan & Tagihan', href: '/bills', icon: <CreditCard className="w-5 h-5" /> },
     { label: 'Laporan & Analitik', href: '/reports', icon: <PieChart className="w-5 h-5" /> },
@@ -177,11 +178,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       className={cn(
                         'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors',
                         isActive
-                          ? 'bg-green-500/15 text-green-700 dark:text-green-400 font-bold border border-green-500/30'
-                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]'
+                          ? 'bg-green-500/10 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-500/25 shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]'
                       )}
                     >
-                      {item.icon}
+                      <span className={cn('shrink-0 transition-colors', isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500')}>
+                        {item.icon}
+                      </span>
                       <span>{item.label}</span>
                     </Link>
                   )

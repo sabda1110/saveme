@@ -21,7 +21,9 @@ import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
 import { PaydayAllocationModal } from '@/components/organisms/PaydayAllocationModal'
 import { NotificationPromptModal } from '@/components/organisms/NotificationPromptModal'
+import { GroupSavingsInviteModal } from '@/components/organisms/GroupSavingsInviteModal'
 import { notificationService } from '@/lib/services/notification.firebase'
+import { groupSavingsService } from '@/lib/services/group-savings.firebase'
 import {
   Wallet as WalletIcon,
   PlusCircle,
@@ -45,8 +47,10 @@ import {
   DollarSign,
   GraduationCap,
   Bell,
+  Users,
+  AlertTriangle,
 } from 'lucide-react'
-import type { Category, DashboardSummary, RecurringBill, SavingsGoal, Wallet, ReceiptScanResult, QuickTemplate } from '@/types'
+import type { Category, DashboardSummary, RecurringBill, SavingsGoal, Wallet, ReceiptScanResult, QuickTemplate, GroupSavings, GroupSavingsMember } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
 type PeriodFilter = 'today' | 'week' | 'month' | 'all'
@@ -68,6 +72,19 @@ export default function DashboardPage() {
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [templates, setTemplates] = useState<QuickTemplate[]>([])
+  const [pendingGroupInvites, setPendingGroupInvites] = useState<{
+    invite: GroupSavingsMember
+    group: GroupSavings
+  }[]>([])
+  const [userGroupSavings, setUserGroupSavings] = useState<{
+    group: GroupSavings
+    member: GroupSavingsMember
+    allMembers: GroupSavingsMember[]
+  }[]>([])
+  const [activeGroupInviteModal, setActiveGroupInviteModal] = useState<{
+    invite: GroupSavingsMember
+    group: GroupSavings
+  } | null>(null)
   const [activePeriod, setActivePeriod] = useState<PeriodFilter>('month')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -126,7 +143,7 @@ export default function DashboardPage() {
           to = todayStr
         }
 
-        const [data, cats, bills, goals, userWallets, userTemplates, notifSettings] = await Promise.all([
+        const [data, cats, bills, goals, userWallets, userTemplates, notifSettings, groupInvites, userGroups] = await Promise.all([
           transactionService.getDashboardSummary(user.uid, from, to),
           categoryService.getCategories(),
           recurringService.getUserRecurringBills(user.uid),
@@ -134,6 +151,8 @@ export default function DashboardPage() {
           walletService.getUserWallets(user.uid),
           quickTemplateService.getUserTemplates(user.uid),
           notificationService.getSettings(user.uid),
+          groupSavingsService.getPendingInvites(user.uid),
+          groupSavingsService.getUserGroups(user.uid),
         ])
 
         if (isMounted) {
@@ -144,6 +163,8 @@ export default function DashboardPage() {
           setWallets(userWallets)
           setTemplates(userTemplates)
           setHasNotificationEnabled(notifSettings.enabled)
+          setPendingGroupInvites(groupInvites)
+          setUserGroupSavings(userGroups)
 
           // Auto-prompt Notification Modal if not yet enabled and not snoozed
           if (!notifSettings.enabled && typeof window !== 'undefined') {
@@ -447,6 +468,20 @@ export default function DashboardPage() {
     }, 0)
   }, [savingsGoals, now])
 
+  const groupSavingsDailyRequired = useMemo(() => {
+    return userGroupSavings.reduce((sum, g) => {
+      if (!g.group.targetDate) return sum
+      const targetD = new Date(g.group.targetDate)
+      const diffDays = Math.max(1, Math.ceil((targetD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      const remainingTarget = Math.max(0, g.member.myTarget - g.member.myContributed)
+      return sum + Math.round(remainingTarget / diffDays)
+    }, 0)
+  }, [userGroupSavings, now])
+
+  const combinedDailySavingsCommitted = totalDailySavingsRequired + groupSavingsDailyRequired
+  const isSavingsDeficitRisk = combinedDailySavingsCommitted > dailyLimit && dailyLimit > 0
+  const savingsDeficitAmount = Math.max(0, combinedDailySavingsCommitted - dailyLimit)
+
   // Payday & Income Mode Calculations
   const userIncomeType = userProfile?.incomeType || 'SALARIED'
   const scheduleType =
@@ -570,6 +605,36 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      {/* 👥 Pending Group Savings Invitation Alert */}
+      {pendingGroupInvites.length > 0 && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 dark:border-amber-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in shadow-md">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl sm:text-3xl p-2 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+              🎉
+            </span>
+            <div>
+              <p className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" />
+                Undangan Celengan Bersama Masuk ({pendingGroupInvites.length})
+              </p>
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 mt-0.5">
+                Kamu diundang ke <span className="font-semibold text-slate-900 dark:text-white">&ldquo;{pendingGroupInvites[0].group.name}&rdquo;</span> dengan target bagian <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400">{pendingGroupInvites[0].invite.percentage}%</span>.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => setActiveGroupInviteModal(pendingGroupInvites[0])}
+              className="text-xs"
+            >
+              Lihat Undangan
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* 💰 Payday & Income Mode Adaptive Hub Banner */}
       <div
@@ -709,6 +774,43 @@ export default function DashboardPage() {
         onAddTransactionClick={() => setIsModalOpen(true)}
         onEnableNotificationClick={() => setIsNotifModalOpen(true)}
       />
+
+      {/* 🚨 SMART SAVINGS DEFICIT RISK BANNER 🚨 */}
+      {isSavingsDeficitRisk && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-400 dark:border-rose-800/60 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                  Target Tabungan Melebihi Kapasitas Kas Harian
+                </h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-700 dark:text-rose-300 font-mono">
+                  Defisit {formatRupiah(savingsDeficitAmount)}/hari
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                Kewajiban celenganmu butuh <strong>{formatRupiah(combinedDailySavingsCommitted)}/hari</strong>, sedangkan kapasitas kasmu hanya <strong>{formatRupiah(dailyLimit)}/hari</strong>. Sistem telah mengamankan jatah makanmu.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-stretch sm:self-auto">
+            <Link href="/daily" className="flex-1 sm:flex-none">
+              <Button variant="secondary" size="sm" className="w-full text-xs text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800">
+                Solusi Jatah Belanja
+              </Button>
+            </Link>
+            <Link href="/savings" className="flex-1 sm:flex-none">
+              <Button variant="primary" size="sm" className="w-full text-xs bg-rose-600 hover:bg-rose-500 text-white">
+                Sesuaikan Deadline
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* 2 Smart Dynamic Indicators (Safe-to-Spend Today & Daily Savings Required) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1579,6 +1681,20 @@ export default function DashboardPage() {
           }
         }}
       />
+
+      {/* 👥 Group Savings Invite Modal */}
+      {activeGroupInviteModal && (
+        <GroupSavingsInviteModal
+          invite={activeGroupInviteModal.invite}
+          group={activeGroupInviteModal.group}
+          userId={user?.uid || ''}
+          onClose={() => setActiveGroupInviteModal(null)}
+          onResponded={() => {
+            setActiveGroupInviteModal(null)
+            setRefreshTrigger((p) => p + 1)
+          }}
+        />
+      )}
     </div>
   )
 }

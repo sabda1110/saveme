@@ -230,3 +230,43 @@ export interface UpdateQuickTemplateDto {
   walletName?: string
 }
 
+// ─── Group Savings (Celengan Bersama) ────────────────────────────────────────
+
+export type GroupSavingsStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+export type GroupMemberStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
+
+export interface GroupSavings {
+  id: string
+  createdBy: string // userId of the creator
+  name: string
+  icon: string
+  targetAmount: number
+  targetDate?: string // YYYY-MM-DD
+  status: GroupSavingsStatus
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+export interface GroupSavingsMember {
+  id: string
+  groupId: string
+  userId: string
+  displayName: string
+  email: string
+  percentage: number // e.g. 70 means 70%
+  myTarget: number // targetAmount * percentage / 100
+  myContributed: number // total amount already contributed
+  status: GroupMemberStatus
+  invitedAt?: unknown
+  respondedAt?: unknown
+}
+
+export interface GroupSavingsContribution {
+  id: string
+  groupId: string
+  userId: string
+  displayName: string
+  amount: number
+  notes?: string
+  contributedAt?: unknown
+}
