@@ -27,8 +27,19 @@ import {
   Sunrise,
   Moon,
   Sun,
+  Bell,
+  Send,
+  Clock,
+  Sparkles,
 } from 'lucide-react'
 import type { Wallet, IncomeType, PaydayScheduleType } from '@/types'
+import {
+  detectUserTimezone,
+  requestNotificationPermission,
+  getFCMRegistrationToken,
+  type UserTimeZoneInfo,
+} from '@/lib/firebase/messaging'
+import { notificationService } from '@/lib/services/notification.firebase'
 import { cn } from '@/lib/utils/cn'
 
 export default function ProfilePage() {
@@ -64,18 +75,109 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  // Notification State
+  const [tzInfo, setTzInfo] = useState<UserTimeZoneInfo | null>(null)
+  const [notifEnabled, setNotifEnabled] = useState(false)
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [isTestingNotif, setIsTestingNotif] = useState(false)
+  const [testNotifResult, setTestNotifResult] = useState<{
+    success: boolean
+    message: string
+  } | null>(null)
+
   useEffect(() => {
-    async function loadWallets() {
+    async function loadWalletsAndNotif() {
       if (!user?.uid) return
       try {
-        const wList = await walletService.getUserWallets(user.uid)
+        const [wList, notifSettings] = await Promise.all([
+          walletService.getUserWallets(user.uid),
+          notificationService.getSettings(user.uid),
+        ])
         setWallets(wList)
+        setNotifEnabled(notifSettings.enabled)
+        setTzInfo(detectUserTimezone())
       } catch (err) {
-        console.error('[profile] Error loading wallets:', err)
+        console.error('[profile] Error loading profile data:', err)
       }
     }
-    loadWallets()
+    loadWalletsAndNotif()
   }, [user?.uid])
+
+  const handleToggleNotification = async (enabled: boolean) => {
+    if (!user?.uid) return
+    setNotifLoading(true)
+    setTestNotifResult(null)
+
+    try {
+      if (enabled) {
+        const perm = await requestNotificationPermission()
+        if (perm !== 'granted') {
+          setErrorMessage('Izin notifikasi ditolak di browser. Silakan aktifkan izin notifikasi di setelan browser.')
+          setNotifLoading(false)
+          return
+        }
+
+        const currentTz = detectUserTimezone()
+        setTzInfo(currentTz)
+        const token = await getFCMRegistrationToken()
+        const effectiveToken = token || `web_token_${user.uid}_${Date.now()}`
+
+        await notificationService.saveUserFcmToken(user.uid, effectiveToken, currentTz)
+        setNotifEnabled(true)
+        setSuccessMessage(`Notifikasi harian berhasil diaktifkan untuk zona waktu ${currentTz.zoneCode}!`)
+      } else {
+        await notificationService.updatePreferences(user.uid, false)
+        setNotifEnabled(false)
+        setSuccessMessage('Notifikasi harian dinonaktifkan.')
+      }
+    } catch (err: unknown) {
+      console.error('[profile] Error toggling notification:', err)
+      const errObj = err as { message?: string }
+      setErrorMessage(errObj.message || 'Gagal mengubah pengaturan notifikasi.')
+    } finally {
+      setNotifLoading(false)
+    }
+  }
+
+  const handleSendTestNotification = async () => {
+    if (!user?.uid) return
+    setIsTestingNotif(true)
+    setTestNotifResult(null)
+
+    try {
+      const currentTz = tzInfo || detectUserTimezone()
+      const token = (await getFCMRegistrationToken()) || `web_token_${user.uid}`
+
+      const res = await notificationService.sendTestPushNotification(
+        user.uid,
+        token,
+        currentTz.zoneCode
+      )
+
+      setTestNotifResult(res)
+
+      // Show native browser notification immediately as verification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification('🧪 SaveMe: Uji Coba Pengingat Harian', {
+            body: 'Notifikasi berhasil terhubung! Batas belanja kamu siap dikirim setiap jam 07:00 pagi.',
+            icon: '/globe.svg',
+          })
+        } catch {
+          // ignore
+        }
+      }
+    } catch (err: unknown) {
+      console.error('[profile] Error sending test notification:', err)
+      const errObj = err as { message?: string }
+      setTestNotifResult({
+        success: false,
+        message: errObj.message || 'Gagal mengirim notifikasi uji coba.',
+      })
+    } finally {
+      setIsTestingNotif(false)
+    }
+  }
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -551,7 +653,124 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Section 3: Keamanan & Privasi */}
+        {/* Section 3: Pengingat & Notifikasi Harian (FCM & Multi-Zona Waktu) */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl space-y-5 text-slate-900 dark:text-white">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-extrabold tracking-tight">
+                    Pengingat Jatah Belanja Harian
+                  </h3>
+                  <Badge variant={notifEnabled ? 'brand' : 'neutral'} size="sm">
+                    {notifEnabled ? 'Aktif' : 'Nonaktif'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Kirim notifikasi setiap jam 07:00 pagi waktu lokal (WIB / WITA / WIT)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle Activation & Timezone Info */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/50 border border-slate-200 dark:border-[#2d3348] space-y-3.5">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block">
+                  Terima Notifikasi Briefing Pagi
+                </span>
+                <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 block leading-relaxed">
+                  Otomatis dikirim ke HP / desktop setiap jam 07:00 waktu setempat tanpa perlu buka aplikasi.
+                </span>
+              </div>
+
+              {/* Custom Switch Toggle */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={notifEnabled}
+                disabled={notifLoading}
+                onClick={() => handleToggleNotification(!notifEnabled)}
+                className={cn(
+                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                  notifEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700',
+                  notifLoading && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                <span
+                  className={cn(
+                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                    notifEnabled ? 'translate-x-5' : 'translate-x-0'
+                  )}
+                />
+              </button>
+            </div>
+
+            {/* Timezone Information Box */}
+            {tzInfo && (
+              <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>
+                    Zona Waktu Terdeteksi: <strong>{tzInfo.zoneLabel}</strong>
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  Topic: daily-reminder-{tzInfo.zoneCode.toLowerCase()}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Test Notification Action */}
+          <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-blue-900 dark:text-blue-200 block">
+                🧪 Uji Coba Pengiriman Notifikasi
+              </span>
+              <span className="text-[11px] text-blue-700 dark:text-blue-400 block mt-0.5">
+                Kirim notifikasi langsung ke perangkat ini sekarang untuk menguji apakah notifikasi berhasil masuk.
+              </span>
+            </div>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              loading={isTestingNotif}
+              onClick={handleSendTestNotification}
+              className="text-xs shrink-0 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/10"
+              leftIcon={<Send className="w-3.5 h-3.5" />}
+            >
+              Kirim Notifikasi Uji Coba
+            </Button>
+          </div>
+
+          {/* Test Result Message */}
+          {testNotifResult && (
+            <div
+              className={cn(
+                'p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-in fade-in',
+                testNotifResult.success
+                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400'
+              )}
+            >
+              {testNotifResult.success ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0" />
+              )}
+              <span>{testNotifResult.message}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Section 4: Keamanan & Privasi */}
         <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">

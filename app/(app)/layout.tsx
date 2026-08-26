@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from '@/components/organisms/Sidebar'
 import { BottomNav } from '@/components/organisms/BottomNav'
 import { SingleTabGuard } from '@/components/organisms/SingleTabGuard'
+import { NotificationPromptModal } from '@/components/organisms/NotificationPromptModal'
+import { setupForegroundMessageListener } from '@/lib/firebase/messaging'
 import { ThemeToggle } from '@/components/molecules/ThemeToggle'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { BrandLogo } from '@/components/atoms/BrandLogo'
@@ -34,12 +36,37 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, userProfile, isAdmin, isSuperAdmin, loading, logout } = useAuth()
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
   }, [user, loading, router])
+
+  // Setup foreground FCM notification listener
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null
+    setupForegroundMessageListener((payload) => {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(payload.title || 'SaveMe - Pengingat Harian', {
+            body: payload.body || '',
+            icon: '/globe.svg',
+            data: { url: payload.url || '/daily' },
+          })
+        } catch {
+          // ignore
+        }
+      }
+    }).then((unsub) => {
+      unsubscribe = unsub
+    })
+
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -221,6 +248,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Single-Tab Active Concurrency Guard */}
       <SingleTabGuard />
+
+      {/* Notification Prompt Modal */}
+      <NotificationPromptModal
+        isOpen={isNotifModalOpen}
+        onClose={() => setIsNotifModalOpen(false)}
+      />
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />
