@@ -7,6 +7,7 @@ import { walletService } from '@/lib/services/wallet.firebase'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { MarkdownView } from '@/components/molecules/MarkdownView'
+import { ReportCharts } from '@/components/organisms/ReportCharts'
 import {
   PieChart,
   TrendingUp,
@@ -217,6 +218,65 @@ export default function ReportsPage() {
       }))
       .sort((a, b) => b.amount - a.amount)
   }, [filteredTransactions, totalExpense])
+
+  // 6 Months Historical Cashflow Comparison
+  const monthlyComparisonData = useMemo(() => {
+    const result = []
+    const now = new Date()
+
+    const MONTH_NAMES = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ]
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const yr = d.getFullYear()
+      const mo = d.getMonth()
+      const label = `${MONTH_NAMES[mo]} ${yr !== now.getFullYear() ? yr.toString().slice(-2) : ''}`.trim()
+
+      const monthTxs = transactions.filter((t) => {
+        const txDate = new Date(t.transactionDate)
+        return txDate.getFullYear() === yr && txDate.getMonth() === mo
+      })
+
+      const inc = monthTxs.filter((t) => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0)
+      const exp = monthTxs.filter((t) => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0)
+
+      result.push({
+        month: label,
+        income: inc,
+        expense: exp,
+        net: inc - exp,
+      })
+    }
+
+    return result
+  }, [transactions])
+
+  // Daily Trend Data for Current Filtered Period
+  const dailyTrendData = useMemo(() => {
+    const map: Record<string, number> = {}
+
+    filteredTransactions
+      .filter((t) => t.type === 'EXPENSE')
+      .forEach((t) => {
+        const dateKey = t.transactionDate // e.g. "2026-08-25"
+        map[dateKey] = (map[dateKey] || 0) + t.amount
+      })
+
+    const sortedDates = Object.keys(map).sort()
+
+    return sortedDates.map((dateStr) => {
+      const d = new Date(dateStr)
+      const label = `${d.getDate()}/${d.getMonth() + 1}`
+      return {
+        date: dateStr,
+        label,
+        amount: map[dateStr],
+      }
+    })
+  }, [filteredTransactions])
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -753,7 +813,17 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
       </div>
 
-      {/* 🔒 5. Multi-Wallet Cash Distribution (Operating vs Frozen) */}
+      {/* 📊 5. Visual Charts Analytics (Donut, 6-Month Comparison, Daily Trend) */}
+      <ReportCharts
+        categoryData={categoryBreakdown}
+        monthlyComparisonData={monthlyComparisonData}
+        dailyTrendData={dailyTrendData}
+        totalExpense={totalExpense}
+        totalIncome={totalIncome}
+        formatRupiah={formatRupiah}
+      />
+
+      {/* 🔒 6. Multi-Wallet Cash Distribution (Operating vs Frozen) */}
       <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
           <div className="flex items-center gap-2">
