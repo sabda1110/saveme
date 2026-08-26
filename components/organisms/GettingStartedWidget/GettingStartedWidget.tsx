@@ -1,21 +1,25 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckCircle2, Circle, X, Sparkles, PlusCircle } from 'lucide-react'
+import { CheckCircle2, Circle, X, Sparkles, PlusCircle, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface GettingStartedWidgetProps {
   hasOnboardingCompleted: boolean
   hasTransactions: boolean
   hasSavingsRate: boolean
+  hasNotificationEnabled?: boolean
   onAddTransactionClick: () => void
+  onEnableNotificationClick?: () => void
 }
 
 export function GettingStartedWidget({
   hasOnboardingCompleted,
   hasTransactions,
   hasSavingsRate,
+  hasNotificationEnabled = false,
   onAddTransactionClick,
+  onEnableNotificationClick,
 }: GettingStartedWidgetProps) {
   const [isDismissed, setIsDismissed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -62,6 +66,21 @@ export function GettingStartedWidget({
       description: 'Sisihkan sebagian uang untuk dana darurat & masa depan',
       completed: hasSavingsRate,
     },
+    {
+      id: 5,
+      title: 'Aktifkan Pengingat Jatah Belanja Pagi (07:00)',
+      description: 'Briefing batas aman belanja setiap pagi via push notification',
+      completed: hasNotificationEnabled,
+      action: !hasNotificationEnabled && onEnableNotificationClick ? (
+        <button
+          type="button"
+          onClick={onEnableNotificationClick}
+          className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+        >
+          <Bell className="w-3.5 h-3.5" /> Aktifkan Sekarang
+        </button>
+      ) : null,
+    },
   ]
 
   const completedCount = tasks.filter((t) => t.completed).length
@@ -76,7 +95,7 @@ export function GettingStartedWidget({
     }
   }
 
-  // Automatically hide if user dismissed it OR if all 4 tasks are 100% completed
+  // Automatically hide if user dismissed it OR if all tasks are 100% completed
   if (isDismissed || completedCount === tasks.length) {
     return null
   }
@@ -120,33 +139,42 @@ export function GettingStartedWidget({
         />
       </div>
 
-      {/* Checklist items */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Task List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {tasks.map((task) => (
           <div
             key={task.id}
             className={cn(
-              'p-3 rounded-xl border flex items-start gap-3 transition-all',
+              'p-3.5 rounded-xl border transition-all flex items-start gap-3',
               task.completed
-                ? 'bg-green-500/10 border-green-500/20 text-slate-700 dark:text-slate-300'
+                ? 'bg-green-500/5 border-green-500/20 text-slate-700 dark:text-slate-300'
                 : 'bg-slate-50 dark:bg-[#21263a]/40 border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400'
             )}
           >
-            {task.completed ? (
-              <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
-            ) : (
-              <Circle className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
-            )}
-            <div className="flex flex-col min-w-0">
-              <span
-                className={cn(
-                  'text-xs font-semibold',
-                  task.completed ? 'text-slate-500 dark:text-slate-400 line-through opacity-80' : 'text-slate-900 dark:text-slate-200'
-                )}
-              >
-                {task.title}
-              </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">{task.description}</span>
+            <div className="mt-0.5 shrink-0">
+              {task.completed ? (
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <Circle className="w-4 h-4 text-slate-400 dark:text-slate-600" />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className={cn(
+                    'text-xs font-semibold block',
+                    task.completed
+                      ? 'line-through text-slate-500 dark:text-slate-400'
+                      : 'text-slate-900 dark:text-slate-200'
+                  )}
+                >
+                  {task.title}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {task.description}
+              </p>
               {task.action && <div className="mt-1.5">{task.action}</div>}
             </div>
           </div>

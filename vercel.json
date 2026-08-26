@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/notifications/send-daily?zoneCode=WIT",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/notifications/send-daily?zoneCode=WITA",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/notifications/send-daily?zoneCode=WIB",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

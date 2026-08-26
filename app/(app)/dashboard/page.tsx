@@ -20,6 +20,8 @@ import { RecurringBillsCard } from '@/components/organisms/RecurringBillsCard'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
 import { PaydayAllocationModal } from '@/components/organisms/PaydayAllocationModal'
+import { NotificationPromptModal } from '@/components/organisms/NotificationPromptModal'
+import { notificationService } from '@/lib/services/notification.firebase'
 import {
   Wallet as WalletIcon,
   PlusCircle,
@@ -42,6 +44,7 @@ import {
   Zap,
   DollarSign,
   GraduationCap,
+  Bell,
 } from 'lucide-react'
 import type { Category, DashboardSummary, RecurringBill, SavingsGoal, Wallet, ReceiptScanResult, QuickTemplate } from '@/types'
 import { cn } from '@/lib/utils/cn'
@@ -71,6 +74,8 @@ export default function DashboardPage() {
   const [isScanModalOpen, setIsScanModalOpen] = useState(false)
   const [isPaydayModalOpen, setIsPaydayModalOpen] = useState(false)
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false)
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false)
+  const [hasNotificationEnabled, setHasNotificationEnabled] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
@@ -121,13 +126,14 @@ export default function DashboardPage() {
           to = todayStr
         }
 
-        const [data, cats, bills, goals, userWallets, userTemplates] = await Promise.all([
+        const [data, cats, bills, goals, userWallets, userTemplates, notifSettings] = await Promise.all([
           transactionService.getDashboardSummary(user.uid, from, to),
           categoryService.getCategories(),
           recurringService.getUserRecurringBills(user.uid),
           savingsService.getUserGoals(user.uid),
           walletService.getUserWallets(user.uid),
           quickTemplateService.getUserTemplates(user.uid),
+          notificationService.getSettings(user.uid),
         ])
 
         if (isMounted) {
@@ -137,6 +143,23 @@ export default function DashboardPage() {
           setSavingsGoals(goals)
           setWallets(userWallets)
           setTemplates(userTemplates)
+          setHasNotificationEnabled(notifSettings.enabled)
+
+          // Auto-prompt Notification Modal if not yet enabled and not snoozed
+          if (!notifSettings.enabled && typeof window !== 'undefined') {
+            try {
+              const snoozedUntil = localStorage.getItem('saveme_notif_modal_snoozed')
+              const isSnoozed = snoozedUntil && Number(snoozedUntil) > Date.now()
+              if (!isSnoozed) {
+                setTimeout(() => {
+                  if (isMounted) setIsNotifModalOpen(true)
+                }, 1200)
+              }
+            } catch {
+              // ignore
+            }
+          }
+
           if (cats.length > 0 && !categoryId) {
             setCategoryId(cats[0].id)
           }
@@ -642,12 +665,49 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Smart Notification Prompt Banner (Shown when notifications not yet enabled) */}
+      {!hasNotificationEnabled && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border border-emerald-500/30 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
+              <Bell className="w-5 h-5 animate-bounce" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                  Aktifkan Pengingat Jatah Belanja Pagi
+                </h4>
+                <Badge variant="brand" size="sm">
+                  07:00 Pagi
+                </Badge>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                Dapatkan info batas belanja harian aman setiap pagi langsung di HP/layarmu agar bebas dari overbudget.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="glow"
+            size="sm"
+            onClick={() => setIsNotifModalOpen(true)}
+            className="shrink-0 text-xs self-stretch sm:self-auto font-bold"
+            leftIcon={<Bell className="w-3.5 h-3.5" />}
+          >
+            Aktifkan Pengingat
+          </Button>
+        </div>
+      )}
+
       {/* Getting Started Guide Checklist */}
       <GettingStartedWidget
         hasOnboardingCompleted={Boolean(userProfile?.hasCompletedOnboarding)}
         hasTransactions={summary.transactions.length > 0}
         hasSavingsRate={summary.savingsRate >= 20}
+        hasNotificationEnabled={hasNotificationEnabled}
         onAddTransactionClick={() => setIsModalOpen(true)}
+        onEnableNotificationClick={() => setIsNotifModalOpen(true)}
       />
 
       {/* 2 Smart Dynamic Indicators (Safe-to-Spend Today & Daily Savings Required) */}
@@ -1493,6 +1553,31 @@ export default function DashboardPage() {
         wallets={wallets}
         savingsGoals={savingsGoals}
         recurringBills={recurringBills}
+      />
+
+      {/* 🔔 Daily Spending Notification Prompt Modal */}
+      <NotificationPromptModal
+        isOpen={isNotifModalOpen}
+        onClose={() => {
+          setIsNotifModalOpen(false)
+          try {
+            // Snooze for 7 days
+            localStorage.setItem(
+              'saveme_notif_modal_snoozed',
+              (Date.now() + 7 * 24 * 60 * 60 * 1000).toString()
+            )
+          } catch {
+            // ignore
+          }
+        }}
+        onSuccess={() => {
+          setHasNotificationEnabled(true)
+          try {
+            localStorage.removeItem('saveme_notif_modal_snoozed')
+          } catch {
+            // ignore
+          }
+        }}
       />
     </div>
   )
