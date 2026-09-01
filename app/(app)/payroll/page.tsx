@@ -15,6 +15,7 @@ import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import {
   DollarSign,
   Calendar,
@@ -455,15 +456,48 @@ export default function PayrollPage() {
         </div>
       )}
 
-      {/* 🛡️ 1. Monthly Allocation Status & Cycle Banner */}
-      <div
-        className={cn(
-          'p-5 sm:p-7 rounded-3xl border shadow-md dark:shadow-2xl relative overflow-hidden transition-all',
-          isAlreadyAllocatedThisMonth
-            ? 'bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/70 dark:via-[#1a1d27] dark:to-[#1a1d27] border-green-500/40'
-            : 'bg-gradient-to-br from-purple-50 via-white to-white dark:from-purple-950/50 dark:via-[#1a1d27] dark:to-[#1a1d27] border-purple-500/30'
-        )}
-      >
+      {/* Loading Skeleton */}
+      {loading && wallets.length === 0 ? (
+        <div className="space-y-6">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-12 h-12 rounded-2xl" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-white/8">
+              <Skeleton className="h-16 rounded-2xl" />
+              <Skeleton className="h-16 rounded-2xl" />
+              <Skeleton className="h-16 rounded-2xl" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+            </div>
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs">
+              <Skeleton className="h-5 w-44" />
+              <Skeleton className="h-28 w-full rounded-2xl" />
+              <Skeleton className="h-28 w-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 🛡️ 1. Monthly Allocation Status & Cycle Banner */}
+          <div
+            className={cn(
+              'p-5 sm:p-7 rounded-3xl border shadow-md dark:shadow-2xl relative overflow-hidden transition-all',
+              isAlreadyAllocatedThisMonth
+                ? 'bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/70 dark:via-[#1a1d27] dark:to-[#1a1d27] border-green-500/40'
+                : 'bg-gradient-to-br from-purple-50 via-white to-white dark:from-purple-950/50 dark:via-[#1a1d27] dark:to-[#1a1d27] border-purple-500/30'
+            )}
+          >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="flex items-start sm:items-center gap-4">
             <div
@@ -1160,6 +1194,8 @@ export default function PayrollPage() {
           </div>
         )}
       </div>
+    </>
+  )}
 
       {/* Confirm Reset Modal */}
       <ConfirmModal

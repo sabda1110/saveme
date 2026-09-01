@@ -14,6 +14,7 @@ import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
 import { TransactionCalendar } from '@/components/organisms/TransactionCalendar'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
 import { savingsService } from '@/lib/services/savings.firebase'
 import {
@@ -530,6 +531,48 @@ export default function TransactionsPage() {
           onDelete={(id) => setTxToDelete(id)}
           onAddOnDate={handleOpenAddOnDate}
         />
+      ) : loading && transactions.length === 0 ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-4 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs flex justify-between items-center"
+              >
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-6 w-32" />
+                </div>
+                <Skeleton className="w-8 h-8 rounded-xl" />
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-3">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-white/8">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-white/3 border border-slate-100 dark:border-white/5"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-xl" />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-16 rounded-md" />
+                    </div>
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-28" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <>
           {/* 3 Summary Badges for Filtered Results */}

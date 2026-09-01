@@ -9,6 +9,7 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { TransferModal } from '@/components/organisms/TransferModal'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import type { Wallet, WalletType, CreateWalletDto } from '@/types'
 import {
   Wallet as WalletIcon,
@@ -398,88 +399,131 @@ export default function WalletsPage() {
         </div>
       )}
 
-      {/* 4 Summary Breakdown Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* 1. Kas Operasional Likuid */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-green-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 flex items-center gap-1.5">
-              <Unlock className="w-3.5 h-3.5" /> Kas Operasional (Belanja)
-            </span>
-            <Badge variant="brand" size="sm">
-              {spendingWallets.length} Kantong
-            </Badge>
+      {/* Loading Skeleton */}
+      {loading && wallets.length === 0 ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-3"
+              >
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-4 w-12 rounded-md" />
+                </div>
+                <Skeleton className="h-7 w-36" />
+                <Skeleton className="h-2.5 w-44" />
+              </div>
+            ))}
           </div>
-          <div>
-            <div className="text-xl sm:text-2xl font-extrabold font-mono text-green-600 dark:text-green-400 tabular-nums">
-              {formatRupiah(totalSpendingBalance)}
-            </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-              Uang siap pakai untuk jatah belanja harian
-            </span>
-          </div>
-        </div>
 
-        {/* 2. Kantong Bertujuan Khusus (Earmarked) */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-              🎯 Kantong Bertujuan Khusus
-            </span>
-            <Badge variant="neutral" size="sm">
-              {earmarkedWallets.length} Kantong
-            </Badge>
-          </div>
-          <div>
-            <div className="text-xl sm:text-2xl font-extrabold font-mono text-blue-600 dark:text-blue-400 tabular-nums">
-              {formatRupiah(totalEarmarkedBalance)}
-            </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-              Bisa dipakai, tidak masuk jatah harian
-            </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-12 h-12 rounded-2xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-36" />
+                <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-white/8">
+                  <Skeleton className="h-9 rounded-xl" />
+                  <Skeleton className="h-9 rounded-xl" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      ) : (
+        <>
+          {/* 4 Summary Breakdown Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {/* 1. Kas Operasional Likuid */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-green-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                  <Unlock className="w-3.5 h-3.5" /> Kas Operasional (Belanja)
+                </span>
+                <Badge variant="brand" size="sm">
+                  {spendingWallets.length} Kantong
+                </Badge>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold font-mono text-green-600 dark:text-green-400 tabular-nums">
+                  {formatRupiah(totalSpendingBalance)}
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
+                  Uang siap pakai untuk jatah belanja harian
+                </span>
+              </div>
+            </div>
 
-        {/* 3. Simpanan & Dana Beku */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-amber-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5" /> Tabungan Beku &amp; Darurat
-            </span>
-            <Badge variant="warning" size="sm">
-              {lockedWallets.length} Kantong
-            </Badge>
-          </div>
-          <div>
-            <div className="text-xl sm:text-2xl font-extrabold font-mono text-amber-700 dark:text-amber-400 tabular-nums">
-              {formatRupiah(totalLockedBalance)}
+            {/* 2. Kantong Bertujuan Khusus (Earmarked) */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  🎯 Kantong Bertujuan Khusus
+                </span>
+                <Badge variant="neutral" size="sm">
+                  {earmarkedWallets.length} Kantong
+                </Badge>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold font-mono text-blue-600 dark:text-blue-400 tabular-nums">
+                  {formatRupiah(totalEarmarkedBalance)}
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
+                  Bisa dipakai, tidak masuk jatah harian
+                </span>
+              </div>
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-              Dana aman (dikecualikan dari jatah harian)
-            </span>
-          </div>
-        </div>
 
-        {/* 3. Total Keseluruhan Dana */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-blue-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" /> Total Seluruh Dana
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-              {wallets.length} Kantong Total
-            </span>
-          </div>
-          <div>
-            <div className="text-xl sm:text-2xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums">
-              {formatRupiah(totalWalletBalance)}
+            {/* 3. Simpanan & Dana Beku */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-amber-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5" /> Tabungan Beku &amp; Darurat
+                </span>
+                <Badge variant="warning" size="sm">
+                  {lockedWallets.length} Kantong
+                </Badge>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold font-mono text-amber-700 dark:text-amber-400 tabular-nums">
+                  {formatRupiah(totalLockedBalance)}
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
+                  Dana aman (dikecualikan dari jatah harian)
+                </span>
+              </div>
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-              Akumulasi seluruh aset di kantong
-            </span>
+
+            {/* 3. Total Keseluruhan Dana */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-blue-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Total Seluruh Dana
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                  {wallets.length} Kantong Total
+                </span>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums">
+                  {formatRupiah(totalWalletBalance)}
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
+                  Akumulasi seluruh aset di kantong
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
       {/* Wallets Grid */}
       {wallets.length === 0 ? (
@@ -654,6 +698,8 @@ export default function WalletsPage() {
           })}
         </div>
       )}
+    </>
+  )}
 
       {/* Modal Add / Edit Wallet */}
       {isWalletModalOpen && (

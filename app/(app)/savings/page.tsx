@@ -12,6 +12,7 @@ import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { GroupSavingsCard } from '@/components/organisms/GroupSavingsCard'
 import { GroupSavingsInviteModal } from '@/components/organisms/GroupSavingsInviteModal'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import {
   Target,
   PlusCircle,
@@ -890,14 +891,74 @@ export default function SavingsPage() {
 
       {/* ════════════════════ TAB 1: CELENGAN PRIBADI ════════════════════ */}
       {activeTab === 'pribadi' && (
-        <>
-          {/* 4 Summary KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-white dark:bg-gradient-to-b dark:from-[#1e2333] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                  Saldo Kas Bebas ({spendingWallets.length} Dompet)
-                </span>
+        loading && goals.length === 0 ? (
+            <div className="space-y-6">
+              {/* 4 Summary KPI Skeletons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="p-5 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs flex items-center justify-between"
+                  >
+                    <div className="space-y-2.5 w-3/4">
+                      <Skeleton className="h-3 w-28" />
+                      <Skeleton className="h-7 w-36" />
+                      <Skeleton className="h-2.5 w-24" />
+                    </div>
+                    <Skeleton className="w-10 h-10 rounded-2xl" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Grid of 3 Goal Card Skeletons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs flex flex-col justify-between space-y-5"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-12 h-12 rounded-2xl" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                        <Skeleton className="w-12 h-6 rounded-lg" />
+                      </div>
+
+                      <div className="space-y-2.5 mb-4">
+                        <div className="flex justify-between">
+                          <Skeleton className="h-3 w-16" />
+                          <Skeleton className="h-3 w-10" />
+                        </div>
+                        <Skeleton className="h-2.5 w-full rounded-full" />
+                        <div className="flex justify-between">
+                          <Skeleton className="h-3 w-20" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-white/8">
+                      <Skeleton className="h-9 rounded-xl" />
+                      <Skeleton className="h-9 rounded-xl" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* 4 Summary KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-5 rounded-2xl bg-white dark:bg-gradient-to-b dark:from-[#1e2333] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                      Saldo Kas Bebas ({spendingWallets.length} Dompet)
+                    </span>
                 <div className="text-xl sm:text-2xl font-extrabold font-mono text-green-600 dark:text-green-400 tabular-nums">
                   {formatRupiah(liquidBalance)}
                 </div>
@@ -1153,119 +1214,162 @@ export default function SavingsPage() {
             </div>
           )}
         </>
-      )}
+      ))}
 
       {/* ════════════════════ TAB 2: CELENGAN BERSAMA ════════════════════ */}
       {activeTab === 'bersama' && (
         <div className="space-y-6">
-          {/* Summary KPIs for Group Savings */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                  Celengan Bersama Aktif
-                </span>
-                <div className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white">
-                  {groupSavings.length} Grup
-                </div>
-                <span className="text-[11px] text-slate-500 mt-1 block">
-                  Patungan bareng kawan & keluarga
-                </span>
+          {loading && groupSavings.length === 0 ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="p-5 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs flex items-center justify-between"
+                  >
+                    <div className="space-y-2.5 w-3/4">
+                      <Skeleton className="h-3 w-28" />
+                      <Skeleton className="h-7 w-36" />
+                      <Skeleton className="h-2.5 w-24" />
+                    </div>
+                    <Skeleton className="w-10 h-10 rounded-2xl" />
+                  </div>
+                ))}
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                <Users className="w-5 h-5" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-12 h-12 rounded-2xl" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-3 w-full rounded-full" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                  Setoran Kamu di Grup
-                </span>
-                <div className="text-2xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
-                  {formatRupiah(myTotalGroupContributed)}
-                </div>
-                <span className="text-[11px] text-slate-500 mt-1 block">
-                  Komitmen yang sudah kamu setor
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <PiggyBank className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                  Total Target Gabungan
-                </span>
-                <div className="text-2xl font-extrabold font-mono text-purple-600 dark:text-purple-400">
-                  {formatRupiah(totalGroupTarget)}
-                </div>
-                <span className="text-[11px] text-slate-500 mt-1 block">
-                  Terkumpul gabungan: {formatRupiah(totalGroupContributed)}
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                <Target className="w-5 h-5" />
-              </div>
-            </div>
-          </div>
-
-          {/* Group Savings Grid */}
-          {groupSavings.length === 0 ? (
-            <div className="p-12 sm:p-16 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center text-center shadow-md">
-              <div className="text-5xl mb-4">👥</div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-                Belum Ada Celengan Bersama
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
-                Mau liburan bareng teman? Beli kado patungan? Atau sewa tempat bersama? Buat celengan bersama, tentukan persentase bagian masing-masing, dan pantau history setorannya bersama!
-              </p>
-              <Button
-                variant="glow"
-                size="md"
-                onClick={() => {
-                  setNewGroupName('')
-                  setNewGroupTarget('')
-                  setNewGroupDate('')
-                  setNewGroupIcon('🏝️')
-                  setHostPercentage(40)
-                  setNewGroupInvitees([
-                    { id: 'inv-1', email: '', percentage: 30, verifiedUser: null, checking: false, error: null },
-                    { id: 'inv-2', email: '', percentage: 30, verifiedUser: null, checking: false, error: null },
-                  ])
-                  setNewGroupError(null)
-                  setIsCreateGroupOpen(true)
-                }}
-                leftIcon={<PlusCircle className="w-4 h-4" />}
-              >
-                Buat Celengan Bersama Pertama
-              </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {groupSavings.map((item) => (
-                <div key={item.group.id} className="flex flex-col gap-2">
-                  <GroupSavingsCard
-                    group={item.group}
-                    myMember={item.member}
-                    allMembers={item.allMembers}
-                    onRefresh={() => setRefreshTrigger((p) => p + 1)}
-                  />
-                  {/* Creator extra action: Invite member */}
-                  {item.group.createdBy === user?.uid && item.group.status === 'ACTIVE' && (
-                    <button
-                      onClick={() => handleOpenInviteModal(item.group.id, item.group.targetAmount)}
-                      className="self-end text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 px-2 py-1 cursor-pointer"
-                    >
-                      <UserPlus className="w-3.5 h-3.5" />
-                      + Undang Anggota Baru
-                    </button>
-                  )}
+            <>
+              {/* Summary KPIs for Group Savings */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                      Celengan Bersama Aktif
+                    </span>
+                    <div className="text-2xl font-extrabold font-mono text-slate-900 dark:text-white">
+                      {groupSavings.length} Grup
+                    </div>
+                    <span className="text-[11px] text-slate-500 mt-1 block">
+                      Patungan bareng kawan & keluarga
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                      Setoran Kamu di Grup
+                    </span>
+                    <div className="text-2xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                      {formatRupiah(myTotalGroupContributed)}
+                    </div>
+                    <span className="text-[11px] text-slate-500 mt-1 block">
+                      Komitmen yang sudah kamu setor
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <PiggyBank className="w-5 h-5" />
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                      Total Target Gabungan
+                    </span>
+                    <div className="text-2xl font-extrabold font-mono text-purple-600 dark:text-purple-400">
+                      {formatRupiah(totalGroupTarget)}
+                    </div>
+                    <span className="text-[11px] text-slate-500 mt-1 block">
+                      Terkumpul gabungan: {formatRupiah(totalGroupContributed)}
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                    <Target className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Group Savings Grid */}
+              {groupSavings.length === 0 ? (
+                <div className="p-12 sm:p-16 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center text-center shadow-md">
+                  <div className="text-5xl mb-4">👥</div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                    Belum Ada Celengan Bersama
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
+                    Mau liburan bareng teman? Beli kado patungan? Atau sewa tempat bersama? Buat celengan bersama, tentukan persentase bagian masing-masing, dan pantau history setorannya bersama!
+                  </p>
+                  <Button
+                    variant="glow"
+                    size="md"
+                    onClick={() => {
+                      setNewGroupName('')
+                      setNewGroupTarget('')
+                      setNewGroupDate('')
+                      setNewGroupIcon('🏝️')
+                      setHostPercentage(40)
+                      setNewGroupInvitees([
+                        { id: 'inv-1', email: '', percentage: 30, verifiedUser: null, checking: false, error: null },
+                        { id: 'inv-2', email: '', percentage: 30, verifiedUser: null, checking: false, error: null },
+                      ])
+                      setNewGroupError(null)
+                      setIsCreateGroupOpen(true)
+                    }}
+                    leftIcon={<PlusCircle className="w-4 h-4" />}
+                  >
+                    Buat Celengan Bersama Pertama
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {groupSavings.map((item) => (
+                    <div key={item.group.id} className="flex flex-col gap-2">
+                      <GroupSavingsCard
+                        group={item.group}
+                        myMember={item.member}
+                        allMembers={item.allMembers}
+                        onRefresh={() => setRefreshTrigger((p) => p + 1)}
+                      />
+                      {/* Creator extra action: Invite member */}
+                      {item.group.createdBy === user?.uid && item.group.status === 'ACTIVE' && (
+                        <button
+                          onClick={() => handleOpenInviteModal(item.group.id, item.group.targetAmount)}
+                          className="self-end text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 px-2 py-1 cursor-pointer"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          + Undang Anggota Baru
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1283,7 +1387,25 @@ export default function SavingsPage() {
             </span>
           </div>
 
-          {pendingInvites.length === 0 ? (
+          {loading && pendingInvites.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="p-5 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-12 h-12 rounded-2xl" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-36" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : pendingInvites.length === 0 ? (
             <div className="p-12 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center text-center">
               <div className="text-4xl mb-3">📬</div>
               <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">

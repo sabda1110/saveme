@@ -12,6 +12,7 @@ import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { MarkdownView } from '@/components/molecules/MarkdownView'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import {
   Compass,
   Sparkles,
@@ -513,12 +514,38 @@ export default function DailyBudgetPage() {
         </div>
       </div>
 
-      {/* Multi-Wallet Segregation Status Bar */}
-      {wallets.length > 0 && (
-        <div className={cn(
-          'grid gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm',
-          earmarkedWallets.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
-        )}>
+      {/* Loading Skeleton */}
+      {loading && wallets.length === 0 ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs">
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+          </div>
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-3">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-12 w-56" />
+              <Skeleton className="h-4 w-full rounded-full" />
+            </div>
+            <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-28 w-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Multi-Wallet Segregation Status Bar */}
+          {wallets.length > 0 && (
+            <div className={cn(
+              'grid gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm',
+              earmarkedWallets.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+            )}>
           <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-green-500/20">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center">
@@ -998,8 +1025,10 @@ export default function DailyBudgetPage() {
               <MarkdownView content={queryAnswer} />
             </div>
           )}
+          </div>
         </div>
-      </div>
+      </>
+    )}
     </div>
   )
 }

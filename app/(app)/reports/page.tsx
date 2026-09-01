@@ -8,6 +8,7 @@ import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { MarkdownView } from '@/components/molecules/MarkdownView'
 import { ReportCharts } from '@/components/organisms/ReportCharts'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import {
   PieChart,
   TrendingUp,
@@ -550,8 +551,46 @@ _Dihasilkan otomatis oleh SaveMe App_`
         </div>
       </div>
 
-      {/* 🌟 1. Financial Health Score & Diagnostic Banner */}
-      <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#1a2133] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 text-slate-900 dark:text-white">
+      {/* Loading Skeleton */}
+      {loading && transactions.length === 0 ? (
+        <div className="space-y-6">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-16 h-16 rounded-2xl" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-6 w-36" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-3"
+              >
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-7 w-36" />
+                <Skeleton className="h-2.5 w-20" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </div>
+            <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 🌟 1. Financial Health Score & Diagnostic Banner */}
+          <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1a1d27] dark:via-[#1a2133] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 text-slate-900 dark:text-white">
         <div className="flex items-start sm:items-center gap-4">
           <div className="relative flex items-center justify-center shrink-0">
             {/* Score Ring Progress */}
@@ -1000,6 +1039,8 @@ _Dihasilkan otomatis oleh SaveMe App_`
           </div>
         </div>
       </div>
-    </div>
+    </>
+  )}
+</div>
   )
 }

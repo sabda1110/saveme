@@ -12,6 +12,7 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { MarkdownView } from '@/components/molecules/MarkdownView'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import {
   CreditCard,
   PlusCircle,
@@ -510,14 +511,61 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
         </div>
       )}
 
-      {/* 🛡️ 1. DSR (Debt Service Ratio) Meter & Sisa Pokok Hutang Banner */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* DSR Meter Card */}
-        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-white dark:from-[#1a1d27] dark:via-[#1f2038] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-2xl flex flex-col justify-between text-slate-900 dark:text-white">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300">
+      {/* Loading Skeleton */}
+      {loading && bills.length === 0 ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs">
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-3 w-full rounded-full" />
+              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-white/8">
+                <Skeleton className="h-8 rounded-lg" />
+                <Skeleton className="h-8 rounded-lg" />
+                <Skeleton className="h-8 rounded-lg" />
+              </div>
+            </div>
+            <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4 shadow-xs">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-16 w-full rounded-2xl" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-4"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-xl" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-5 w-16 rounded-md" />
+                </div>
+                <Skeleton className="h-7 w-32" />
+                <Skeleton className="h-9 w-full rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 🛡️ 1. DSR (Debt Service Ratio) Meter & Sisa Pokok Hutang Banner */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* DSR Meter Card */}
+            <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-white dark:from-[#1a1d27] dark:via-[#1f2038] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-2xl flex flex-col justify-between text-slate-900 dark:text-white">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300">
                   <ShieldCheck className="w-4 h-4" />
                 </span>
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -932,6 +980,8 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
           })}
         </div>
       )}
+    </>
+  )}
 
       {/* 5. Modal: Add / Edit Tagihan & Cicilan */}
       {isModalOpen && (
