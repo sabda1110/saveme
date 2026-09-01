@@ -89,6 +89,8 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       lastAllocatedMonth: data.lastAllocatedMonth,
       monthlyBudget: data.monthlyBudget || 0,
       monthlyBudgetMonth: data.monthlyBudgetMonth,
+      appPin: data.appPin,
+      isPinEnabled: data.isPinEnabled ?? false,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     } as UserProfile

@@ -50,30 +50,69 @@ export function SetPinModal({
 
   const currentInput = step === 'enter' ? pin : confirmPin
 
-  const handleKeyPress = (digit: string) => {
-    setError(null)
-    if (step === 'enter') {
-      if (pin.length < 6) {
-        const next = pin + digit
-        setPin(next)
-        if (next.length === 6) {
-          setTimeout(() => {
-            setStep('confirm')
-          }, 200)
-        }
+  const handleVerifyAndSave = React.useCallback(
+    async (firstPin: string, secondPin: string) => {
+      if (firstPin !== secondPin) {
+        setError('PIN konfirmasi tidak cocok. Silakan ulangi.')
+        setConfirmPin('')
+        return
       }
-    } else {
-      if (confirmPin.length < 6) {
-        const next = confirmPin + digit
-        setConfirmPin(next)
-        if (next.length === 6) {
-          handleVerifyAndSave(pin, next)
-        }
-      }
-    }
-  }
 
-  const handleDelete = () => {
+      setLoading(true)
+      try {
+        const hashed = await hashPin(firstPin)
+        await updateUserProfile(userId, {
+          appPin: hashed,
+          isPinEnabled: true,
+        })
+
+        // Also set unlocked in current session
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('saveme_pin_unlocked', 'true')
+        }
+
+        setSuccess(true)
+        setTimeout(() => {
+          onSuccess()
+          onClose()
+        }, 1000)
+      } catch (err: unknown) {
+        const errObj = err as { message?: string }
+        setError(errObj.message || 'Gagal menyimpan PIN')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [userId, onSuccess, onClose]
+  )
+
+  const handleKeyPress = React.useCallback(
+    (digit: string) => {
+      setError(null)
+      if (step === 'enter') {
+        if (pin.length < 6) {
+          const next = pin + digit
+          setPin(next)
+          if (next.length === 6) {
+            setTimeout(() => {
+              setStep('confirm')
+            }, 200)
+          }
+        }
+      } else {
+        if (confirmPin.length < 6) {
+          const next = confirmPin + digit
+          setConfirmPin(next)
+          if (next.length === 6) {
+            handleVerifyAndSave(pin, next)
+          }
+        }
+      }
+    },
+    [step, pin, confirmPin, handleVerifyAndSave]
+  )
+
+  const handleDelete = React.useCallback(() => {
     setError(null)
     if (step === 'enter') {
       setPin((prev) => prev.slice(0, -1))
@@ -85,40 +124,25 @@ export function SetPinModal({
         setConfirmPin((prev) => prev.slice(0, -1))
       }
     }
-  }
+  }, [step, confirmPin.length])
 
-  const handleVerifyAndSave = async (firstPin: string, secondPin: string) => {
-    if (firstPin !== secondPin) {
-      setError('PIN konfirmasi tidak cocok. Silakan ulangi.')
-      setConfirmPin('')
-      return
-    }
+  // Keyboard physical listener
+  useEffect(() => {
+    if (!isOpen || loading || success) return
 
-    setLoading(true)
-    try {
-      const hashed = await hashPin(firstPin)
-      await updateUserProfile(userId, {
-        appPin: hashed,
-        isPinEnabled: true,
-      })
-
-      // Also set unlocked in current session
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('saveme_pin_unlocked', 'true')
-      }
-
-      setSuccess(true)
-      setTimeout(() => {
-        onSuccess()
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        handleKeyPress(e.key)
+      } else if (e.key === 'Backspace') {
+        handleDelete()
+      } else if (e.key === 'Escape') {
         onClose()
-      }, 1000)
-    } catch (err: unknown) {
-      const errObj = err as { message?: string }
-      setError(errObj.message || 'Gagal menyimpan PIN')
-    } finally {
-      setLoading(false)
+      }
     }
-  }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, loading, success, handleKeyPress, handleDelete, onClose])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
