@@ -1,65 +1,61 @@
 'use client'
 
 import React from 'react'
-import { SectionHeader } from '@/components/molecules/SectionHeader'
-import { Lock, KeyRound, Database, EyeOff } from 'lucide-react'
+import { Zap, BookOpen, ShieldCheck, Smartphone } from 'lucide-react'
+
+const BENEFITS = [
+  {
+    icon: <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+    label: 'Simpel',
+    title: 'Tanpa alat keuangan yang membingungkan.',
+    description: 'SaveMe menghilangkan kerumitan. Cukup catat, pantau jatah harian, dan pahami ke mana uangmu bergerak.',
+  },
+  {
+    icon: <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+    label: 'Jernih',
+    title: 'Pahami kondisi kas tanpa rumus spreadsheet.',
+    description: 'Laporan visual dan ringkasan transaksi memberikan kejelasan instan tentang posisi keuanganmu.',
+  },
+  {
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+    label: '100% Privat',
+    title: 'Data keuanganmu murni milikmu seutuhnya.',
+    description: 'Data terisolasi aman di akun pribadimu. Kami tidak pernah menjual data, menampilkan iklan, atau membagikannya ke pihak ketiga.',
+  },
+  {
+    icon: <Smartphone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+    label: 'Akses Fleksibel',
+    title: 'Kelola keuangan di mana pun dan kapan pun.',
+    description: 'Dapat diinstall langsung di HP sebagai Progressive Web App (PWA), cepat, ringan, dan tanpa makan memori.',
+  },
+]
 
 export function SecuritySection() {
-  const securityPillars = [
-    {
-      icon: <Database className="w-5 h-5 text-green-600 dark:text-green-400" />,
-      title: 'Firestore Rules Database Isolation',
-      desc: 'Setiap baris data transaksi terikat secara permanen pada request.auth.uid. Cloud Firestore Security Rules menolak query lintas-pengguna di level database terdalam.',
-    },
-    {
-      icon: <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
-      title: 'Single-Tab Session Guard',
-      desc: 'Proteksi konkurensi tab aktif mencegah konflik mutasi saldo dan menjamin keakuratan perhitungan arus kas saat membuka aplikasi.',
-    },
-    {
-      icon: <KeyRound className="w-5 h-5 text-teal-600 dark:text-teal-400" />,
-      title: 'Firebase Auth Enterprise Standard',
-      desc: 'Otentikasi pengguna ditangani oleh Google Firebase Authentication dengan enkripsi token berkala dan proteksi brute-force.',
-    },
-    {
-      icon: <EyeOff className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
-      title: 'Nol Penjualan Data & Bebas Pinjol',
-      desc: 'SaveMe tidak terafiliasi dengan pinjaman online, broker asuransi, atau platform iklan. Datamu murni milikmu dan tidak akan pernah dijual.',
-    },
-  ]
-
   return (
-    <section id="keamanan" className="py-20 sm:py-28 relative scroll-mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeader
-          badgeText="🛡️ Komitmen Privasi 100%"
-          badgeVariant="income"
-          title={
-            <>
-              Keamanan Finansialmu Adalah{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-emerald-300 to-teal-300">
-                Prioritas Tertinggi Kami
-              </span>
-            </>
-          }
-          subtitle="Kami percaya data finansial pribadi adalah hal paling rahasia bagi setiap individu. SaveMe dibangun dari nol dengan prinsip privasi-pertama."
-        />
+    <section id="keunggulan" className="py-20 sm:py-28 scroll-mt-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="max-w-xl mb-14">
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-3">Keunggulan</p>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            Dibuat untuk memudahkan pengelolaan uangmu.
+          </h2>
+        </div>
 
-        {/* 4 Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {securityPillars.map((pillar, idx) => (
+        {/* Benefit grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {BENEFITS.map((b, i) => (
             <div
-              key={idx}
-              className="p-6 rounded-2xl bg-white dark:bg-[#1a1d27]/70 border border-slate-200 dark:border-[#2d3348] hover:border-green-500/30 transition-all duration-200 flex gap-4 shadow-xs dark:shadow-md text-slate-900 dark:text-white"
+              key={i}
+              className="group flex gap-5 p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-[#111118] border border-slate-200 dark:border-white/8 hover:border-emerald-500/25 transition-all duration-200"
             >
-              <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center shrink-0">
-                {pillar.icon}
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
+                {b.icon}
               </div>
-              <div className="flex flex-col">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1.5">{pillar.title}</h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
-                  {pillar.desc}
-                </p>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-500 mb-1">{b.label}</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">{b.title}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{b.description}</p>
               </div>
             </div>
           ))}

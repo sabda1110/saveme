@@ -3,46 +3,44 @@
 import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/atoms/Button'
-import { Badge } from '@/components/atoms/Badge'
 import { useAuth } from '@/context/AuthContext'
-import { ArrowRight, CheckCircle2, LayoutDashboard } from 'lucide-react'
+import { ArrowRight, LayoutDashboard } from 'lucide-react'
 
 export function CTASection() {
   const { user } = useAuth()
 
   return (
-    <section className="py-20 sm:py-28 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[300px] bg-green-500/20 rounded-full blur-[140px] pointer-events-none -z-10" />
+    <section className="py-20 sm:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative rounded-3xl overflow-hidden bg-slate-900 dark:bg-[#0f1f14] px-8 sm:px-16 py-16 sm:py-20 text-center">
+          {/* Subtle grid */}
+          <div
+            className="absolute inset-0 opacity-[0.04] pointer-events-none"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+          {/* Green ambient blob */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] rounded-full bg-emerald-600/20 blur-[80px] pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl bg-gradient-to-b from-green-50/80 via-white to-white dark:from-[#1a1d27] dark:via-[#1a1d27]/95 dark:to-[#131620] border border-green-500/30 p-8 sm:p-14 text-center shadow-xl dark:shadow-2xl overflow-hidden text-slate-900 dark:text-white">
-          {/* Subtle grid mesh */}
-          <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02] bg-[size:24px_24px] pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
-            <Badge variant="brand" size="md" dot className="mb-6">
-              Mulai Langkah Pertama Hari Ini
-            </Badge>
-
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight mb-5">
-              Siap Memiliki Kontrol Penuh Atas Keuanganmu?
+          <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight mb-5">
+              Mulai kendalikan keuanganmu hari ini.
             </h2>
-
-            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-normal leading-relaxed mb-8">
-              Bergabung sekarang bersama SaveMe. Gratis, cepat, dan tanpa ribet. Mulai catat
-              transaksi pertamamu dalam hitungan detik.
+            <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-10">
+              Ambil langkah pertama menuju kebiasaan finansial yang lebih sehat bersama SaveMe — privat, simpel, dan 100% gratis.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-8">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
               {user ? (
                 <Link href="/dashboard" className="w-full sm:w-auto">
                   <Button
                     variant="glow"
                     size="lg"
-                    className="w-full sm:w-auto text-base px-8"
+                    className="w-full sm:w-auto px-10"
                     leftIcon={<LayoutDashboard className="w-5 h-5" />}
-                    rightIcon={<ArrowRight className="w-5 h-5" />}
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
                   >
                     Buka Dashboard Saya
                   </Button>
@@ -53,35 +51,22 @@ export function CTASection() {
                     <Button
                       variant="glow"
                       size="lg"
-                      className="w-full sm:w-auto text-base px-8"
-                      rightIcon={<ArrowRight className="w-5 h-5" />}
+                      className="w-full sm:w-auto px-10"
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
-                      Daftar Akun Gratis
+                      Mulai Sekarang — Gratis
                     </Button>
                   </Link>
                   <Link href="/login" className="w-full sm:w-auto">
-                    <Button variant="secondary" size="lg" className="w-full sm:w-auto text-base">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto px-8 border border-white/15 bg-white/8 text-white hover:bg-white/15 transition-colors"
+                    >
                       Sudah Punya Akun? Masuk
                     </Button>
                   </Link>
                 </>
               )}
-            </div>
-
-            {/* Quick Micro Bullet points */}
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-600 dark:text-slate-400">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                <span>Tanpa Biaya Langganan</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                <span>Tanpa Iklan Mengganggu</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                <span>Bebas Hapus Kapan Saja</span>
-              </div>
             </div>
           </div>
         </div>

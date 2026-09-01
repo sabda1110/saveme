@@ -3,84 +3,85 @@
 import React from 'react'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/atoms/BrandLogo'
-import { Badge } from '@/components/atoms/Badge'
+
+const PRODUCT_LINKS = [
+  { label: 'Fitur', href: '#fitur' },
+  { label: 'Cara Kerja', href: '#cara-kerja' },
+  { label: 'Keunggulan', href: '#keunggulan' },
+]
+
+const ACCOUNT_LINKS = [
+  { label: 'Masuk Akun', href: '/login', external: false },
+  { label: 'Daftar Gratis', href: '/register', external: false },
+]
+
+const LEGAL_LINKS = [
+  { label: 'Kebijakan Privasi', href: '#' },
+  { label: 'Syarat & Ketentuan', href: '#' },
+]
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-200 dark:border-[#2d3348] bg-slate-50 dark:bg-[#0c0e14] py-12 sm:py-16 text-slate-600 dark:text-slate-400 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Col 1: Brand Info */}
-          <div className="md:col-span-2 flex flex-col gap-4">
-            <BrandLogo size="md" />
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              Aplikasi pencatat keuangan pribadi yang simpel, modern, dan menjunjung tinggi
-              privasi datamu.
+    <footer className="border-t border-slate-200 dark:border-white/8 bg-white dark:bg-[#0a0a0f] py-14 sm:py-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-10 mb-12">
+          {/* Brand col */}
+          <div className="sm:col-span-2 flex flex-col gap-4">
+            <BrandLogo size="md" withLink={false} />
+            <p className="text-sm text-slate-500 dark:text-slate-500 max-w-xs leading-relaxed">
+              Aplikasi pengelola keuangan pribadi yang simpel, privat, dan modern untuk semua orang. Catat pengeluaran, amankan tabungan, dan raih kebebasan finansial.
             </p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="neutral" size="sm">
-                Next.js 16
-              </Badge>
-              <Badge variant="neutral" size="sm">
-                Firebase Auth
-              </Badge>
-              <Badge variant="neutral" size="sm">
-                Cloud Firestore
-              </Badge>
-            </div>
           </div>
 
-          {/* Col 2: Navigation Links */}
+          {/* Product col */}
           <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">Navigasi</h4>
-            <ul className="flex flex-col gap-2 text-sm">
-              <li>
-                <a href="#fitur" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  Fitur Unggulan
-                </a>
-              </li>
-              <li>
-                <a href="#simulator" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  Simulator Finansial
-                </a>
-              </li>
-              <li>
-                <a href="#preview" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  Live Preview App
-                </a>
-              </li>
-              <li>
-                <a href="#keamanan" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  Privasi & Keamanan
-                </a>
-              </li>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Navigasi</h4>
+            <ul className="flex flex-col gap-2">
+              {PRODUCT_LINKS.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    className="text-sm text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+              {ACCOUNT_LINKS.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.href}
+                    className="text-sm text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Col 3: Akses Akun */}
+          {/* Legal col */}
           <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">Akses Akun</h4>
-            <ul className="flex flex-col gap-2 text-sm">
-              <li>
-                <Link href="/login" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  Masuk Akun
-                </Link>
-              </li>
-              <li>
-                <Link href="/register" className="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  Daftar Akun Baru
-                </Link>
-              </li>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Legal &amp; Privasi</h4>
+            <ul className="flex flex-col gap-2">
+              {LEGAL_LINKS.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    className="text-sm text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-200 dark:border-[#2d3348]/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-slate-100 dark:border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-600">
           <p>© {new Date().getFullYear()} SaveMe. Seluruh hak cipta dilindungi.</p>
-          <p className="flex items-center gap-1.5">
-            <span>Dibuat dengan dedikasi untuk kebebasan finansial</span>
-          </p>
+          <p>Dibuat dengan dedikasi untuk kebiasaan finansial yang lebih baik.</p>
         </div>
       </div>
     </footer>

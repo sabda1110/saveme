@@ -1,38 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
   <defs>
-    <linearGradient id="favBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#022c22"/>
+    <!-- Vibrant Emerald Fintech Gradient -->
+    <linearGradient id="emBadge" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
     </linearGradient>
-    <linearGradient id="favEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399"/>
-      <stop offset="100%" stop-color="#059669"/>
+
+    <!-- Subtle Bevel Stroke -->
+    <linearGradient id="emStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.2"/>
     </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
 
   <!-- Squircle Base -->
-  <rect x="6" y="6" width="116" height="116" rx="32" fill="url(#favBg)" stroke="#10b981" stroke-width="3" stroke-opacity="0.4"/>
+  <rect x="6" y="6" width="116" height="116" rx="34" fill="url(#emBadge)" stroke="url(#emStroke)" stroke-width="3"/>
 
-  <!-- Crisp S-Curve -->
+  <!-- Geometric S-Vault Ribbon (Pure White) -->
   <path 
-    d="M 82 36 C 82 36, 58 34, 49 42 C 40 50, 40 60, 52 65 L 72 74 C 86 80, 86 94, 73 101 C 61 108, 42 103, 42 103" 
+    d="M 88 38 C 88 38, 55 31, 42 45 C 30 59, 34 74, 54 80 L 68 85 C 88 91, 93 105, 80 118 C 68 132, 38 125, 38 125" 
     fill="none" 
-    stroke="url(#favEmerald)" 
+    stroke="#ffffff" 
     stroke-width="12" 
     stroke-linecap="round" 
     stroke-linejoin="round"
+    transform="scale(0.72) translate(25, 6)"
   />
 
-  <!-- Center Core Node -->
-  <circle cx="64" cy="64" r="6" fill="#ecfdf5"/>
+  <!-- Central Diamond Core -->
+  <polygon 
+    points="64,52 74,64 64,76 54,64" 
+    fill="#ffffff" 
+    filter="url(#softGlow)"
+  />
 
-  <!-- Arrow Growth Tip -->
+  <!-- Growth Arrow Tip -->
   <path 
-    d="M 78 36 L 90 36 L 90 48" 
+    d="M 72 30 L 92 30 L 92 50" 
     fill="none" 
-    stroke="#34d399" 
-    stroke-width="12" 
+    stroke="#ffffff" 
+    stroke-width="11" 
     stroke-linecap="round" 
     stroke-linejoin="round"
+    transform="scale(0.82) translate(14, 4)"
   />
 </svg>

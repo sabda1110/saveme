@@ -60,6 +60,16 @@ const CHART_COLORS = [
   '#6366f1', // indigo-500
   '#14b8a6', // teal-500
   '#a855f7', // violet-500
+  '#84cc16', // lime-500
+  '#e11d48', // rose-600
+  '#0284c7', // sky-600
+  '#d97706', // amber-600
+  '#9333ea', // purple-600
+  '#059669', // emerald-600
+  '#ca8a04', // yellow-600
+  '#4f46e5', // indigo-600
+  '#db2777', // pink-600
+  '#64748b', // slate-500
 ]
 
 export const ReportCharts: React.FC<ReportChartsProps> = ({

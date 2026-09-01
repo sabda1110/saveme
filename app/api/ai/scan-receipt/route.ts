@@ -35,13 +35,24 @@ export async function POST(req: NextRequest) {
 Tugas Anda adalah membaca gambar struk / nota pembayaran ini dan mengekstrak informasi finansial ke dalam format JSON murni.
 
 Kategori yang tersedia:
-- 'Food' (Makanan & Minuman / Restoran / Cafe / Minimarket camilan)
-- 'Transportation' (Bensin / Parkir / Tol / Ojek Online / Tiket)
-- 'Shopping' (Belanja Pakaian / Gadget / Kebutuhan Rumah)
-- 'Bills' (Listrik / Air / Pulsa / Internet / Tagihan)
-- 'Health' (Obat / Apotek / Dokter)
-- 'Entertainment' (Bioskop / Hiburan / Game)
-- 'Education' (Buku / Kursus)
+- 'Food' (Makanan & Minuman / Restoran / Warung)
+- 'Coffee & Cafe' (Kopi / Cafe / Minuman Kekinian)
+- 'Groceries' (Belanja Sembako / Pasar / Supermarket / Indomaret / Alfamart)
+- 'Transportation' (Ojek Online / Taksi / Tiket Kereta / Pesawat / Tol / Parkir)
+- 'Fuel' (Bensin / SPBU Pertamina / Shell / BP)
+- 'Shopping' (Pakaian / Sepatu / Gadget / Belanja Online)
+- 'Self-Care & Beauty' (Skincare / Kosmetik / Salon / Barbershop)
+- 'Bills' (Listrik / Air / Pulsa / Paket Data / WiFi / Internet)
+- 'Installments & Debt' (Cicilan / Leasing / Paylater / KPR)
+- 'Insurance & BPJS' (BPJS / Asuransi)
+- 'Health' (Obat / Apotek / Dokter / Rumah Sakit)
+- 'Education' (Buku / Kursus / SPP / Sekolah)
+- 'Entertainment' (Bioskop / Game / Konser / Liburan)
+- 'Hobby & Sport' (Gym / Futsal / Badminton / Perlengkapan Hobi)
+- 'Pet Care' (Makanan Hewan / Petshop / Dokter Hewan)
+- 'Family & Kids' (Kebutuhan Bayi / Susu / Popok / Anak)
+- 'Zakat & Donation' (Zakat / Infaq / Sedekah / Sumbangan)
+- 'Gifts & Kondangan' (Amplop Hajatan / Kado / Hadiah)
 - 'Other' (Lain-lain)
 
 Kembalikan HANYA format JSON valid tanpa tanda markdown (no backticks):

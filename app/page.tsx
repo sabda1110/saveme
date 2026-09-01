@@ -6,9 +6,12 @@ import { useAuth } from '@/context/AuthContext'
 import { LandingTemplate } from '@/components/templates/LandingTemplate'
 import { Navbar } from '@/components/organisms/Navbar'
 import { HeroSection } from '@/components/organisms/HeroSection'
-import { PlaygroundSection } from '@/components/organisms/PlaygroundSection'
+import { TrustStripSection } from '@/components/organisms/TrustStripSection'
+import { ProblemSection } from '@/components/organisms/ProblemSection'
+import { Storytelling3D } from '@/components/organisms/Storytelling3D'
 import { BentoFeatures } from '@/components/organisms/BentoFeatures'
 import { LiveDashboardPreview } from '@/components/organisms/LiveDashboardPreview'
+import { HowItWorksSection } from '@/components/organisms/HowItWorksSection'
 import { SecuritySection } from '@/components/organisms/SecuritySection'
 import { CTASection } from '@/components/organisms/CTASection'
 import { Footer } from '@/components/organisms/Footer'
@@ -32,7 +35,7 @@ export default function HomePage() {
           <BrandLogo />
           <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>Membuka SaveMe...</span>
+            <span>Opening SaveMe...</span>
           </div>
         </div>
       </div>
@@ -43,10 +46,13 @@ export default function HomePage() {
     <LandingTemplate
       navbar={<Navbar />}
       hero={<HeroSection />}
-      playground={<PlaygroundSection />}
-      bento={<BentoFeatures />}
-      preview={<LiveDashboardPreview />}
-      security={<SecuritySection />}
+      trust={<TrustStripSection />}
+      storytelling={<Storytelling3D />}
+      problem={<ProblemSection />}
+      features={<BentoFeatures />}
+      showcase={<LiveDashboardPreview />}
+      howItWorks={<HowItWorksSection />}
+      benefits={<SecuritySection />}
       cta={<CTASection />}
       footer={<Footer />}
     />

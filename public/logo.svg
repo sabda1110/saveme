@@ -1,65 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <!-- Background Squircle Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#022c22"/>
-    </linearGradient>
-    
-    <!-- Emerald Brand Primary Gradient -->
-    <linearGradient id="emeraldPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399"/>
+    <!-- Vibrant Emerald Fintech Gradient -->
+    <linearGradient id="emBadge512" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857"/>
       <stop offset="50%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
     </linearGradient>
 
-    <!-- Emerald Light Accent Gradient -->
-    <linearGradient id="emeraldLight" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#6ee7b7"/>
+    <!-- Bevel Stroke Gradient -->
+    <linearGradient id="emStroke512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.2"/>
     </linearGradient>
 
-    <!-- Subtle Glow Filter -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    <!-- Ambient Shadow -->
+    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#059669" flood-opacity="0.3"/>
     </filter>
-
-    <!-- Inner Shadow / Bevel -->
-    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#059669" stop-opacity="0.1"/>
-    </linearGradient>
   </defs>
 
-  <!-- Background Squircle Base -->
-  <rect x="24" y="24" width="464" height="464" rx="128" fill="url(#bgGrad)"/>
-  <rect x="24" y="24" width="464" height="464" rx="128" fill="none" stroke="url(#borderGrad)" stroke-width="8"/>
+  <!-- Squircle Base with Shadow -->
+  <rect x="32" y="32" width="448" height="448" rx="128" fill="url(#emBadge512)" stroke="url(#emStroke512)" stroke-width="12" filter="url(#badgeShadow)"/>
 
-  <!-- Stylized Geometric Financial S-Shield / Vault Geometry -->
-  <g transform="translate(0, 0)">
-    <!-- Top Arc of 'S' - Curved Vault Arch -->
-    <path 
-      d="M 330 145 C 330 145, 230 135, 195 165 C 160 195, 160 235, 205 255 L 290 290 C 345 315, 345 370, 295 400 C 245 430, 165 410, 165 410" 
-      fill="none" 
-      stroke="url(#emeraldPrimary)" 
-      stroke-width="46" 
-      stroke-linecap="round" 
-      stroke-linejoin="round"
-    />
+  <!-- Geometric S-Vault Ribbon (Pure White) -->
+  <path 
+    d="M 350 150 C 350 150, 220 120, 170 180 C 120 240, 140 300, 220 320 L 280 340 C 360 360, 380 420, 330 470 C 280 520, 160 500, 160 500" 
+    fill="none" 
+    stroke="#ffffff" 
+    stroke-width="48" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+    transform="scale(0.72) translate(100, 25)"
+  />
 
-    <!-- Upward Growth Diamond / Coin Node in Center -->
-    <circle cx="256" cy="256" r="28" fill="#10b981" filter="url(#glow)"/>
-    <circle cx="256" cy="256" r="18" fill="#ecfdf5"/>
+  <!-- Central Diamond Core -->
+  <polygon 
+    points="256,206 306,256 256,306 206,256" 
+    fill="#ffffff" 
+  />
 
-    <!-- Dynamic Upward Growth Arrow Tip on Top Right -->
-    <path 
-      d="M 315 145 L 365 145 L 365 195" 
-      fill="none" 
-      stroke="url(#emeraldLight)" 
-      stroke-width="46" 
-      stroke-linecap="round" 
-      stroke-linejoin="round"
-    />
-  </g>
+  <!-- Growth Arrow Tip -->
+  <path 
+    d="M 290 120 L 370 120 L 370 200" 
+    fill="none" 
+    stroke="#ffffff" 
+    stroke-width="46" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+    transform="scale(0.82) translate(55, 18)"
+  />
 </svg>

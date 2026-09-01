@@ -1,6 +1,7 @@
+'use client'
+
 import React from 'react'
 import Link from 'next/link'
-import { WalletCards } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface BrandLogoProps {
@@ -15,9 +16,9 @@ export function BrandLogo({
   withLink = true,
 }: BrandLogoProps) {
   const iconSizes = {
-    sm: 'w-7 h-7',
-    md: 'w-9 h-9',
-    lg: 'w-11 h-11',
+    sm: 'w-7 h-7 rounded-lg p-1.5',
+    md: 'w-9 h-9 rounded-xl p-2',
+    lg: 'w-11 h-11 rounded-2xl p-2.5',
   }
 
   const textSizes = {
@@ -28,61 +29,52 @@ export function BrandLogo({
 
   const content = (
     <div className={cn('inline-flex items-center gap-2.5 group cursor-pointer select-none', className)}>
+      {/* Adaptive Vibrant Emerald Fintech Badge */}
       <div
         className={cn(
-          'relative rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden',
+          'relative flex items-center justify-center shrink-0 bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 dark:from-emerald-500 dark:via-emerald-400 dark:to-teal-400 text-white shadow-md shadow-emerald-500/20 dark:shadow-emerald-500/30 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 transition-all duration-200',
           iconSizes[size]
         )}
       >
-        <svg viewBox="0 0 128 128" width="100%" height="100%" className="w-full h-full">
-          <defs>
-            <linearGradient id="logoBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#0f172a" />
-              <stop offset="100%" stop-color="#022c22" />
-            </linearGradient>
-            <linearGradient id="logoEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#34d399" />
-              <stop offset="100%" stop-color="#059669" />
-            </linearGradient>
-          </defs>
-
-          <rect
-            x="4"
-            y="4"
-            width="120"
-            height="120"
-            rx="30"
-            fill="url(#logoBg)"
-            stroke="#10b981"
-            strokeWidth="3"
-            strokeOpacity="0.4"
-          />
-
+        <svg
+          viewBox="0 0 48 48"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-full drop-shadow-xs"
+        >
+          {/* Geometric S-Vault Ribbon - Top Arch */}
           <path
-            d="M 82 36 C 82 36, 58 34, 49 42 C 40 50, 40 60, 52 65 L 72 74 C 86 80, 86 94, 73 101 C 61 108, 42 103, 42 103"
-            fill="none"
-            stroke="url(#logoEmerald)"
-            strokeWidth="12"
+            d="M 34 14 C 34 14, 21 11, 16 17 C 11 23, 13 29, 21 31 L 27 33 C 35 35, 37 41, 32 47 C 27 53, 14 50, 14 50"
+            stroke="white"
+            strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            transform="scale(0.8) translate(6, -2)"
           />
-
-          <circle cx="64" cy="64" r="6" fill="#ecfdf5" />
-
+          {/* Central Savings Diamond Node */}
           <path
-            d="M 78 36 L 90 36 L 90 48"
-            fill="none"
-            stroke="#34d399"
-            strokeWidth="12"
+            d="M 24 19 L 28 24 L 24 29 L 20 24 Z"
+            fill="white"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          {/* Upward Growth Arrow Tip */}
+          <path
+            d="M 28 10 L 35 10 L 35 17"
+            stroke="white"
+            strokeWidth="4.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            transform="scale(0.85) translate(4, 1)"
           />
         </svg>
       </div>
 
+      {/* Logotype Text */}
       <div className="flex items-baseline tracking-tight">
         <span className={cn('font-black text-slate-900 dark:text-white', textSizes[size])}>
-          Save<span className="text-emerald-500 font-extrabold">Me</span>
+          Save<span className="text-emerald-600 dark:text-emerald-400 font-extrabold ml-0.5">Me</span>
         </span>
       </div>
     </div>

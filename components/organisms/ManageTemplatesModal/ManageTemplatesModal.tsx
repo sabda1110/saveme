@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
-const COMMON_TEMPLATE_ICONS = ['🚬', '🅿️', '☕', '🍛', '⛽', '🥤', '🥐', '🍔', '🛒', '🎮', '💊', '🧼', '⚡', '📦']
+const COMMON_TEMPLATE_ICONS = ['☕', '🍔', '🛒', '⛽', '🅿️', '🛵', '🚬', '🥤', '🍛', '🛍️', '✨', '🏸', '🐱', '👶', '🕌', '🎁', '💊', '📚', '⚡', '🎮', '📦']
 
 export interface ManageTemplatesModalProps {
   isOpen: boolean

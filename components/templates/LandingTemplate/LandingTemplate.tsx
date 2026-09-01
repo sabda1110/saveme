@@ -3,10 +3,13 @@ import React from 'react'
 export interface LandingTemplateProps {
   navbar: React.ReactNode
   hero: React.ReactNode
-  playground: React.ReactNode
-  bento: React.ReactNode
-  preview: React.ReactNode
-  security: React.ReactNode
+  trust: React.ReactNode
+  storytelling: React.ReactNode
+  problem: React.ReactNode
+  features: React.ReactNode
+  showcase: React.ReactNode
+  howItWorks: React.ReactNode
+  benefits: React.ReactNode
   cta: React.ReactNode
   footer: React.ReactNode
 }
@@ -14,29 +17,30 @@ export interface LandingTemplateProps {
 export function LandingTemplate({
   navbar,
   hero,
-  playground,
-  bento,
-  preview,
-  security,
+  trust,
+  storytelling,
+  problem,
+  features,
+  showcase,
+  howItWorks,
+  benefits,
   cta,
   footer,
 }: LandingTemplateProps) {
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-[#0f1117] text-slate-900 dark:text-[#f1f5f9] flex flex-col overflow-x-hidden bg-mesh-pattern transition-colors">
-      {/* Background subtle grid pattern */}
-      <div className="fixed inset-0 grid-bg-overlay pointer-events-none opacity-40 -z-10" />
-
+    <div className="relative min-h-screen bg-white dark:bg-[#0a0a0f] text-slate-900 dark:text-slate-100 flex flex-col overflow-x-hidden">
       {navbar}
-
       <main className="flex-1 flex flex-col">
         {hero}
-        {playground}
-        {bento}
-        {preview}
-        {security}
+        {trust}
+        {storytelling}
+        {problem}
+        {features}
+        {showcase}
+        {howItWorks}
+        {benefits}
         {cta}
       </main>
-
       {footer}
     </div>
   )

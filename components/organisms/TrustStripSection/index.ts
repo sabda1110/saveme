@@ -1,0 +1,1 @@
+export { TrustStripSection } from './TrustStripSection'
