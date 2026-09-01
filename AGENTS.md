@@ -168,6 +168,21 @@ The following require **explicit user confirmation** — agent must NOT run thes
 Read Documentation → Read Skill → Plan → [USER APPROVAL] → Implement → Test → Update Docs
 ```
 
+## Slash Command Shortcuts
+
+You can trigger specific playbooks and workflows instantly using these slash command shortcuts:
+
+| Shortcut | Playbook / Target | Deskripsi |
+|---|---|---|
+| `/feat <fitur>` | `.agents/playbooks/start-feature.md` | **Mulai Fitur Baru** — Riset, baca skill, buat plan, tunggu persetujuan |
+| `/bug <masalah>` | `.agents/playbooks/debug-issue.md` | **Investigasi & Debug** — Reproduce, cek layer, temukan root cause, buat fix |
+| `/finish` (atau `/finis`) | `.agents/playbooks/finish-feature.md` | **Finalisasi Fitur** — Tes `tsc/build`, cek sekuriti, update docs/roadmap, rekomendasi commit |
+| `/review` | `.agents/playbooks/security-review.md` | **Audit Keamanan** — Validasi `userId`, role superadmin, Zod, sanitasi data |
+| `/update` | `saveme-project/` | **Sync Dokumentasi** — Update roadmap, ADR decisions, dan database doc |
+| `/db` | `.agents/playbooks/database-migration.md` | **Firestore Schema** — Koleksi baru, security rules, composite index |
+| `/api` | `.agents/playbooks/add-api-endpoint.md` | **Backend / Service** — Service Firestore atau Next.js Route Handler |
+| `/page` | `.agents/playbooks/add-page.md` | **Halaman Baru** — Page App Router, Layout, UI Component |
+
 ## Playbooks
 
 Playbooks are step-by-step operational guides for specific workflows.

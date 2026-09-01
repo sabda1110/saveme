@@ -24,6 +24,9 @@ import {
   Clock,
   ChevronRight,
   DollarSign,
+  Lock,
+  Unlock,
+  KeyRound,
 } from 'lucide-react'
 import {
   detectUserTimezone,
@@ -32,6 +35,7 @@ import {
   type UserTimeZoneInfo,
 } from '@/lib/firebase/messaging'
 import { notificationService } from '@/lib/services/notification.firebase'
+import { SetPinModal } from '@/components/organisms/SetPinModal/SetPinModal'
 import { cn } from '@/lib/utils/cn'
 
 export default function ProfilePage() {
@@ -53,6 +57,37 @@ export default function ProfilePage() {
     success: boolean
     message: string
   } | null>(null)
+
+  // PIN Security State
+  const [isSetPinModalOpen, setIsSetPinModalOpen] = useState(false)
+  const [pinLoading, setPinLoading] = useState(false)
+
+  const handleTogglePin = async () => {
+    if (!user?.uid) return
+    if (!userProfile?.appPin) {
+      setIsSetPinModalOpen(true)
+      return
+    }
+
+    const nextState = !userProfile.isPinEnabled
+    setPinLoading(true)
+    try {
+      await updateUserProfile(user.uid, {
+        isPinEnabled: nextState,
+      })
+      await refreshProfile()
+      setSuccessMessage(
+        nextState
+          ? 'Kunci PIN 6-digit berhasil diaktifkan!'
+          : 'Kunci PIN 6-digit berhasil dinonaktifkan.'
+      )
+    } catch (err) {
+      console.error('[profile] Error toggling pin:', err)
+      setErrorMessage('Gagal mengubah pengaturan PIN.')
+    } finally {
+      setPinLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (userProfile?.name) {
@@ -503,7 +538,81 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Section 4: Keamanan & Privasi */}
+        {/* Section 4: Kunci PIN Keamanan Aplikasi */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex flex-col gap-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Kunci Aplikasi (PIN 6-Digit)
+                </h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Lindungi akses saldo dan riwayat keuangan dengan PIN rahasia saat membuka aplikasi
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={pinLoading}
+              onClick={handleTogglePin}
+              className={cn(
+                'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                userProfile?.isPinEnabled && userProfile?.appPin
+                  ? 'bg-emerald-500'
+                  : 'bg-slate-200 dark:bg-[#2d3348]'
+              )}
+            >
+              <span
+                className={cn(
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  userProfile?.isPinEnabled && userProfile?.appPin
+                    ? 'translate-x-5'
+                    : 'translate-x-0'
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'w-2 h-2 rounded-full',
+                  userProfile?.isPinEnabled && userProfile?.appPin
+                    ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                    : 'bg-slate-400'
+                )}
+              />
+              <span className="text-xs text-slate-700 dark:text-slate-300">
+                Status:{' '}
+                <strong>
+                  {userProfile?.isPinEnabled && userProfile?.appPin
+                    ? 'Aktif (Aplikasi Terkunci)'
+                    : 'Nonaktif'}
+                </strong>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSetPinModalOpen(true)}
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/30"
+                leftIcon={<KeyRound className="w-3.5 h-3.5" />}
+              >
+                {userProfile?.appPin ? 'Ubah PIN 6-Digit' : 'Buat PIN 6-Digit'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: Keamanan & Privasi */}
         <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
@@ -535,6 +644,18 @@ export default function ProfilePage() {
           </Button>
         </div>
       </form>
+
+      {/* Set/Change PIN Modal */}
+      <SetPinModal
+        isOpen={isSetPinModalOpen}
+        userId={user?.uid || ''}
+        hasExistingPin={Boolean(userProfile?.appPin)}
+        onClose={() => setIsSetPinModalOpen(false)}
+        onSuccess={async () => {
+          await refreshProfile()
+          setSuccessMessage('PIN 6-digit keamanan aplikasi berhasil disimpan!')
+        }}
+      />
     </div>
   )
 }

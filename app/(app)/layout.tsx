@@ -9,6 +9,7 @@ import { BottomNav } from '@/components/organisms/BottomNav'
 import { SingleTabGuard } from '@/components/organisms/SingleTabGuard'
 import { NotificationPromptModal } from '@/components/organisms/NotificationPromptModal'
 import { MorningBriefingAlarm } from '@/components/organisms/MorningBriefingAlarm/MorningBriefingAlarm'
+import { PinLockScreen } from '@/components/organisms/PinLockScreen/PinLockScreen'
 import { setupForegroundMessageListener } from '@/lib/firebase/messaging'
 import { ThemeToggle } from '@/components/molecules/ThemeToggle'
 import { AppTemplate } from '@/components/templates/AppTemplate'
@@ -252,6 +253,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Single-Tab Active Concurrency Guard */}
       <SingleTabGuard />
+
+      {/* Security PIN Lock Screen */}
+      <PinLockScreen />
 
       {/* Smart Morning In-App Alarm Trigger */}
       <MorningBriefingAlarm />
