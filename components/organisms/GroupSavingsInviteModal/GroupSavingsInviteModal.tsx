@@ -79,8 +79,37 @@ export function GroupSavingsInviteModal({
     }
   }
 
+  const [isNegotiating, setIsNegotiating] = useState(false)
+  const [requestedPercentage, setRequestedPercentage] = useState(Math.max(5, Math.min(invite.percentage, 10)))
+  const [requestedDate, setRequestedDate] = useState('')
+  const [negotiationNote, setNegotiationNote] = useState('')
+  const [negoSuccess, setNegoSuccess] = useState(false)
+
+  async function handleSendNegotiation() {
+    setLoading('accept')
+    setError(null)
+    try {
+      await groupSavingsService.requestMemberChange(invite.id, userId, {
+        requestedPercentage,
+        requestedDate: requestedDate || undefined,
+        note: negotiationNote,
+      })
+      setNegoSuccess(true)
+      setTimeout(() => {
+        onResponded()
+      }, 1500)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Gagal mengirim pengajuan penyesuaian')
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const isDeficit = feasibility && !feasibility.isFeasible && !feasibility.isTight
   const isTight = feasibility && feasibility.isTight
+
+  const requestedNominal = Math.round((group.targetAmount * requestedPercentage) / 100)
+  const requestedDaily = Math.round(requestedNominal / Math.max(1, daysRemaining))
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -117,122 +146,224 @@ export function GroupSavingsInviteModal({
 
         {/* Body */}
         <div className="p-4 sm:p-5 space-y-4">
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348]">
-              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-1">
-                <Target className="w-3 h-3" />
-                Target Total Grup
-              </div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">
-                {formatRp(group.targetAmount)}
+          {negoSuccess ? (
+            <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 text-center space-y-2 animate-in fade-in">
+              <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Pengajuan Berhasil Dikirim!</h4>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Host telah menerima permintaan penyesuaian porsi/deadlinemu. Mohon tunggu konfirmasi dari Host.
               </p>
             </div>
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348]">
-              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-1">
-                <Clock className="w-3 h-3" />
-                Deadline
+          ) : (
+            <>
+              {/* Details Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348]">
+                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-1">
+                    <Target className="w-3 h-3" />
+                    Target Total Grup
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {formatRp(group.targetAmount)}
+                  </p>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348]">
+                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-1">
+                    <Clock className="w-3 h-3" />
+                    Deadline
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {group.targetDate
+                      ? new Date(group.targetDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : 'Fleksibel'}
+                  </p>
+                  {group.targetDate && (
+                    <p className="text-[10px] text-slate-500">{daysRemaining} hari lagi</p>
+                  )}
+                </div>
               </div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">
-                {group.targetDate
-                  ? new Date(group.targetDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-                  : 'Fleksibel'}
-              </p>
-              {group.targetDate && (
-                <p className="text-[10px] text-slate-500">{daysRemaining} hari lagi</p>
+
+              {/* My share */}
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30">
+                <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Porsi Bagian Kamu Saat Ini
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <p className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-300">
+                    {formatRp(invite.myTarget)}
+                  </p>
+                  <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md">
+                    {invite.percentage}%
+                  </span>
+                </div>
+                {group.targetDate && (
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1.5 font-medium">
+                    ≈ {formatRp(Math.round(invite.myTarget / daysRemaining))}/hari selama {daysRemaining} hari
+                  </p>
+                )}
+              </div>
+
+              {/* 🚨 FINANCIAL FEASIBILITY & DEFICIT WARNING 🚨 */}
+              {feasibility && isDeficit && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800/50 space-y-2">
+                  <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs font-bold uppercase tracking-wider">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                    Peringatan Kapasitas Kas Harian (Defisit)
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    Porsimu butuh <strong className="text-rose-600 dark:text-rose-400 font-mono">{formatRp(feasibility.dailyRequired)}/hari</strong>, sedangkan kapasitas kasmu hanya <strong className="font-mono text-slate-900 dark:text-white">{formatRp(feasibility.dailyCapacity)}/hari</strong> (Defisit <strong className="text-rose-600 font-mono">{formatRp(feasibility.deficitPerDay)}/hari</strong>).
+                  </p>
+                  <div className="text-[11px] text-rose-800 dark:text-rose-300 pt-1 border-t border-rose-200 dark:border-rose-900/40">
+                    💡 <em>Jika merasa berat, kamu bisa mengajukan penyesuaian porsi yang sanggup kamu bayar tanpa perlu menolak ajakan kawanmu!</em>
+                  </div>
+                </div>
               )}
-            </div>
-          </div>
 
-          {/* My share */}
-          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30">
-            <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase mb-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Porsi Bagian Kamu
-            </div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-300">
-                {formatRp(invite.myTarget)}
-              </p>
-              <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md">
-                {invite.percentage}%
-              </span>
-            </div>
-            {group.targetDate && (
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1.5 font-medium">
-                ≈ {formatRp(Math.round(invite.myTarget / daysRemaining))}/hari selama {daysRemaining} hari
-              </p>
-            )}
-          </div>
+              {feasibility && isTight && (
+                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/50 space-y-1.5">
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                    Target Relatif Ketat
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    Porsimu ({formatRp(feasibility.dailyRequired)}/hari) akan memakan sebagian besar kapasitas kas harianmu ({formatRp(feasibility.dailyCapacity)}/hari). Sisa uang belanja harianmu akan sangat terbatas.
+                  </p>
+                </div>
+              )}
 
-          {/* 🚨 FINANCIAL FEASIBILITY & DEFICIT WARNING 🚨 */}
-          {feasibility && isDeficit && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800/50 space-y-2">
-              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs font-bold uppercase tracking-wider">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                Peringatan Kapasitas Kas Harian (Defisit)
+              {feasibility && feasibility.isFeasible && (
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Target ini aman dan sesuai dengan kapasitas kas harianmu ({formatRp(feasibility.dailyCapacity)}/hari).</span>
+                </div>
+              )}
+
+              {/* 💬 NEGOTIATION / ADJUSTMENT SUB-PANEL */}
+              {isNegotiating && (
+                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-300 dark:border-purple-800/50 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-purple-800 dark:text-purple-300 flex items-center gap-1.5">
+                      💬 Ajukan Penyesuaian ke Host
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setIsNegotiating(false)}
+                      className="text-xs text-slate-400 hover:text-slate-600"
+                    >
+                      Batal
+                    </button>
+                  </div>
+
+                  {/* Requested Percentage */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                      Porsi yang Disanggupi (%):
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={requestedPercentage}
+                        onChange={(e) => setRequestedPercentage(Number(e.target.value))}
+                        className="w-20 h-9 px-2 text-center rounded-xl bg-white dark:bg-[#131620] border border-purple-300 dark:border-purple-800 text-xs font-bold font-mono"
+                      />
+                      <div className="text-xs text-slate-600 dark:text-slate-400 font-mono">
+                        ≈ <strong>{formatRp(requestedNominal)}</strong> ({formatRp(requestedDaily)}/hari)
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Requested Date */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                      Minta Mundurkan Deadline (Opsional):
+                    </label>
+                    <input
+                      type="date"
+                      value={requestedDate}
+                      onChange={(e) => setRequestedDate(e.target.value)}
+                      className="w-full h-9 px-3 rounded-xl bg-white dark:bg-[#131620] border border-purple-300 dark:border-purple-800 text-xs"
+                    />
+                  </div>
+
+                  {/* Note */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                      Pesan untuk Host (Opsional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Kas gue baru aman di 10% ya bro"
+                      value={negotiationNote}
+                      onChange={(e) => setNegotiationNote(e.target.value)}
+                      className="w-full h-9 px-3 rounded-xl bg-white dark:bg-[#131620] border border-purple-300 dark:border-purple-800 text-xs"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="glow"
+                    size="sm"
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold"
+                    disabled={loading !== null}
+                    onClick={handleSendNegotiation}
+                  >
+                    {loading === 'accept' ? 'Mengirim Pengajuan...' : '📨 Kirim Pengajuan ke Host'}
+                  </Button>
+                </div>
+              )}
+
+              {/* Members preview */}
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Users className="w-3.5 h-3.5" />
+                <span>Kamu diundang bergabung bersama anggota lainnya</span>
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                Porsimu di celengan ini membutuhkan <strong className="text-rose-600 dark:text-rose-400 font-mono">{formatRp(feasibility.dailyRequired)}/hari</strong>, sedangkan kapasitas kas harianmu saat ini hanya <strong className="font-mono text-slate-900 dark:text-white">{formatRp(feasibility.dailyCapacity)}/hari</strong> (Defisit <strong className="text-rose-600 font-mono">{formatRp(feasibility.deficitPerDay)}/hari</strong>).
-              </p>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-rose-200 dark:border-rose-900/40">
-                💡 <em>Catatan: Menerima undangan ini berisiko membuat jatah belanja harianmu tekor/habis. Pastikan kamu memiliki sumber dana lain.</em>
-              </div>
-            </div>
-          )}
 
-          {feasibility && isTight && (
-            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/50 space-y-1.5">
-              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                Target Relatif Ketat
-              </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                Porsimu ({formatRp(feasibility.dailyRequired)}/hari) akan memakan sebagian besar kapasitas kas harianmu ({formatRp(feasibility.dailyCapacity)}/hari). Sisa uang belanja harianmu akan sangat terbatas.
-              </p>
-            </div>
-          )}
-
-          {feasibility && feasibility.isFeasible && (
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Target ini aman dan sesuai dengan kapasitas kas harianmu ({formatRp(feasibility.dailyCapacity)}/hari).</span>
-            </div>
-          )}
-
-          {/* Members preview */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <Users className="w-3.5 h-3.5" />
-            <span>Kamu diundang bergabung bersama anggota lainnya</span>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-xs text-rose-500 bg-rose-50 dark:bg-rose-900/20 p-3 rounded-xl border border-rose-200 dark:border-rose-800/40">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
-            </div>
+              {error && (
+                <div className="flex items-center gap-2 text-xs text-rose-500 bg-rose-50 dark:bg-rose-900/20 p-3 rounded-xl border border-rose-200 dark:border-rose-800/40">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Footer actions */}
-        <div className="flex gap-2 p-4 sm:p-5 pt-0">
-          <Button
-            variant="ghost"
-            className="flex-1 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-            disabled={loading !== null}
-            onClick={() => respond('REJECTED')}
-          >
-            {loading === 'reject' ? 'Menolak...' : '❌ Tolak'}
-          </Button>
-          <Button
-            variant="primary"
-            className="flex-1"
-            disabled={loading !== null}
-            onClick={() => respond('ACCEPTED')}
-          >
-            {loading === 'accept' ? 'Menerima...' : '✅ Terima'}
-          </Button>
-        </div>
+        {!negoSuccess && (
+          <div className="flex flex-col sm:flex-row gap-2 p-4 sm:p-5 pt-0">
+            <Button
+              variant="ghost"
+              className="flex-1 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-xs"
+              disabled={loading !== null}
+              onClick={() => respond('REJECTED')}
+            >
+              {loading === 'reject' ? 'Menolak...' : '❌ Tolak'}
+            </Button>
+
+            {!isNegotiating && (
+              <Button
+                variant="secondary"
+                className="flex-1 text-xs border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300"
+                disabled={loading !== null}
+                onClick={() => setIsNegotiating(true)}
+              >
+                💬 Minta Nego Porsi
+              </Button>
+            )}
+
+            <Button
+              variant="primary"
+              className="flex-1 text-xs"
+              disabled={loading !== null}
+              onClick={() => respond('ACCEPTED')}
+            >
+              {loading === 'accept' && !isNegotiating ? 'Menerima...' : '✅ Terima'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

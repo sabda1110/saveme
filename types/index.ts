@@ -247,6 +247,13 @@ export interface GroupSavings {
   updatedAt?: unknown
 }
 
+export interface GroupMemberChangeRequest {
+  requestedPercentage?: number
+  requestedDate?: string
+  note?: string
+  requestedAt?: unknown
+}
+
 export interface GroupSavingsMember {
   id: string
   groupId: string
@@ -257,6 +264,7 @@ export interface GroupSavingsMember {
   myTarget: number // targetAmount * percentage / 100
   myContributed: number // total amount already contributed
   status: GroupMemberStatus
+  changeRequest?: GroupMemberChangeRequest
   invitedAt?: unknown
   respondedAt?: unknown
 }

@@ -11,6 +11,7 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  deleteField,
   Timestamp,
 } from 'firebase/firestore'
 import type {
@@ -442,19 +443,135 @@ export const groupSavingsService = {
     }
   },
 
-  // ── Get groups created by user ────────────────────────────────────────────
-
-  async getCreatedGroups(userId: string): Promise<GroupSavings[]> {
-    if (!userId) return []
-    try {
-      const q = query(
-        collection(db, 'group_savings'),
-        where('createdBy', '==', userId)
-      )
-      const snap = await getDocs(q)
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() })) as GroupSavings[]
-    } catch {
-      return []
+  // ── Request Member Change (Negotiate Percentage / Deadline) ───────────────
+  async requestMemberChange(
+    memberId: string,
+    userId: string,
+    change: {
+      requestedPercentage?: number
+      requestedDate?: string
+      note?: string
     }
+  ): Promise<void> {
+    const docRef = doc(db, 'group_savings_members', memberId)
+    const snap = await getDoc(docRef)
+    if (!snap.exists()) throw new Error('Undangan tidak ditemukan')
+    const data = snap.data()
+    if (data.userId !== userId) throw new Error('Akses ditolak')
+
+    await updateDoc(docRef, {
+      changeRequest: {
+        requestedPercentage: change.requestedPercentage !== undefined ? Number(change.requestedPercentage) : undefined,
+        requestedDate: change.requestedDate || undefined,
+        note: change.note?.trim() || '',
+        requestedAt: serverTimestamp(),
+      },
+    })
+  },
+
+  // ── Resolution Option 1: Extend Group Deadline ────────────────────────────
+  async resolveChangeWithDeadline(
+    groupId: string,
+    memberId: string,
+    newTargetDate: string
+  ): Promise<void> {
+    // 1. Update group targetDate
+    await updateDoc(doc(db, 'group_savings', groupId), {
+      targetDate: newTargetDate,
+      updatedAt: serverTimestamp(),
+    })
+
+    // 2. Accept member and clear change request
+    const memberRef = doc(db, 'group_savings_members', memberId)
+    await updateDoc(memberRef, {
+      status: 'ACCEPTED',
+      changeRequest: deleteField(),
+      respondedAt: serverTimestamp(),
+    })
+  },
+
+  // ── Resolution Option 2: Host Subsidy (Host takes over remaining %) ───────
+  async resolveChangeWithHostSubsidy(
+    groupId: string,
+    memberId: string,
+    hostMemberId: string,
+    newPercentage: number,
+    groupTargetAmount: number
+  ): Promise<void> {
+    const memberRef = doc(db, 'group_savings_members', memberId)
+    const hostRef = doc(db, 'group_savings_members', hostMemberId)
+
+    const [memberSnap, hostSnap] = await Promise.all([getDoc(memberRef), getDoc(hostRef)])
+    if (!memberSnap.exists() || !hostSnap.exists()) throw new Error('Data anggota tidak ditemukan')
+
+    const oldMemberPct = Number(memberSnap.data().percentage || 0)
+    const diffPct = Math.max(0, oldMemberPct - newPercentage)
+
+    const oldHostPct = Number(hostSnap.data().percentage || 0)
+    const newHostPct = oldHostPct + diffPct
+
+    // Update requesting member
+    await updateDoc(memberRef, {
+      percentage: newPercentage,
+      myTarget: Math.round((groupTargetAmount * newPercentage) / 100),
+      status: 'ACCEPTED',
+      changeRequest: deleteField(),
+      respondedAt: serverTimestamp(),
+    })
+
+    // Update host
+    await updateDoc(hostRef, {
+      percentage: newHostPct,
+      myTarget: Math.round((groupTargetAmount * newHostPct) / 100),
+    })
+  },
+
+  // ── Resolution Option 3: Split remaining % across other members ───────────
+  async resolveChangeWithSplitRemaining(
+    groupId: string,
+    memberId: string,
+    newPercentage: number,
+    groupTargetAmount: number
+  ): Promise<void> {
+    const memberRef = doc(db, 'group_savings_members', memberId)
+    const memberSnap = await getDoc(memberRef)
+    if (!memberSnap.exists()) throw new Error('Data anggota tidak ditemukan')
+
+    const oldMemberPct = Number(memberSnap.data().percentage || 0)
+    const diffPct = Math.max(0, oldMemberPct - newPercentage)
+
+    // Get all other members (ACCEPTED or PENDING)
+    const q = query(
+      collection(db, 'group_savings_members'),
+      where('groupId', '==', groupId)
+    )
+    const allMembersSnap = await getDocs(q)
+    const otherMembers = allMembersSnap.docs.filter((d) => d.id !== memberId)
+
+    if (otherMembers.length > 0 && diffPct > 0) {
+      const sharePerPerson = Math.floor(diffPct / otherMembers.length)
+      const remainder = diffPct - (sharePerPerson * otherMembers.length)
+
+      await Promise.all(
+        otherMembers.map(async (docSnap, index) => {
+          const curPct = Number(docSnap.data().percentage || 0)
+          const extra = index === 0 ? sharePerPerson + remainder : sharePerPerson
+          const updatedPct = curPct + extra
+          return updateDoc(docSnap.ref, {
+            percentage: updatedPct,
+            myTarget: Math.round((groupTargetAmount * updatedPct) / 100),
+          })
+        })
+      )
+    }
+
+    // Update requesting member
+    await updateDoc(memberRef, {
+      percentage: newPercentage,
+      myTarget: Math.round((groupTargetAmount * newPercentage) / 100),
+      status: 'ACCEPTED',
+      changeRequest: deleteField(),
+      respondedAt: serverTimestamp(),
+    })
   },
 }

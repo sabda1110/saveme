@@ -23,6 +23,7 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
+  AlertCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -244,20 +245,23 @@ export default function WalletsPage() {
     if (!user?.uid || !walletToDelete) return
 
     // Guard: harus ada minimal 1 kantong non-locked
-    if (!walletToDelete.isLocked && spendingWallets.length <= 1) {
+    if (!walletToDelete.isLocked && !walletToDelete.isEarmarked && spendingWallets.length <= 1) {
+      setWalletError(`Kantong "${walletToDelete.name}" tidak dapat dihapus karena merupakan satu-satunya kantong kas operasional aktifmu. Buat kantong operasional baru terlebih dahulu jika ingin menggantinya.`)
       setWalletToDelete(null)
-      setWalletError('Tidak bisa dihapus — kamu harus punya minimal 1 kantong aktif (non-locked) sebagai saldo utama.')
       return
     }
 
     setIsDeleting(true)
+    setWalletError(null)
 
     try {
       await walletService.deleteWallet(user.uid, walletToDelete.id)
       setWalletToDelete(null)
       setRefreshTrigger((p) => p + 1)
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[wallets] Error deleting wallet:', err)
+      const errObj = err as { message?: string }
+      setWalletError(errObj.message || 'Gagal menghapus kantong rekening')
     } finally {
       setIsDeleting(false)
     }
@@ -265,6 +269,26 @@ export default function WalletsPage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-4">
+      {/* Top Wallet Error / Guard Alert */}
+      {walletError && !isWalletModalOpen && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/60 shadow-sm flex items-start justify-between gap-3 text-xs text-rose-800 dark:text-rose-300 animate-in fade-in">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-slate-900 dark:text-white mb-0.5">Pemberitahuan Sistem</h4>
+              <p className="leading-relaxed">{walletError}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWalletError(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

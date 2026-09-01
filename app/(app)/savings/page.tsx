@@ -250,37 +250,60 @@ export default function SavingsPage() {
     return calculateSavingsFeasibility(hostTarget, newGroupDate, liquidBalance, daysLeftInMonth)
   }, [newGroupTarget, hostPercentage, newGroupDate, liquidBalance])
 
-  // Real-time Debounced Email Verification for Invitee Row
-  const handleVerifyInviteeEmail = async (id: string, rawEmail: string) => {
-    const email = rawEmail.trim().toLowerCase()
+  // Client-side Email Regex Validation Helper
+  const isValidEmailFormat = (email: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  }
 
-    // 1. Update email immediately
+  // Handle Invitee Email Text Input (Client-only state update, NO Firestore hits)
+  const handleInviteeEmailChange = (id: string, rawEmail: string) => {
+    const email = rawEmail.trim()
     setNewGroupInvitees((prev) =>
       prev.map((row) =>
-        row.id === id ? { ...row, email, checking: Boolean(email), error: null } : row
+        row.id === id
+          ? {
+              ...row,
+              email,
+              verifiedUser: null, // reset verified status when typing
+              checking: false,
+              error: null,
+            }
+          : row
       )
     )
+  }
+
+  // Manual Trigger: Check Invitee Email in Firestore
+  const handleCheckInviteeEmail = async (id: string) => {
+    const targetRow = newGroupInvitees.find((r) => r.id === id)
+    if (!targetRow) return
+    const email = targetRow.email.trim().toLowerCase()
 
     if (!email) {
       setNewGroupInvitees((prev) =>
-        prev.map((row) =>
-          row.id === id ? { ...row, verifiedUser: null, checking: false, error: null } : row
-        )
+        prev.map((r) => (r.id === id ? { ...r, error: 'Masukkan email teman terlebih dahulu' } : r))
+      )
+      return
+    }
+
+    if (!isValidEmailFormat(email)) {
+      setNewGroupInvitees((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, error: 'Format email tidak valid (contoh: nama@domain.com)' } : r))
       )
       return
     }
 
     if (email === user?.email?.toLowerCase()) {
       setNewGroupInvitees((prev) =>
-        prev.map((row) =>
-          row.id === id
+        prev.map((r) =>
+          r.id === id
             ? {
-                ...row,
+                ...r,
                 verifiedUser: null,
                 checking: false,
                 error: 'Ini adalah email akunmu sendiri (kamu adalah Host)',
               }
-            : row
+            : r
         )
       )
       return
@@ -290,65 +313,67 @@ export default function SavingsPage() {
     const duplicate = newGroupInvitees.some((r) => r.id !== id && r.email.toLowerCase() === email)
     if (duplicate) {
       setNewGroupInvitees((prev) =>
-        prev.map((row) =>
-          row.id === id
+        prev.map((r) =>
+          r.id === id
             ? {
-                ...row,
+                ...r,
                 verifiedUser: null,
                 checking: false,
                 error: 'Email ini sudah ada di daftar anggota',
               }
-            : row
+            : r
         )
       )
       return
     }
 
+    setNewGroupInvitees((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, checking: true, error: null } : r))
+    )
+
     try {
       const verified = await groupSavingsService.verifyUserByEmail(email)
       setNewGroupInvitees((prev) =>
-        prev.map((row) =>
-          row.id === id
+        prev.map((r) =>
+          r.id === id
             ? {
-                ...row,
+                ...r,
                 checking: false,
                 verifiedUser: verified,
                 error: verified
                   ? null
                   : 'Email ini belum terdaftar di SaveMe. Minta kawanmu mendaftar dulu ya!',
               }
-            : row
+            : r
         )
       )
     } catch {
       setNewGroupInvitees((prev) =>
-        prev.map((row) =>
-          row.id === id ? { ...row, checking: false, error: 'Gagal memverifikasi akun' } : row
+        prev.map((r) =>
+          r.id === id ? { ...r, checking: false, error: 'Gagal memverifikasi akun' } : r
         )
       )
     }
   }
 
-  // Real-time verification for single invite modal (existing group)
-  const handleVerifySingleInviteEmail = async (rawEmail: string) => {
-    const email = rawEmail.trim().toLowerCase()
-    setInviteEmail(email)
-    setInviteError(null)
-
+  // Manual Trigger: Check Single Invite Email in Firestore (Existing Group)
+  const handleCheckSingleInviteEmail = async () => {
+    const email = inviteEmail.trim().toLowerCase()
     if (!email) {
-      setInviteVerifiedUser(null)
-      setInviteChecking(false)
+      setInviteError('Masukkan email teman terlebih dahulu')
       return
     }
-
+    if (!isValidEmailFormat(email)) {
+      setInviteError('Format email tidak valid (contoh: nama@domain.com)')
+      return
+    }
     if (email === user?.email?.toLowerCase()) {
-      setInviteVerifiedUser(null)
-      setInviteChecking(false)
       setInviteError('Ini adalah email akunmu sendiri')
       return
     }
 
     setInviteChecking(true)
+    setInviteError(null)
     try {
       const verified = await groupSavingsService.verifyUserByEmail(email)
       setInviteVerifiedUser(verified)
@@ -1603,16 +1628,34 @@ export default function SavingsPage() {
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <div className="relative flex-1">
-                          <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                          <Input
-                            type="email"
-                            placeholder="email.kawan@gmail.com"
-                            className="pl-9 h-9 text-xs"
-                            value={inv.email}
-                            onChange={(e) => handleVerifyInviteeEmail(inv.id, e.target.value)}
-                            required
-                          />
+                        <div className="relative flex-1 flex items-center gap-1.5">
+                          <div className="relative flex-1">
+                            <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                            <Input
+                              type="email"
+                              placeholder="email.kawan@gmail.com"
+                              className="pl-9 h-9 text-xs"
+                              value={inv.email}
+                              onChange={(e) => handleInviteeEmailChange(inv.id, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleCheckInviteeEmail(inv.id)
+                                }
+                              }}
+                              required
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            disabled={inv.checking || !inv.email.trim() || Boolean(inv.verifiedUser)}
+                            onClick={() => handleCheckInviteeEmail(inv.id)}
+                            className="h-9 px-3 text-xs shrink-0 font-semibold"
+                          >
+                            {inv.checking ? 'Cek...' : inv.verifiedUser ? '✅ Cocok' : '🔍 Cek'}
+                          </Button>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
@@ -1746,16 +1789,38 @@ export default function SavingsPage() {
 
             <form onSubmit={handleSendInvite} className="flex flex-col gap-4">
               <FormField label="Email Teman (Terdaftar di SaveMe)" required>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <Input
-                    type="email"
-                    placeholder="nama@gmail.com"
-                    className="pl-9"
-                    value={inviteEmail}
-                    onChange={(e) => handleVerifySingleInviteEmail(e.target.value)}
-                    required
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <Input
+                      type="email"
+                      placeholder="nama@gmail.com"
+                      className="pl-9"
+                      value={inviteEmail}
+                      onChange={(e) => {
+                        setInviteEmail(e.target.value)
+                        setInviteVerifiedUser(null)
+                        setInviteError(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleCheckSingleInviteEmail()
+                        }
+                      }}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    disabled={inviteChecking || !inviteEmail.trim() || Boolean(inviteVerifiedUser)}
+                    onClick={handleCheckSingleInviteEmail}
+                    className="shrink-0 text-xs font-semibold px-3"
+                  >
+                    {inviteChecking ? 'Cek...' : inviteVerifiedUser ? '✅ Cocok' : '🔍 Cek Akun'}
+                  </Button>
                 </div>
               </FormField>
 

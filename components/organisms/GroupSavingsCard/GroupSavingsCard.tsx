@@ -26,6 +26,8 @@ import {
   Trash2,
   LogOut,
   ArrowUpRight,
+  Calendar,
+  AlertCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -137,8 +139,147 @@ export function GroupSavingsCard({
     }
   }
 
+  const [resolutionLoading, setResolutionLoading] = useState<string | null>(null)
+
+  async function handleResolveDeadline(memberId: string, requestedDate?: string) {
+    setResolutionLoading(memberId)
+    try {
+      const currentD = group.targetDate ? new Date(group.targetDate) : new Date()
+      const newD = requestedDate || new Date(currentD.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      await groupSavingsService.resolveChangeWithDeadline(group.id, memberId, newD)
+      onRefresh()
+    } catch (err) {
+      console.error('Error resolving deadline:', err)
+    } finally {
+      setResolutionLoading(null)
+    }
+  }
+
+  async function handleResolveHostSubsidy(memberId: string, hostMemberId: string, newPercentage: number) {
+    setResolutionLoading(memberId)
+    try {
+      await groupSavingsService.resolveChangeWithHostSubsidy(group.id, memberId, hostMemberId, newPercentage, group.targetAmount)
+      onRefresh()
+    } catch (err) {
+      console.error('Error resolving host subsidy:', err)
+    } finally {
+      setResolutionLoading(null)
+    }
+  }
+
+  async function handleResolveSplitRemaining(memberId: string, newPercentage: number) {
+    setResolutionLoading(memberId)
+    try {
+      await groupSavingsService.resolveChangeWithSplitRemaining(group.id, memberId, newPercentage, group.targetAmount)
+      onRefresh()
+    } catch (err) {
+      console.error('Error resolving split remaining:', err)
+    } finally {
+      setResolutionLoading(null)
+    }
+  }
+
+  const membersWithRequests = allMembers.filter((m) => Boolean(m.changeRequest))
+  const hostMember = allMembers.find((m) => m.userId === group.createdBy)
+
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-[#2d3348] bg-white dark:bg-[#1a1d27] overflow-hidden shadow-sm">
+      {/* 💬 HOST RESOLUTION BANNER FOR MEMBER CHANGE REQUESTS */}
+      {isCreator && membersWithRequests.length > 0 && (
+        <div className="p-4 bg-purple-50/80 dark:bg-purple-950/40 border-b border-purple-200 dark:border-purple-800/60 space-y-3">
+          {membersWithRequests.map((reqMember) => {
+            const req = reqMember.changeRequest!
+            const reqPct = req.requestedPercentage !== undefined ? req.requestedPercentage : reqMember.percentage
+            const oldPct = reqMember.percentage
+            const diffPct = Math.max(0, oldPct - reqPct)
+
+            return (
+              <div key={reqMember.id} className="space-y-2.5">
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300">
+                        💬 Permintaan Penyesuaian
+                      </span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">
+                        {reqMember.displayName}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-700 dark:text-slate-300">
+                      Mengajukan porsi <strong className="text-purple-700 dark:text-purple-300 font-mono">{reqPct}% ({formatRp(Math.round((group.targetAmount * reqPct) / 100))})</strong> (sebelumnya {oldPct}%).
+                      {req.requestedDate && (
+                        <span> Minta deadline diundur ke <strong>{new Date(req.requestedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>.</span>
+                      )}
+                    </p>
+                    {req.note && (
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 italic bg-white/70 dark:bg-[#131620]/70 p-2 rounded-lg border border-purple-200 dark:border-purple-900/40">
+                        &ldquo;{req.note}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-purple-200 dark:border-purple-900/40 space-y-1.5">
+                  <p className="text-[11px] font-bold text-purple-900 dark:text-purple-300">
+                    🛠️ Pilih Solusi Resolusi untuk Grup Ini:
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {/* Option 1: Extend Deadline (Safe for Everyone) */}
+                    <button
+                      type="button"
+                      disabled={resolutionLoading === reqMember.id}
+                      onClick={() => handleResolveDeadline(reqMember.id, req.requestedDate)}
+                      className="p-2.5 rounded-xl bg-white dark:bg-[#1a1d27] border border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-left transition-all cursor-pointer shadow-xs"
+                    >
+                      <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+                        <Calendar className="w-3.5 h-3.5 shrink-0" />
+                        <span>1. Perpanjang Jadwal ⭐</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                        Cicilan semua orang makin enteng. Tidak ada yang nambah uang!
+                      </p>
+                    </button>
+
+                    {/* Option 2: Host Subsidy */}
+                    <button
+                      type="button"
+                      disabled={resolutionLoading === reqMember.id || !hostMember}
+                      onClick={() => handleResolveHostSubsidy(reqMember.id, hostMember?.id || '', reqPct)}
+                      className="p-2.5 rounded-xl bg-white dark:bg-[#1a1d27] border border-purple-300 dark:border-purple-700/60 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-left transition-all cursor-pointer shadow-xs"
+                    >
+                      <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-400 font-bold text-xs">
+                        <Users className="w-3.5 h-3.5 shrink-0" />
+                        <span>2. Subsidi oleh Host</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                        Host tanggung selisih {diffPct}%. Porsi anggota lain tetap sama.
+                      </p>
+                    </button>
+
+                    {/* Option 3: Split remaining across others */}
+                    <button
+                      type="button"
+                      disabled={resolutionLoading === reqMember.id}
+                      onClick={() => handleResolveSplitRemaining(reqMember.id, reqPct)}
+                      className="p-2.5 rounded-xl bg-white dark:bg-[#1a1d27] border border-blue-300 dark:border-blue-700/60 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-left transition-all cursor-pointer shadow-xs"
+                    >
+                      <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 font-bold text-xs">
+                        <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                        <span>3. Bagi Rata ke Lainnya</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                        Selisih {diffPct}% dibagi rata ke sisa anggota yang ada.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* Header */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">

@@ -140,9 +140,42 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // 1. Broadcast to Topic for this zone
+    // 1. Query users with active notifications in Firestore
+    const usersQuery = query(
+      collection(db, 'users'),
+      where('notificationsEnabled', '==', true)
+    )
+    const usersSnap = await getDocs(usersQuery)
+
+    const dispatchResults: Array<{ userId: string; name: string; zone: string; result: unknown }> = []
+
+    for (const docSnap of usersSnap.docs) {
+      const userData = docSnap.data()
+      const userZone = userData.zoneCode || 'WIB'
+
+      // Match zoneCode or 'ALL'
+      if (zoneCode === 'ALL' || userZone.toUpperCase() === zoneCode.toUpperCase()) {
+        const userToken = userData.fcmToken
+        if (userToken) {
+          const res = await processDailyNotification({
+            userId: docSnap.id,
+            token: userToken,
+            zoneCode: userZone,
+            isTest: false,
+          })
+          dispatchResults.push({
+            userId: docSnap.id,
+            name: userData.name || 'Teman SaveMe',
+            zone: userZone,
+            result: res,
+          })
+        }
+      }
+    }
+
+    // 2. Also broadcast to Topic for this zone as secondary fallback
     const targetTopic = `daily-reminder-${zoneCode.toLowerCase()}`
-    const result = await processDailyNotification({
+    const topicResult = await processDailyNotification({
       topic: targetTopic,
       zoneCode,
       isTest: false,
@@ -152,9 +185,10 @@ export async function GET(req: NextRequest) {
       success: true,
       mode: 'cron',
       zoneCode,
-      topic: targetTopic,
-      message: `Cron job berhasil memproses notifikasi untuk zona waktu ${zoneCode}`,
-      result,
+      totalUsersProcessed: dispatchResults.length,
+      usersDispatched: dispatchResults,
+      topicResult,
+      message: `Cron job berhasil memproses notifikasi untuk ${dispatchResults.length} pengguna di zona waktu ${zoneCode}`,
       timestamp: new Date().toISOString(),
     })
   } catch (err: unknown) {

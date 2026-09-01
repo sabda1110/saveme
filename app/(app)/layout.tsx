@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/organisms/Sidebar'
 import { BottomNav } from '@/components/organisms/BottomNav'
 import { SingleTabGuard } from '@/components/organisms/SingleTabGuard'
 import { NotificationPromptModal } from '@/components/organisms/NotificationPromptModal'
+import { MorningBriefingAlarm } from '@/components/organisms/MorningBriefingAlarm/MorningBriefingAlarm'
 import { setupForegroundMessageListener } from '@/lib/firebase/messaging'
 import { ThemeToggle } from '@/components/molecules/ThemeToggle'
 import { AppTemplate } from '@/components/templates/AppTemplate'
@@ -251,6 +252,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Single-Tab Active Concurrency Guard */}
       <SingleTabGuard />
+
+      {/* Smart Morning In-App Alarm Trigger */}
+      <MorningBriefingAlarm />
 
       {/* Notification Prompt Modal */}
       <NotificationPromptModal

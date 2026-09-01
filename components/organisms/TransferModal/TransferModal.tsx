@@ -36,10 +36,28 @@ export function TransferModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Synchronize wallet selection whenever modal opens or wallets load
+  React.useEffect(() => {
+    if (isOpen && wallets.length > 0) {
+      const defaultFrom = wallets.find((w) => !w.isLocked)?.id || wallets[0].id
+      const defaultTo = wallets.find((w) => w.id !== defaultFrom)?.id || wallets[0].id
+
+      if (!fromWalletId || !wallets.some((w) => w.id === fromWalletId)) {
+        setFromWalletId(defaultFrom)
+      }
+      if (!toWalletId || !wallets.some((w) => w.id === toWalletId)) {
+        setToWalletId(defaultTo)
+      }
+    }
+  }, [isOpen, wallets, fromWalletId, toWalletId])
+
   if (!isOpen) return null
 
-  const fromWallet = wallets.find((w) => w.id === fromWalletId)
-  const toWallet = wallets.find((w) => w.id === toWalletId)
+  const effectiveFromId = fromWalletId || wallets.find((w) => !w.isLocked)?.id || wallets[0]?.id
+  const effectiveToId = toWalletId || wallets.find((w) => w.id !== effectiveFromId)?.id || wallets[1]?.id
+
+  const fromWallet = wallets.find((w) => w.id === effectiveFromId)
+  const toWallet = wallets.find((w) => w.id === effectiveToId)
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -59,7 +77,12 @@ export function TransferModal({
       return
     }
 
-    if (fromWalletId === toWalletId) {
+    if (!effectiveFromId || !effectiveToId) {
+      setError('Pilih kantong asal dan kantong tujuan')
+      return
+    }
+
+    if (effectiveFromId === effectiveToId) {
       setError('Kantong asal dan kantong tujuan tidak boleh sama')
       return
     }
@@ -69,11 +92,16 @@ export function TransferModal({
       return
     }
 
+    if (fromWallet?.isLocked) {
+      setError(`Kantong "${fromWallet.name}" sedang dikunci/dibekukan dan tidak dapat digunakan untuk transfer keluar`)
+      return
+    }
+
     setLoading(true)
     try {
       const payload: TransferWalletDto = {
-        fromWalletId,
-        toWalletId,
+        fromWalletId: effectiveFromId,
+        toWalletId: effectiveToId,
         amount: numAmount,
         notes: notes.trim() || undefined,
         date,
@@ -137,8 +165,8 @@ export function TransferModal({
                 required
               >
                 {wallets.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.icon} {w.name} ({formatRupiah(w.balance)})
+                  <option key={w.id} value={w.id} disabled={w.isLocked}>
+                    {w.icon} {w.name} {w.isLocked ? '🔒 [Terkunci/Beku]' : `(${formatRupiah(w.balance)})`}
                   </option>
                 ))}
               </select>
@@ -154,7 +182,7 @@ export function TransferModal({
               >
                 {wallets.map((w) => (
                   <option key={w.id} value={w.id}>
-                    {w.icon} {w.name} ({formatRupiah(w.balance)})
+                    {w.icon} {w.name} {w.isLocked ? '🔒 [Beku]' : `(${formatRupiah(w.balance)})`}
                   </option>
                 ))}
               </select>
