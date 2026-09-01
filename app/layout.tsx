@@ -30,8 +30,14 @@ export const metadata: Metadata = {
     title: "SaveMe",
   },
   icons: {
-    icon: "/globe.svg",
-    apple: "/globe.svg",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
   },
 };
 

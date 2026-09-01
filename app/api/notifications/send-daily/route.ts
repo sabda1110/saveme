@@ -79,7 +79,7 @@ async function processDailyNotification({
       notification: {
         title,
         body: messageBody,
-        icon: '/globe.svg',
+        icon: '/logo.svg',
         click_action: targetUrl,
       },
       data: {

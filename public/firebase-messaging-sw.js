@@ -11,8 +11,8 @@ self.addEventListener('push', (event) => {
     const title = notification.title || 'SaveMe - Asisten Finansial'
     const options = {
       body: notification.body || 'Cek jatah belanja harianmu hari ini!',
-      icon: notification.icon || '/globe.svg',
-      badge: '/globe.svg',
+      icon: notification.icon || '/logo.svg',
+      badge: '/logo.svg',
       vibrate: [200, 100, 200],
       tag: notification.tag || 'daily-spending-reminder',
       renotify: true,

@@ -58,8 +58,8 @@ export function MorningBriefingAlarm() {
             if (reg && reg.showNotification) {
               await reg.showNotification(title, {
                 body,
-                icon: '/globe.svg',
-                badge: '/globe.svg',
+                icon: '/logo.svg',
+                badge: '/logo.svg',
                 data: { url: '/daily' },
               })
               localStorage.setItem(storageKey, 'true')
@@ -73,7 +73,7 @@ export function MorningBriefingAlarm() {
         try {
           new Notification(title, {
             body,
-            icon: '/globe.svg',
+            icon: '/logo.svg',
           })
           localStorage.setItem(storageKey, 'true')
         } catch {
