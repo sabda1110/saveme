@@ -18,7 +18,7 @@ function renderInlineFormatting(text: string): React.ReactNode[] {
   return parts.map((part, idx) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={idx} className="font-bold text-white">
+        <strong key={idx} className="font-bold text-slate-900 dark:text-white">
           {part.slice(2, -2)}
         </strong>
       )
@@ -28,7 +28,7 @@ function renderInlineFormatting(text: string): React.ReactNode[] {
       (part.startsWith('_') && part.endsWith('_') && part.length > 2)
     ) {
       return (
-        <em key={idx} className="italic text-slate-200">
+        <em key={idx} className="italic text-slate-800 dark:text-slate-200">
           {part.slice(1, -1)}
         </em>
       )
@@ -37,7 +37,7 @@ function renderInlineFormatting(text: string): React.ReactNode[] {
       return (
         <code
           key={idx}
-          className="px-1.5 py-0.5 rounded bg-[#21263a] text-emerald-400 font-mono text-[11px] border border-[#2d3348]"
+          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#21263a] text-emerald-700 dark:text-emerald-400 font-mono text-[11px] border border-slate-200 dark:border-[#2d3348]"
         >
           {part.slice(1, -1)}
         </code>
@@ -75,7 +75,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
       elements.push(
         <blockquote
           key={`quote-${keyPrefix}`}
-          className="my-3 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 to-[#21263a]/60 border-l-4 border-emerald-400 text-xs sm:text-sm text-emerald-200 italic leading-relaxed shadow-inner"
+          className="my-3 p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-[#1a1d27] border-l-4 border-emerald-500 text-xs sm:text-sm text-slate-800 dark:text-slate-200 italic leading-relaxed shadow-xs"
         >
           {renderInlineFormatting(quoteText)}
         </blockquote>
@@ -94,7 +94,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
       flushList(i)
       flushQuote(i)
       elements.push(
-        <hr key={`hr-${i}`} className="border-[#2d3348] my-3 sm:my-4" />
+        <hr key={`hr-${i}`} className="border-slate-200 dark:border-[#2d3348] my-3 sm:my-4" />
       )
       continue
     }
@@ -118,7 +118,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
       elements.push(
         <h4
           key={`h3-${i}`}
-          className="text-sm sm:text-base font-extrabold text-green-400 mt-4 sm:mt-5 mb-2 flex items-center gap-1.5"
+          className="text-sm sm:text-base font-bold text-emerald-700 dark:text-emerald-400 mt-4 sm:mt-5 mb-2 flex items-center gap-1.5"
         >
           {renderInlineFormatting(title)}
         </h4>
@@ -133,7 +133,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
       elements.push(
         <h3
           key={`h2-${i}`}
-          className="text-base sm:text-lg font-black text-white mt-5 mb-2.5 flex items-center gap-1.5"
+          className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-5 mb-2.5 flex items-center gap-1.5"
         >
           {renderInlineFormatting(title)}
         </h3>
@@ -148,7 +148,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
       elements.push(
         <h2
           key={`h1-${i}`}
-          className="text-lg sm:text-xl font-black text-white mt-6 mb-3"
+          className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-6 mb-3"
         >
           {renderInlineFormatting(title)}
         </h2>
@@ -163,9 +163,9 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
       currentListItems.push(
         <li
           key={`li-${i}`}
-          className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300 leading-relaxed"
+          className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0 shadow-[0_0_6px_#22c55e]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
           <span className="flex-1">{renderInlineFormatting(itemContent)}</span>
         </li>
       )
@@ -185,7 +185,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
     elements.push(
       <p
         key={`p-${i}`}
-        className="text-xs sm:text-sm text-slate-300 leading-relaxed my-1.5"
+        className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed my-1.5"
       >
         {renderInlineFormatting(trimmed)}
       </p>

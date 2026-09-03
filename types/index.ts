@@ -31,6 +31,7 @@ export interface UserProfile {
   lastAllocatedMonth?: string // e.g. "2026-08" to guard against double allocation in a single month
   monthlyBudget?: number // Quick budget set by user for the month (Rp)
   monthlyBudgetMonth?: string // e.g. "2026-08" — which month this budget applies to
+  deductBillsFromDaily?: boolean // true if daily safe-to-spend deducts unpaid recurring bills. Default: true
   // Security & App Lock
   appPin?: string // Hashed 6-digit PIN (SHA-256)
   isPinEnabled?: boolean // Toggle for PIN security lock

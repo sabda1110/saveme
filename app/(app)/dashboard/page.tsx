@@ -9,6 +9,7 @@ import { recurringService } from '@/lib/services/recurring.firebase'
 import { savingsService } from '@/lib/services/savings.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { quickTemplateService } from '@/lib/services/quick-template.firebase'
+import { groupSavingsService } from '@/lib/services/group-savings.firebase'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -50,6 +51,8 @@ import type {
   Wallet,
   ReceiptScanResult,
   QuickTemplate,
+  GroupSavings,
+  GroupSavingsMember,
 } from '@/types'
 import { cn } from '@/lib/utils/cn'
 
@@ -72,6 +75,11 @@ export default function DashboardPage() {
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [templates, setTemplates] = useState<QuickTemplate[]>([])
+  const [groupSavings, setGroupSavings] = useState<{
+    group: GroupSavings
+    member: GroupSavingsMember
+    allMembers: GroupSavingsMember[]
+  }[]>([])
 
   const [activePeriod, setActivePeriod] = useState<PeriodFilter>('month')
   const [loading, setLoading] = useState(true)
@@ -83,6 +91,26 @@ export default function DashboardPage() {
   const [isNotifBannerDismissed, setIsNotifBannerDismissed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  // Dual-Perspective Bills Preference (Synced with /profile & localStorage)
+  const [deductBills, setDeductBills] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('saveme_deduct_bills_daily')
+      if (saved !== null) return saved === 'true'
+    }
+    return userProfile?.deductBillsFromDaily ?? true
+  })
+
+  useEffect(() => {
+    if (userProfile?.deductBillsFromDaily !== undefined) {
+      setDeductBills(userProfile.deductBillsFromDaily)
+    } else if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('saveme_deduct_bills_daily')
+      if (saved !== null) {
+        setDeductBills(saved === 'true')
+      }
+    }
+  }, [userProfile?.deductBillsFromDaily])
 
   // Form State for Add Transaction
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE')
@@ -129,6 +157,7 @@ export default function DashboardPage() {
           walletsList,
           templatesList,
           notifSettings,
+          groupsList,
         ] = await Promise.all([
           transactionService.getDashboardSummary(user.uid, dateFrom),
           categoryService.getCategories(),
@@ -137,6 +166,7 @@ export default function DashboardPage() {
           walletService.getUserWallets(user.uid),
           quickTemplateService.getUserTemplates(user.uid),
           notificationService.getSettings(user.uid),
+          groupSavingsService.getUserGroups(user.uid),
         ])
 
         if (isMounted) {
@@ -147,6 +177,7 @@ export default function DashboardPage() {
           setWallets(walletsList)
           setTemplates(templatesList)
           setHasNotificationEnabled(Boolean(notifSettings?.enabled))
+          setGroupSavings(groupsList)
 
           // Set default Category & Wallet for Add Transaction Form
           if (categoryList.length > 0 && !categoryId) {
@@ -209,9 +240,79 @@ export default function DashboardPage() {
     return Math.max(1, lastDay - now.getDate() + 1)
   }, [])
 
+  const unpaidBillsThisMonth = useMemo(() => {
+    const now = new Date()
+    const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0')
+    const currentMonthStr = `${now.getFullYear()}-${currentMonthNum}`
+    return recurringBills
+      .filter((b) => b.lastProcessedMonth !== currentMonthStr)
+      .reduce((sum, b) => sum + b.amount, 0)
+  }, [recurringBills])
+
+  // Daily Savings Required for Individual Goals (Celengan Impian)
+  const individualDailySavingsRequired = useMemo(() => {
+    const now = new Date()
+    return savingsGoals.reduce((sum, g) => {
+      if (!g.targetDate) return sum
+      const targetD = new Date(g.targetDate)
+      const diffDays = Math.max(1, Math.ceil((targetD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      const remainingTarget = Math.max(0, g.targetAmount - g.currentAmount)
+      return sum + Math.round(remainingTarget / diffDays)
+    }, 0)
+  }, [savingsGoals])
+
+  // Daily Savings Required for Group Savings (Celengan Bersama)
+  const groupSavingsDailyRequired = useMemo(() => {
+    const now = new Date()
+    return groupSavings.reduce((sum, g) => {
+      if (!g.group.targetDate) return sum
+      const targetD = new Date(g.group.targetDate)
+      const diffDays = Math.max(1, Math.ceil((targetD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      const remainingTarget = Math.max(0, g.member.myTarget - g.member.myContributed)
+      return sum + Math.round(remainingTarget / diffDays)
+    }, 0)
+  }, [groupSavings])
+
+  // Combined Daily Savings Commitment (Pribadi + Bersama)
+  const totalDailySavingsRequired = individualDailySavingsRequired + groupSavingsDailyRequired
+
+  // Kas operasional setelah disisihkan untuk tagihan/cicilan yang belum lunas
+  const operatingCashAfterBills = Math.max(0, effectiveOperatingCash - unpaidBillsThisMonth)
+
+  // Kas operasional aktif sesuai preferensi user
+  const activeOperatingCashBasis = deductBills && unpaidBillsThisMonth > 0
+    ? operatingCashAfterBills
+    : effectiveOperatingCash
+
+  // Raw Daily Operating Capacity
+  const rawSafeToSpendDaily = Math.max(
+    0,
+    Math.round(activeOperatingCashBasis / daysRemainingInMonth)
+  )
+
+  // Deficit & Feasibility Analysis
+  const isSavingsDeficit = totalDailySavingsRequired > rawSafeToSpendDaily && rawSafeToSpendDaily > 0
+
+  // Daily Limit: Net of both bills (if deducted) and daily savings commitment (consistent with /daily)!
   const dailyLimit = useMemo(() => {
-    return Math.max(0, Math.floor(effectiveOperatingCash / daysRemainingInMonth))
-  }, [effectiveOperatingCash, daysRemainingInMonth])
+    return isSavingsDeficit
+      ? Math.max(0, Math.round(rawSafeToSpendDaily * 0.5))
+      : Math.max(0, rawSafeToSpendDaily - totalDailySavingsRequired)
+  }, [isSavingsDeficit, rawSafeToSpendDaily, totalDailySavingsRequired])
+
+  const rawDailyWithoutBills = Math.max(0, Math.round(effectiveOperatingCash / daysRemainingInMonth))
+  const dailyLimitWithoutBills = useMemo(() => {
+    return totalDailySavingsRequired > rawDailyWithoutBills && rawDailyWithoutBills > 0
+      ? Math.max(0, Math.round(rawDailyWithoutBills * 0.5))
+      : Math.max(0, rawDailyWithoutBills - totalDailySavingsRequired)
+  }, [rawDailyWithoutBills, totalDailySavingsRequired])
+
+  const rawDailyWithBills = Math.max(0, Math.round(operatingCashAfterBills / daysRemainingInMonth))
+  const dailyLimitWithBills = useMemo(() => {
+    return totalDailySavingsRequired > rawDailyWithBills && rawDailyWithBills > 0
+      ? Math.max(0, Math.round(rawDailyWithBills * 0.5))
+      : Math.max(0, rawDailyWithBills - totalDailySavingsRequired)
+  }, [rawDailyWithBills, totalDailySavingsRequired])
 
   const todayExpense = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0]
@@ -630,7 +731,7 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     {isOverToday ? '⚠️ Lewat Batas Hari Ini' : 'Jatah Belanja Aman Hari Ini:'}
                   </span>
@@ -642,12 +743,32 @@ export default function DashboardPage() {
                   >
                     {isOverToday ? `+${formatRupiah(todayExcessAmount)} lebih` : `${formatRupiah(dailyLimit)} / hari`}
                   </span>
+                  {unpaidBillsThisMonth > 0 && (
+                    <span
+                      className={cn(
+                        'text-[10px] px-2 py-0.5 rounded-full font-bold',
+                        deductBills
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                      )}
+                    >
+                      {deductBills
+                        ? `🛡️ Cicilan ${formatRupiah(unpaidBillsThisMonth)} diamankan`
+                        : `⚡ Tanpa cicilan (Ada ${formatRupiah(unpaidBillsThisMonth)} belum bayar)`}
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {isOverToday
                     ? 'Tidak apa-apa — jatah hari esok otomatis dihitung ulang secara aman.'
                     : isUsedToday
                     ? `Sudah belanja: ${formatRupiah(todayExpense)} · Sisa aman hari ini: ${formatRupiah(todayRemainingAllowance)}`
+                    : unpaidBillsThisMonth > 0 && deductBills
+                    ? `Saran aman: dipotong cicilan ${formatRupiah(unpaidBillsThisMonth)} & tabungan ${formatRupiah(totalDailySavingsRequired)}/hari (tanpa cicilan: ${formatRupiah(dailyLimitWithoutBills)}/hari)`
+                    : unpaidBillsThisMonth > 0 && !deductBills
+                    ? `⚠️ Belum diamankan untuk cicilan ${formatRupiah(unpaidBillsThisMonth)} (saran aman: ${formatRupiah(dailyLimitWithBills)}/hari)`
+                    : totalDailySavingsRequired > 0
+                    ? `Bersih setelah disisihkan untuk tabungan impian ${formatRupiah(totalDailySavingsRequired)}/hari (${daysRemainingInMonth} hari tersisa)`
                     : `Dihitung dari sisa kas aktif ÷ ${daysRemainingInMonth} hari · Belum ada belanja hari ini`}
                 </p>
               </div>

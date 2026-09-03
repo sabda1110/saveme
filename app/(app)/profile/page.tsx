@@ -27,6 +27,7 @@ import {
   Lock,
   Unlock,
   KeyRound,
+  CreditCard,
 } from 'lucide-react'
 import {
   detectUserTimezone,
@@ -47,6 +48,50 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // Budget & Bills Preference
+  const [deductBills, setDeductBills] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('saveme_deduct_bills_daily')
+      if (saved !== null) return saved === 'true'
+    }
+    return userProfile?.deductBillsFromDaily ?? true
+  })
+  const [deductBillsLoading, setDeductBillsLoading] = useState(false)
+
+  useEffect(() => {
+    if (userProfile?.deductBillsFromDaily !== undefined) {
+      setDeductBills(userProfile.deductBillsFromDaily)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('saveme_deduct_bills_daily', String(userProfile.deductBillsFromDaily))
+      }
+    }
+  }, [userProfile?.deductBillsFromDaily])
+
+  const handleToggleDeductBills = async (nextVal: boolean) => {
+    if (!user?.uid) return
+    setDeductBills(nextVal)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('saveme_deduct_bills_daily', String(nextVal))
+    }
+    setDeductBillsLoading(true)
+    try {
+      await updateUserProfile(user.uid, {
+        deductBillsFromDaily: nextVal,
+      })
+      await refreshProfile()
+      setSuccessMessage(
+        nextVal
+          ? 'Pengaturan tersimpan: Jatah belanja harian otomatis mengamankan dana cicilan.'
+          : 'Pengaturan tersimpan: Jatah belanja harian dihitung tanpa memotong cicilan.'
+      )
+    } catch (err) {
+      console.error('[profile] Error updating deductBillsFromDaily:', err)
+      setErrorMessage('Gagal menyimpan preferensi anggaran.')
+    } finally {
+      setDeductBillsLoading(false)
+    }
+  }
 
   // Notification State
   const [tzInfo, setTzInfo] = useState<UserTimeZoneInfo | null>(null)
@@ -419,6 +464,72 @@ export default function ProfilePage() {
             <span>Buka Alokasi Gaji</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
+        </div>
+
+        {/* Section 2.5: Preferensi Anggaran & Jatah Belanja (Global) */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl space-y-4 text-slate-900 dark:text-white">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-extrabold tracking-tight">
+                    Preferensi Anggaran &amp; Jatah Belanja
+                  </h3>
+                  <Badge variant={deductBills ? 'brand' : 'neutral'} size="sm">
+                    {deductBills ? 'Amankan Cicilan' : 'Tanpa Potong'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Konfigurasi global perhitungan jatah harian di Dashboard dan halaman Jatah
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/50 border border-slate-200 dark:border-[#2d3348] space-y-3.5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block">
+                  Potong Cicilan &amp; Tagihan Bulanan
+                </span>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
+                  {deductBills ? (
+                    <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                      🛡️ <strong>Aktif (Disarankan):</strong> Tagihan dan cicilan yang belum lunas bulan ini otomatis disisihkan dari kas belanja. Kamu terlindungi dari risiko tekor saat tagihan jatuh tempo.
+                    </span>
+                  ) : (
+                    <span className="text-amber-700 dark:text-amber-400 font-medium">
+                      ⚡ <strong>Nonaktif:</strong> Seluruh saldo kas aktif dihitung bebas untuk belanja harian tanpa menyisihkan cicilan. Cocok jika kamu memiliki dana terpisah untuk tagihan.
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {/* Custom Switch Toggle */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={deductBills}
+                disabled={deductBillsLoading}
+                onClick={() => handleToggleDeductBills(!deductBills)}
+                className={cn(
+                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-1',
+                  deductBills ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700',
+                  deductBillsLoading && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                <span
+                  className={cn(
+                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                    deductBills ? 'translate-x-5' : 'translate-x-0'
+                  )}
+                />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Section 3: Pengingat & Notifikasi Harian (FCM & Multi-Zona Waktu) */}
