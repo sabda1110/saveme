@@ -13,6 +13,7 @@ import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
+import { Skeleton } from '@/components/atoms/Skeleton'
 import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
 import { OnboardingWizard } from '@/components/organisms/OnboardingWizard'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
@@ -378,9 +379,53 @@ export default function DashboardPage() {
 
   if (loading && summary.transactions.length === 0) {
     return (
-      <div className="py-24 flex flex-col items-center justify-center gap-3">
-        <div className="w-9 h-9 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Memuat Dashboard...</span>
+      <div className="flex flex-col gap-6 pb-16 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-36 rounded-xl" />
+            <Skeleton className="h-10 w-32 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Hero Card Skeleton */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-6 shadow-xs">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-10 w-64" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
+              <Skeleton className="h-16 w-full sm:w-44 rounded-2xl" />
+              <Skeleton className="h-16 w-full sm:w-44 rounded-2xl" />
+              <Skeleton className="h-16 w-full sm:w-44 rounded-2xl" />
+            </div>
+          </div>
+          <div className="pt-4 border-t border-slate-100 dark:border-white/8">
+            <Skeleton className="h-5 w-72" />
+          </div>
+        </div>
+
+        {/* 2-Column Layout Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-20 w-full rounded-2xl" />
+              <Skeleton className="h-20 w-full rounded-2xl" />
+            </div>
+          </div>
+          <div className="lg:col-span-4 space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 space-y-4">
+              <Skeleton className="h-6 w-36" />
+              <Skeleton className="h-24 w-full rounded-2xl" />
+              <Skeleton className="h-24 w-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -512,37 +557,61 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* 2 Main Vault Pillars */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:w-auto w-full">
+            {/* 3 Main Vault Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3.5 lg:w-auto w-full">
               {/* Pillar 1: Liquid Operating Cash */}
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1e2a] border border-slate-200 dark:border-white/10 shadow-xs flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <Unlock className="w-5 h-5" />
+              <Link
+                href="/wallets"
+                className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1a1e2a] border border-slate-200 dark:border-white/10 shadow-xs flex items-center gap-3 hover:border-emerald-500/40 transition-all group cursor-pointer"
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Unlock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                <div className="min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
                     Kas Bebas Belanja
                   </span>
-                  <span className="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
+                  <span className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
                     {formatRupiah(effectiveOperatingCash)}
                   </span>
                 </div>
-              </div>
+              </Link>
 
-              {/* Pillar 2: Locked Savings & Goals */}
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1e2a] border border-slate-200 dark:border-white/10 shadow-xs flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <Lock className="w-5 h-5" />
+              {/* Pillar 2: Locked Savings (from Wallets) */}
+              <Link
+                href="/wallets"
+                className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1a1e2a] border border-slate-200 dark:border-white/10 shadow-xs flex items-center gap-3 hover:border-purple-500/40 transition-all group cursor-pointer"
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                    Tabungan Terkunci
+                <div className="min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
+                    Tabungan Beku
                   </span>
-                  <span className="text-lg font-black font-mono text-amber-600 dark:text-amber-400">
-                    {formatRupiah(totalLockedBalance + totalSavingsInGoals)}
+                  <span className="text-base sm:text-lg font-black font-mono text-purple-600 dark:text-purple-400">
+                    {formatRupiah(totalLockedBalance)}
                   </span>
                 </div>
-              </div>
+              </Link>
+
+              {/* Pillar 3: Savings in Goals (Celengan Impian) */}
+              <Link
+                href="/savings"
+                className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1a1e2a] border border-slate-200 dark:border-white/10 shadow-xs flex items-center gap-3 hover:border-blue-500/40 transition-all group cursor-pointer"
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
+                    Celengan Impian
+                  </span>
+                  <span className="text-base sm:text-lg font-black font-mono text-blue-600 dark:text-blue-400">
+                    {formatRupiah(totalSavingsInGoals)}
+                  </span>
+                </div>
+              </Link>
             </div>
           </div>
 
