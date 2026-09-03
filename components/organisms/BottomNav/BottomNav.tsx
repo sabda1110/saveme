@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Compass,
+  Wallet,
   Target,
-  ReceiptText,
-  User,
+  CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -17,14 +17,19 @@ export function BottomNav() {
 
   const navItems = [
     {
-      label: 'Beranda',
+      label: 'Dashboard',
       href: '/dashboard',
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
-      label: 'Jatah & AI',
+      label: 'Jatah',
       href: '/daily',
       icon: <Compass className="w-5 h-5" />,
+    },
+    {
+      label: 'Kantong',
+      href: '/wallets',
+      icon: <Wallet className="w-5 h-5" />,
     },
     {
       label: 'Celengan',
@@ -32,14 +37,9 @@ export function BottomNav() {
       icon: <Target className="w-5 h-5" />,
     },
     {
-      label: 'Transaksi',
-      href: '/transactions',
-      icon: <ReceiptText className="w-5 h-5" />,
-    },
-    {
-      label: 'Profil',
-      href: '/profile',
-      icon: <User className="w-5 h-5" />,
+      label: 'Tagihan',
+      href: '/bills',
+      icon: <CreditCard className="w-5 h-5" />,
     },
   ]
 
