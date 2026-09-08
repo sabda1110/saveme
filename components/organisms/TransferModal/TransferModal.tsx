@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useToast } from '@/context/ToastContext'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
@@ -28,6 +29,7 @@ export function TransferModal({
   onClose,
   onSuccess,
 }: TransferModalProps) {
+  const { toast } = useToast()
   const [fromWalletId, setFromWalletId] = useState(wallets[0]?.id || '')
   const [toWalletId, setToWalletId] = useState(wallets[1]?.id || '')
   const [amount, setAmount] = useState('')
@@ -113,7 +115,9 @@ export function TransferModal({
     } catch (err: unknown) {
       console.error('[transfer] Error processing transfer:', err)
       const errObj = err as { message?: string }
-      setError(errObj.message || 'Gagal memproses transfer antar kantong')
+      const errMsg = errObj.message || 'Gagal memproses transfer antar kantong'
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setLoading(false)
     }

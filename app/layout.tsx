@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { ToastProvider } from "@/context/ToastContext";
+import { ToastContainer } from "@/components/organisms/ToastContainer";
 import { OfflineIndicator } from "@/components/molecules/OfflineIndicator";
 import { ServiceWorkerRegister } from "@/components/organisms/ServiceWorkerRegister";
 import "./globals.css";
@@ -71,9 +73,12 @@ export default function RootLayout({
       <body className="min-h-screen bg-[var(--color-bg-base)] text-[var(--color-text-primary)] flex flex-col selection:bg-green-500/30 selection:text-green-600 dark:selection:text-green-300">
         <ThemeProvider>
           <AuthProvider>
-            <OfflineIndicator />
-            <ServiceWorkerRegister />
-            {children}
+            <ToastProvider>
+              <OfflineIndicator />
+              <ServiceWorkerRegister />
+              <ToastContainer />
+              {children}
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

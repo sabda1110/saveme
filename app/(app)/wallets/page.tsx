@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { Badge } from '@/components/atoms/Badge'
 import { Button } from '@/components/atoms/Button'
@@ -37,6 +38,7 @@ const WALLET_TYPE_OPTIONS: { type: WalletType; label: string; icon: string; defa
 
 export default function WalletsPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
 
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,12 +132,13 @@ export default function WalletsPage() {
     setSyncSuccessMsg(null)
     try {
       const newBal = await walletService.syncWalletBalanceFromTransactions(user.uid, walletId)
-      setSyncSuccessMsg(
-        `Saldo kantong "${walletName}" berhasil disinkronkan (${formatRupiah(newBal)}) sesuai riwayat transaksi!`
-      )
+      const msg = `Saldo kantong "${walletName}" berhasil disinkronkan (${formatRupiah(newBal)}) sesuai riwayat transaksi!`
+      setSyncSuccessMsg(msg)
+      toast.success(msg)
       setRefreshTrigger((p) => p + 1)
     } catch (err) {
       console.error('[wallets] Error syncing wallet:', err)
+      toast.error('Gagal menyinkronkan saldo kantong.')
     } finally {
       setSyncingWalletId(null)
     }
@@ -147,10 +150,13 @@ export default function WalletsPage() {
     setSyncSuccessMsg(null)
     try {
       await walletService.syncAllWalletsFromTransactions(user.uid)
-      setSyncSuccessMsg('Semua saldo kantong berhasil disinkronkan dengan seluruh riwayat transaksi!')
+      const msg = 'Semua saldo kantong berhasil disinkronkan dengan seluruh riwayat transaksi!'
+      setSyncSuccessMsg(msg)
+      toast.success(msg)
       setRefreshTrigger((p) => p + 1)
     } catch (err) {
       console.error('[wallets] Error syncing all wallets:', err)
+      toast.error('Gagal menyinkronkan seluruh kantong rekening.')
     } finally {
       setSyncingWalletId(null)
     }
@@ -188,7 +194,9 @@ export default function WalletsPage() {
 
     if (!user?.uid) return
     if (!name.trim()) {
-      setWalletError('Nama kantong rekening wajib diisi')
+      const err = 'Nama kantong rekening wajib diisi'
+      setWalletError(err)
+      toast.error(err)
       return
     }
 
@@ -196,7 +204,9 @@ export default function WalletsPage() {
 
     // Guard: saat edit, tidak boleh lock satu-satunya kantong non-locked
     if (editingWallet && isLocked && !editingWallet.isLocked && spendingWallets.length <= 1) {
-      setWalletError('Tidak bisa dikunci — kamu harus punya minimal 1 kantong aktif (non-locked) sebagai saldo utama.')
+      const err = 'Tidak bisa dikunci — kamu harus punya minimal 1 kantong aktif (non-locked) sebagai saldo utama.'
+      setWalletError(err)
+      toast.warning(err)
       return
     }
 
@@ -217,6 +227,7 @@ export default function WalletsPage() {
           isLocked: finalIsLocked,
           isEarmarked: finalIsEarmarked,
         })
+        toast.success(`Kantong "${name.trim()}" berhasil diperbarui!`)
       } else {
         // CREATE
         const payload: CreateWalletDto = {
@@ -229,6 +240,7 @@ export default function WalletsPage() {
           isEarmarked: finalIsEarmarked,
         }
         await walletService.createWallet(user.uid, payload)
+        toast.success(`Kantong "${name.trim()}" berhasil dibuat!`)
       }
 
       setIsWalletModalOpen(false)
@@ -236,7 +248,9 @@ export default function WalletsPage() {
     } catch (err: unknown) {
       console.error('[wallets] Error saving wallet:', err)
       const errObj = err as { message?: string }
-      setWalletError(errObj.message || 'Gagal menyimpan kantong rekening')
+      const errMsg = errObj.message || 'Gagal menyimpan kantong rekening'
+      setWalletError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -247,7 +261,9 @@ export default function WalletsPage() {
 
     // Guard: harus ada minimal 1 kantong non-locked
     if (!walletToDelete.isLocked && !walletToDelete.isEarmarked && spendingWallets.length <= 1) {
-      setWalletError(`Kantong "${walletToDelete.name}" tidak dapat dihapus karena merupakan satu-satunya kantong kas operasional aktifmu. Buat kantong operasional baru terlebih dahulu jika ingin menggantinya.`)
+      const err = `Kantong "${walletToDelete.name}" tidak dapat dihapus karena merupakan satu-satunya kantong kas operasional aktifmu. Buat kantong operasional baru terlebih dahulu jika ingin menggantinya.`
+      setWalletError(err)
+      toast.warning(err)
       setWalletToDelete(null)
       return
     }
@@ -257,12 +273,15 @@ export default function WalletsPage() {
 
     try {
       await walletService.deleteWallet(user.uid, walletToDelete.id)
+      toast.success(`Kantong "${walletToDelete.name}" berhasil dihapus!`)
       setWalletToDelete(null)
       setRefreshTrigger((p) => p + 1)
     } catch (err: unknown) {
       console.error('[wallets] Error deleting wallet:', err)
       const errObj = err as { message?: string }
-      setWalletError(errObj.message || 'Gagal menghapus kantong rekening')
+      const errMsg = errObj.message || 'Gagal menghapus kantong rekening'
+      setWalletError(errMsg)
+      toast.error(errMsg)
     } finally {
       setIsDeleting(false)
     }
@@ -859,7 +878,10 @@ export default function WalletsPage() {
         wallets={wallets}
         userId={user?.uid || ''}
         onClose={() => setIsTransferModalOpen(false)}
-        onSuccess={() => setRefreshTrigger((p) => p + 1)}
+        onSuccess={() => {
+          setRefreshTrigger((p) => p + 1)
+          toast.success('Transfer saldo antar kantong berhasil!')
+        }}
       />
 
       {/* Delete Confirm Modal */}

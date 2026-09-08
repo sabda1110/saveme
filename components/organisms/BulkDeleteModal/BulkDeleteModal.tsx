@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { transactionService, type BulkDeleteResult } from '@/lib/services/transaction.firebase'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
@@ -38,6 +39,7 @@ export function BulkDeleteModal({
   formatRupiah,
 }: BulkDeleteModalProps) {
   const { user } = useAuth()
+  const { toast } = useToast()
 
   // Mode: Rentang Tanggal vs Hapus Semua
   const [mode, setMode] = useState<'RANGE' | 'ALL'>('RANGE')
@@ -164,7 +166,9 @@ export function BulkDeleteModal({
       onClose()
     } catch (err) {
       console.error('[BulkDeleteModal] Execution error:', err)
-      setErrorMsg(err instanceof Error ? err.message : 'Gagal menghapus transaksi')
+      const errMsg = err instanceof Error ? err.message : 'Gagal menghapus transaksi'
+      setErrorMsg(errMsg)
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }

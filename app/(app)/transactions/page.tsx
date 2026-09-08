@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { transactionService, type CreateTransactionDto, type BulkDeleteResult } from '@/lib/services/transaction.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
@@ -51,6 +52,7 @@ import { cn } from '@/lib/utils/cn'
 
 export default function TransactionsPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -403,6 +405,8 @@ export default function TransactionsPage() {
         setOverbudgetWarning({ isOpen: false, amount: 0, limit: 0, excess: 0 })
       }
 
+      toast.success(editingTx ? 'Transaksi berhasil diperbarui!' : 'Transaksi berhasil dicatat!')
+
       // Reset
       setFormAmount('')
       setFormDescription('')
@@ -412,7 +416,9 @@ export default function TransactionsPage() {
     } catch (err: unknown) {
       console.error('[transactions] Error submitting transaction:', err)
       const errorObj = err as { message?: string }
-      setFormError(errorObj.message || 'Gagal menyimpan transaksi')
+      const errMsg = errorObj.message || 'Gagal menyimpan transaksi'
+      setFormError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -431,8 +437,10 @@ export default function TransactionsPage() {
       await transactionService.delete(user.uid, txToDelete)
       setTxToDelete(null)
       setRefreshTrigger((p) => p + 1)
+      toast.success('Transaksi berhasil dihapus!')
     } catch (err) {
       console.error('[transactions] Error deleting transaction:', err)
+      toast.error('Gagal menghapus transaksi. Silakan coba lagi.')
     } finally {
       setIsDeletingTx(false)
     }
@@ -442,12 +450,13 @@ export default function TransactionsPage() {
     setRefreshTrigger((p) => p + 1)
     let info = `Berhasil membersihkan ${result.deletedCount} transaksi!`
     if (result.totalExpenseDeleted > 0 || result.totalIncomeDeleted > 0) {
-      info += ` (Pengeluaran dihapus: ${formatRupiah(result.totalExpenseDeleted)}, Pemasukan: ${formatRupiah(result.totalIncomeDeleted)})`
+      info += ` (Pengeluaran: ${formatRupiah(result.totalExpenseDeleted)}, Pemasukan: ${formatRupiah(result.totalIncomeDeleted)})`
     }
     if (result.affectedWalletsCount > 0) {
       info += ` • ${result.affectedWalletsCount} saldo kantong diperbarui.`
     }
     setBulkDeleteSuccessInfo(info)
+    toast.success(info, { title: 'Pembersihan Transaksi Selesai' })
     setTimeout(() => {
       setBulkDeleteSuccessInfo(null)
     }, 8000)

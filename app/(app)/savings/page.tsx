@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { savingsService, type CreateSavingsGoalDto } from '@/lib/services/savings.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { groupSavingsService, type VerifiedUserProfile } from '@/lib/services/group-savings.firebase'
@@ -54,6 +55,7 @@ export interface MultiInviteeRow {
 
 export default function SavingsPage() {
   const { user, userProfile } = useAuth()
+  const { toast } = useToast()
 
   const [activeTab, setActiveTab] = useState<SavingsTab>('pribadi')
 
@@ -576,6 +578,7 @@ export default function SavingsPage() {
         )
       }
 
+      toast.success(editingGoal ? 'Celengan berhasil diperbarui!' : 'Celengan impian berhasil dibuat!')
       setIsGoalModalOpen(false)
       setEditingGoal(null)
       setGoalName('')
@@ -587,7 +590,9 @@ export default function SavingsPage() {
     } catch (err: unknown) {
       console.error('[savings] Error saving goal:', err)
       const errObj = err as { message?: string }
-      setGoalError(errObj.message || 'Gagal menyimpan target')
+      const errMsg = errObj.message || 'Gagal menyimpan target'
+      setGoalError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSubmittingGoal(false)
     }
@@ -608,12 +613,17 @@ export default function SavingsPage() {
     if (!user?.uid || !goalToDelete) return
     setIsDeletingGoal(true)
 
+    const targetGoal = goals.find((g) => g.id === goalToDelete)
+    const goalTitle = targetGoal ? `Celengan "${targetGoal.name}"` : 'Celengan'
+
     try {
       await savingsService.deleteGoal(user.uid, goalToDelete)
+      toast.success(`${goalTitle} berhasil dihapus!`)
       setGoalToDelete(null)
       setRefreshTrigger((p) => p + 1)
     } catch (err) {
       console.error('[savings] Error deleting goal:', err)
+      toast.error('Gagal menghapus celengan')
     } finally {
       setIsDeletingGoal(false)
     }
@@ -682,6 +692,7 @@ export default function SavingsPage() {
         targetWallet.id,
         targetWallet.name
       )
+      toast.success(`Setoran ${formatRupiah(num)} ke "${depositModalGoal.name}" berhasil!`)
       setDepositModalGoal(null)
       setAmountAction('')
       setRefreshTrigger((p) => p + 1)
@@ -695,14 +706,15 @@ export default function SavingsPage() {
       ]
       for (const m of milestones) {
         if (prevPct < m.threshold && newPctAfter >= m.threshold) {
-          setMilestoneToast({ emoji: m.emoji, message: m.message })
-          setTimeout(() => setMilestoneToast(null), 5000)
+          toast.success(m.message, { title: `${m.emoji} Milestone Tabungan!` })
           break
         }
       }
     } catch (err: unknown) {
       const errObj = err as { message?: string }
-      setActionError(errObj.message || 'Gagal menyetor dana')
+      const errMsg = errObj.message || 'Gagal menyetor dana'
+      setActionError(errMsg)
+      toast.error(errMsg)
     } finally {
       setActionLoading(false)
     }
@@ -715,7 +727,9 @@ export default function SavingsPage() {
 
     const num = Number(amountAction)
     if (!num || num <= 0) {
-      setActionError('Nominal tarik harus lebih besar dari 0')
+      const err = 'Nominal tarik harus lebih besar dari 0'
+      setActionError(err)
+      toast.error(err)
       return
     }
 
@@ -725,7 +739,9 @@ export default function SavingsPage() {
       wallets[0]
 
     if (!targetWallet) {
-      setActionError('Silakan pilih dompet tujuan penerimaan dana')
+      const err = 'Silakan pilih dompet tujuan penerimaan dana'
+      setActionError(err)
+      toast.error(err)
       return
     }
 
@@ -738,12 +754,15 @@ export default function SavingsPage() {
         targetWallet.id,
         targetWallet.name
       )
+      toast.success(`Penarikan ${formatRupiah(num)} dari "${withdrawModalGoal.name}" berhasil!`)
       setWithdrawModalGoal(null)
       setAmountAction('')
       setRefreshTrigger((p) => p + 1)
     } catch (err: unknown) {
       const errObj = err as { message?: string }
-      setActionError(errObj.message || 'Gagal menarik dana')
+      const errMsg = errObj.message || 'Gagal menarik dana'
+      setActionError(errMsg)
+      toast.error(errMsg)
     } finally {
       setActionLoading(false)
     }

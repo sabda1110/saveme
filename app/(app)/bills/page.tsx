@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { recurringService, type CreateRecurringBillDto } from '@/lib/services/recurring.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
@@ -40,6 +41,7 @@ type FilterTab = 'ALL' | 'INSTALLMENT' | 'RECURRING' | 'UNPAID' | 'PAID'
 
 export default function BillsPage() {
   const { user, userProfile } = useAuth()
+  const { toast } = useToast()
 
   const [bills, setBills] = useState<RecurringBill[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -347,8 +349,10 @@ export default function BillsPage() {
 
       if (editingBill) {
         await recurringService.update(user.uid, editingBill.id, payload)
+        toast.success(`Tagihan "${formName}" berhasil diperbarui!`)
       } else {
         await recurringService.create(user.uid, payload)
+        toast.success(`Tagihan "${formName}" berhasil dibuat!`)
       }
 
       setIsModalOpen(false)
@@ -357,7 +361,9 @@ export default function BillsPage() {
     } catch (err: unknown) {
       console.error('[bills] Error saving bill:', err)
       const errObj = err as { message?: string }
-      setFormError(errObj.message || 'Gagal menyimpan tagihan')
+      const errMsg = errObj.message || 'Gagal menyimpan tagihan'
+      setFormError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -382,12 +388,15 @@ export default function BillsPage() {
         selectedWallet?.name
       )
 
-      setPaySuccessMsg(`Pembayaran "${billToPay.name}" berhasil dicatat & saldo terpotong!`)
+      const msg = `Pembayaran "${billToPay.name}" berhasil dicatat & saldo terpotong!`
+      setPaySuccessMsg(msg)
+      toast.success(msg)
       setBillToPay(null)
       setRefreshTrigger((p) => p + 1)
       setTimeout(() => setPaySuccessMsg(null), 3500)
     } catch (err) {
       console.error('[bills] Error paying bill:', err)
+      toast.error('Gagal memproses pembayaran tagihan.')
     } finally {
       setIsPayingBill(false)
     }
@@ -398,12 +407,17 @@ export default function BillsPage() {
     if (!user?.uid || !billToDelete) return
     setIsDeletingBill(true)
 
+    const targetBill = bills.find((b) => b.id === billToDelete)
+    const billName = targetBill ? `Tagihan "${targetBill.name}"` : 'Tagihan'
+
     try {
       await recurringService.delete(user.uid, billToDelete)
+      toast.success(`${billName} berhasil dihapus!`)
       setBillToDelete(null)
       setRefreshTrigger((p) => p + 1)
     } catch (err) {
       console.error('[bills] Error deleting bill:', err)
+      toast.error('Gagal menghapus tagihan.')
     } finally {
       setIsDeletingBill(false)
     }

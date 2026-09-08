@@ -8,12 +8,14 @@ import { Input } from '@/components/atoms/Input'
 import { Button } from '@/components/atoms/Button'
 import { registerWithEmail, signInWithGoogle } from '@/lib/auth/firebase-auth'
 import { initSession } from '@/lib/auth/session'
+import { useToast } from '@/context/ToastContext'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth.schema'
 import { GoogleIcon } from '@/components/atoms/GoogleIcon'
 import { User, Mail, Lock, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react'
 
 export function RegisterForm() {
   const router = useRouter()
+  const { toast } = useToast()
   const [formData, setFormData] = useState<RegisterInput>({
     name: '',
     email: '',
@@ -53,17 +55,19 @@ export function RegisterForm() {
       const user = await registerWithEmail(formData.name, formData.email, formData.password)
       // Initialize 7-day session
       initSession(user.uid)
+      toast.success('Pendaftaran akun berhasil! Selamat datang di SaveMe.')
       router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[auth] Register error:', err)
       const firebaseError = err as { code?: string; message?: string }
+      let msg = firebaseError.message || 'Gagal mendaftar. Silakan coba lagi.'
       if (firebaseError.code === 'auth/email-already-in-use') {
-        setServerError('Email ini sudah terdaftar. Silakan gunakan email lain atau masuk.')
+        msg = 'Email ini sudah terdaftar. Silakan gunakan email lain atau masuk.'
       } else if (firebaseError.code === 'auth/weak-password') {
-        setServerError('Kata sandi terlalu lemah. Gunakan minimal 6 karakter.')
-      } else {
-        setServerError(firebaseError.message || 'Gagal mendaftar. Silakan coba lagi.')
+        msg = 'Kata sandi terlalu lemah. Gunakan minimal 6 karakter.'
       }
+      setServerError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -75,6 +79,7 @@ export function RegisterForm() {
     try {
       const { user } = await signInWithGoogle()
       initSession(user.uid)
+      toast.success('Berhasil masuk dengan akun Google!')
       router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[auth] Google sign-in error:', err)
@@ -85,13 +90,16 @@ export function RegisterForm() {
       ) {
         return
       }
+      let msg = firebaseError.message || 'Gagal masuk dengan Google. Silakan coba lagi.'
       if (firebaseError.code === 'auth/popup-blocked') {
-        setServerError('Pop-up Google diblokir browser. Harap izinkan pop-up untuk situs ini.')
+        msg = 'Pop-up Google diblokir browser. Harap izinkan pop-up untuk situs ini.'
       } else if (firebaseError.code === 'auth/network-request-failed') {
-        setServerError('Gagal terhubung ke Google. Periksa koneksi internet Anda.')
-      } else {
-        setServerError(firebaseError.message || 'Gagal masuk dengan Google. Silakan coba lagi.')
+        msg = 'Gagal terhubung ke Google. Periksa koneksi internet Anda.'
+      } else if (firebaseError.code === 'auth/unauthorized-domain') {
+        msg = 'Domain deployment ini belum didaftarkan di Firebase Console. Buka Firebase Authentication > Settings > Authorized Domains dan tambahkan domain Vercel Anda.'
       }
+      setServerError(msg)
+      toast.error(msg, { duration: 6000 })
     } finally {
       setGoogleLoading(false)
     }

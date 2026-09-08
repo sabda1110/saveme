@@ -140,3 +140,13 @@ html:not(.dark) {
 .dark {
   color-scheme: dark;
 }
+
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+

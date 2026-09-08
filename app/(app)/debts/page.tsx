@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { debtService } from '@/lib/services/debt.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { Badge } from '@/components/atoms/Badge'
@@ -39,6 +40,7 @@ import { cn } from '@/lib/utils/cn'
 
 export default function DebtsPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
 
   // Data States
   const [debts, setDebts] = useState<Debt[]>([])
@@ -243,12 +245,16 @@ export default function DebtsPage() {
     e.preventDefault()
     if (!user?.uid) return
     if (!formPersonName.trim()) {
-      setFeedback({ type: 'error', message: 'Nama peminjam / pihak terkait wajib diisi' })
+      const err = 'Nama peminjam / pihak terkait wajib diisi'
+      setFeedback({ type: 'error', message: err })
+      toast.error(err)
       return
     }
     const amountNum = Number(formAmount)
     if (!amountNum || amountNum <= 0) {
-      setFeedback({ type: 'error', message: 'Nominal pinjaman harus lebih besar dari Rp 0' })
+      const err = 'Nominal pinjaman harus lebih besar dari Rp 0'
+      setFeedback({ type: 'error', message: err })
+      toast.error(err)
       return
     }
 
@@ -271,15 +277,19 @@ export default function DebtsPage() {
         notes: formNotes,
       })
 
+      const successMsg = formType === 'LENT' ? 'Catatan piutang berhasil disimpan!' : 'Catatan hutang berhasil disimpan!'
       setIsCreateModalOpen(false)
       setFeedback({
         type: 'success',
-        message: formType === 'LENT' ? 'Catatan piutang berhasil disimpan!' : 'Catatan hutang berhasil disimpan!',
+        message: successMsg,
       })
+      toast.success(successMsg)
       await loadData()
     } catch (err) {
       console.error('[DebtsPage] Error creating debt:', err)
-      setFeedback({ type: 'error', message: 'Gagal membuat catatan pinjaman' })
+      const errMsg = 'Gagal membuat catatan pinjaman'
+      setFeedback({ type: 'error', message: errMsg })
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -301,12 +311,16 @@ export default function DebtsPage() {
         notes: formNotes,
       })
 
+      const successMsg = 'Perubahan data pinjaman berhasil disimpan!'
       setIsEditModalOpen(false)
-      setFeedback({ type: 'success', message: 'Perubahan data pinjaman berhasil disimpan!' })
+      setFeedback({ type: 'success', message: successMsg })
+      toast.success(successMsg)
       await loadData()
     } catch (err) {
       console.error('[DebtsPage] Error updating debt:', err)
-      setFeedback({ type: 'error', message: 'Gagal memperbarui catatan pinjaman' })
+      const errMsg = 'Gagal memperbarui catatan pinjaman'
+      setFeedback({ type: 'error', message: errMsg })
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -319,7 +333,9 @@ export default function DebtsPage() {
 
     const amountNum = Number(repayAmount)
     if (!amountNum || amountNum <= 0) {
-      setFeedback({ type: 'error', message: 'Nominal pembayaran harus lebih besar dari Rp 0' })
+      const err = 'Nominal pembayaran harus lebih besar dari Rp 0'
+      setFeedback({ type: 'error', message: err })
+      toast.error(err)
       return
     }
 
@@ -344,15 +360,19 @@ export default function DebtsPage() {
         })
       }
 
+      const successMsg = newlyPaid ? '🎉 Selamat! Pinjaman telah lunas seluruhnya!' : 'Pembayaran cicilan berhasil dicatat!'
       setIsRepayModalOpen(false)
       setFeedback({
         type: 'success',
-        message: newlyPaid ? '🎉 Selamat! Pinjaman telah lunas seluruhnya!' : 'Pembayaran cicilan berhasil dicatat!',
+        message: successMsg,
       })
+      toast.success(successMsg)
       await loadData()
     } catch (err) {
       console.error('[DebtsPage] Error recording repayment:', err)
-      setFeedback({ type: 'error', message: 'Gagal mencatat pembayaran cicilan' })
+      const errMsg = 'Gagal mencatat pembayaran cicilan'
+      setFeedback({ type: 'error', message: errMsg })
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -365,7 +385,9 @@ export default function DebtsPage() {
 
     const amountNum = Number(addLoanAmount)
     if (!amountNum || amountNum <= 0) {
-      setFeedback({ type: 'error', message: 'Nominal pinjaman tambahan harus lebih besar dari Rp 0' })
+      const err = 'Nominal pinjaman tambahan harus lebih besar dari Rp 0'
+      setFeedback({ type: 'error', message: err })
+      toast.error(err)
       return
     }
 
@@ -382,18 +404,23 @@ export default function DebtsPage() {
         affectWalletBalance: addLoanAffectWallet,
       })
 
+      const successMsg =
+        selectedDebt.type === 'LENT'
+          ? `Pinjaman tambahan untuk ${selectedDebt.personName} berhasil dicatat!`
+          : `Penambahan hutang ke ${selectedDebt.personName} berhasil dicatat!`
+
       setIsAddLoanModalOpen(false)
       setFeedback({
         type: 'success',
-        message:
-          selectedDebt.type === 'LENT'
-            ? `Pinjaman tambahan untuk ${selectedDebt.personName} berhasil dicatat!`
-            : `Penambahan hutang ke ${selectedDebt.personName} berhasil dicatat!`,
+        message: successMsg,
       })
+      toast.success(successMsg)
       await loadData()
     } catch (err) {
       console.error('[DebtsPage] Error adding loan:', err)
-      setFeedback({ type: 'error', message: 'Gagal menambahkan pinjaman' })
+      const errMsg = 'Gagal menambahkan pinjaman'
+      setFeedback({ type: 'error', message: errMsg })
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
@@ -407,11 +434,15 @@ export default function DebtsPage() {
     try {
       await debtService.delete(user.uid, debtToDelete.id)
       setDebtToDelete(null)
-      setFeedback({ type: 'success', message: 'Catatan pinjaman berhasil dihapus' })
+      const successMsg = 'Catatan pinjaman berhasil dihapus'
+      setFeedback({ type: 'success', message: successMsg })
+      toast.success(successMsg)
       await loadData()
     } catch (err) {
       console.error('[DebtsPage] Error deleting debt:', err)
-      setFeedback({ type: 'error', message: 'Gagal menghapus catatan pinjaman' })
+      const errMsg = 'Gagal menghapus catatan pinjaman'
+      setFeedback({ type: 'error', message: errMsg })
+      toast.error(errMsg)
     } finally {
       setSubmitting(false)
     }
