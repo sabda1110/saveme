@@ -140,10 +140,6 @@ export default function TemplatesPage() {
 
       await transactionService.create(user.uid, payload)
 
-      if (selectedWallet) {
-        await walletService.adjustWalletBalance(user.uid, selectedWallet.id, -numAmount)
-      }
-
       setIsTxModalOpen(false)
       setSelectedTemplateForTx(null)
       setRefreshTrigger((p) => p + 1)

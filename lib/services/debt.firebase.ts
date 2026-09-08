@@ -115,31 +115,39 @@ export const debtService = {
         if (data.type === 'LENT') {
           // Money left user's wallet to lend to someone
           await walletService.adjustWalletBalance(userId, data.walletId, -totalAmount)
-          await transactionService.create(userId, {
-            type: 'EXPENSE',
-            amount: totalAmount,
-            categoryId: 'pinjaman-diberikan',
-            categoryName: 'Peminjaman Uang / Piutang',
-            categoryIcon: '🤝',
-            description: `Pinjaman diberikan ke ${data.personName.trim()}${data.notes ? ` (${data.notes})` : ''}`,
-            transactionDate: data.startDate,
-            walletId: data.walletId,
-            walletName: data.walletName,
-          })
+          await transactionService.create(
+            userId,
+            {
+              type: 'EXPENSE',
+              amount: totalAmount,
+              categoryId: 'pinjaman-diberikan',
+              categoryName: 'Peminjaman Uang / Piutang',
+              categoryIcon: '🤝',
+              description: `Pinjaman diberikan ke ${data.personName.trim()}${data.notes ? ` (${data.notes})` : ''}`,
+              transactionDate: data.startDate,
+              walletId: data.walletId,
+              walletName: data.walletName,
+            },
+            { skipWalletAdjustment: true }
+          )
         } else {
           // User borrowed money from someone into user's wallet
           await walletService.adjustWalletBalance(userId, data.walletId, totalAmount)
-          await transactionService.create(userId, {
-            type: 'INCOME',
-            amount: totalAmount,
-            categoryId: 'pinjaman-diterima',
-            categoryName: 'Peminjaman Uang / Hutang',
-            categoryIcon: '📥',
-            description: `Pinjaman diterima dari ${data.personName.trim()}${data.notes ? ` (${data.notes})` : ''}`,
-            transactionDate: data.startDate,
-            walletId: data.walletId,
-            walletName: data.walletName,
-          })
+          await transactionService.create(
+            userId,
+            {
+              type: 'INCOME',
+              amount: totalAmount,
+              categoryId: 'pinjaman-diterima',
+              categoryName: 'Peminjaman Uang / Hutang',
+              categoryIcon: '📥',
+              description: `Pinjaman diterima dari ${data.personName.trim()}${data.notes ? ` (${data.notes})` : ''}`,
+              transactionDate: data.startDate,
+              walletId: data.walletId,
+              walletName: data.walletName,
+            },
+            { skipWalletAdjustment: true }
+          )
         }
       } catch (syncErr) {
         console.error('[debtService] Warning: Failed to sync wallet transaction:', syncErr)
@@ -217,31 +225,39 @@ export const debtService = {
         if (debtData.type === 'LENT') {
           // Money returned to user's wallet (INCOME)
           await walletService.adjustWalletBalance(userId, repayment.walletId, repaymentAmount)
-          await transactionService.create(userId, {
-            type: 'INCOME',
-            amount: repaymentAmount,
-            categoryId: 'pelunasan-piutang',
-            categoryName: 'Pelunasan Piutang',
-            categoryIcon: '💰',
-            description: `Penerimaan cicilan/pelunasan dari ${debtData.personName}${repayment.notes ? ` (${repayment.notes})` : ''}`,
-            transactionDate: newRepayment.repaymentDate,
-            walletId: repayment.walletId,
-            walletName: repayment.walletName,
-          })
+          await transactionService.create(
+            userId,
+            {
+              type: 'INCOME',
+              amount: repaymentAmount,
+              categoryId: 'pelunasan-piutang',
+              categoryName: 'Pelunasan Piutang',
+              categoryIcon: '💰',
+              description: `Penerimaan cicilan/pelunasan dari ${debtData.personName}${repayment.notes ? ` (${repayment.notes})` : ''}`,
+              transactionDate: newRepayment.repaymentDate,
+              walletId: repayment.walletId,
+              walletName: repayment.walletName,
+            },
+            { skipWalletAdjustment: true }
+          )
         } else {
           // User paid off debt from user's wallet (EXPENSE)
           await walletService.adjustWalletBalance(userId, repayment.walletId, -repaymentAmount)
-          await transactionService.create(userId, {
-            type: 'EXPENSE',
-            amount: repaymentAmount,
-            categoryId: 'pelunasan-hutang',
-            categoryName: 'Pelunasan Hutang',
-            categoryIcon: '💸',
-            description: `Pembayaran cicilan/pelunasan ke ${debtData.personName}${repayment.notes ? ` (${repayment.notes})` : ''}`,
-            transactionDate: newRepayment.repaymentDate,
-            walletId: repayment.walletId,
-            walletName: repayment.walletName,
-          })
+          await transactionService.create(
+            userId,
+            {
+              type: 'EXPENSE',
+              amount: repaymentAmount,
+              categoryId: 'pelunasan-hutang',
+              categoryName: 'Pelunasan Hutang',
+              categoryIcon: '💸',
+              description: `Pembayaran cicilan/pelunasan ke ${debtData.personName}${repayment.notes ? ` (${repayment.notes})` : ''}`,
+              transactionDate: newRepayment.repaymentDate,
+              walletId: repayment.walletId,
+              walletName: repayment.walletName,
+            },
+            { skipWalletAdjustment: true }
+          )
         }
       } catch (syncErr) {
         console.error('[debtService] Warning: Failed to sync wallet repayment:', syncErr)
@@ -322,31 +338,39 @@ export const debtService = {
         if (debtData.type === 'LENT') {
           // Additional money lent out (EXPENSE)
           await walletService.adjustWalletBalance(userId, data.walletId, -loanAmount)
-          await transactionService.create(userId, {
-            type: 'EXPENSE',
-            amount: loanAmount,
-            categoryId: 'pinjaman-diberikan',
-            categoryName: 'Peminjaman Uang / Piutang',
-            categoryIcon: '🤝',
-            description: `Tambahan pinjaman ke ${debtData.personName}${data.notes ? ` (${data.notes})` : ''}`,
-            transactionDate: newAddition.additionDate,
-            walletId: data.walletId,
-            walletName: data.walletName,
-          })
+          await transactionService.create(
+            userId,
+            {
+              type: 'EXPENSE',
+              amount: loanAmount,
+              categoryId: 'pinjaman-diberikan',
+              categoryName: 'Peminjaman Uang / Piutang',
+              categoryIcon: '🤝',
+              description: `Tambahan pinjaman ke ${debtData.personName}${data.notes ? ` (${data.notes})` : ''}`,
+              transactionDate: newAddition.additionDate,
+              walletId: data.walletId,
+              walletName: data.walletName,
+            },
+            { skipWalletAdjustment: true }
+          )
         } else {
           // Additional money borrowed in (INCOME)
           await walletService.adjustWalletBalance(userId, data.walletId, loanAmount)
-          await transactionService.create(userId, {
-            type: 'INCOME',
-            amount: loanAmount,
-            categoryId: 'pinjaman-diterima',
-            categoryName: 'Peminjaman Uang / Hutang',
-            categoryIcon: '📥',
-            description: `Tambahan pinjaman dari ${debtData.personName}${data.notes ? ` (${data.notes})` : ''}`,
-            transactionDate: newAddition.additionDate,
-            walletId: data.walletId,
-            walletName: data.walletName,
-          })
+          await transactionService.create(
+            userId,
+            {
+              type: 'INCOME',
+              amount: loanAmount,
+              categoryId: 'pinjaman-diterima',
+              categoryName: 'Peminjaman Uang / Hutang',
+              categoryIcon: '📥',
+              description: `Tambahan pinjaman dari ${debtData.personName}${data.notes ? ` (${data.notes})` : ''}`,
+              transactionDate: newAddition.additionDate,
+              walletId: data.walletId,
+              walletName: data.walletName,
+            },
+            { skipWalletAdjustment: true }
+          )
         }
       } catch (syncErr) {
         console.error('[debtService] Warning: Failed to sync wallet addition:', syncErr)

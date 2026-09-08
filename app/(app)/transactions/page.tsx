@@ -126,7 +126,8 @@ export default function TransactionsPage() {
             setFormCategoryId(cats[0].id)
           }
           if (userWallets.length > 0 && !formWalletId) {
-            setFormWalletId(userWallets[0].id)
+            const firstUnlocked = userWallets.find((w) => !w.isLocked) || userWallets[0]
+            setFormWalletId(firstUnlocked.id)
           }
         }
       } catch (error) {
@@ -225,6 +226,10 @@ export default function TransactionsPage() {
     setFormDate(dateStr)
     setIsSavingsDeposit(false)
     setTargetGoalId('')
+    if (!formWalletId) {
+      const defaultWallet = wallets.find((w) => !w.isLocked) || wallets[0]
+      if (defaultWallet) setFormWalletId(defaultWallet.id)
+    }
     setFormError(null)
     setIsAddModalOpen(true)
   }
@@ -248,6 +253,11 @@ export default function TransactionsPage() {
     )
     if (matchedCategory) {
       setFormCategoryId(matchedCategory.id)
+    }
+
+    if (!formWalletId) {
+      const defaultWallet = wallets.find((w) => !w.isLocked) || wallets[0]
+      if (defaultWallet) setFormWalletId(defaultWallet.id)
     }
 
     setFormError(null)
@@ -341,7 +351,7 @@ export default function TransactionsPage() {
       type: 'BOTH' as const,
     }
 
-    const selectedWallet = wallets.find((w) => w.id === formWalletId)
+    const selectedWallet = wallets.find((w) => w.id === formWalletId) || wallets.find((w) => !w.isLocked) || wallets[0]
 
     if (formType === 'EXPENSE' && selectedWallet?.isLocked) {
       setFormError('Kantong simpanan terkunci tidak dapat digunakan untuk pengeluaran')
@@ -394,12 +404,6 @@ export default function TransactionsPage() {
           walletName: selectedWallet?.name,
         }
         await transactionService.create(user.uid, payload)
-
-        // Adjust wallet balance if wallet is selected
-        if (selectedWallet) {
-          const delta = formType === 'INCOME' ? numAmount : -numAmount
-          await walletService.adjustWalletBalance(user.uid, selectedWallet.id, delta)
-        }
 
         setIsAddModalOpen(false)
         setOverbudgetWarning({ isOpen: false, amount: 0, limit: 0, excess: 0 })
@@ -522,6 +526,10 @@ export default function TransactionsPage() {
               setFormAmount('')
               setFormDescription('')
               setFormDate(new Date().toISOString().split('T')[0])
+              if (!formWalletId) {
+                const defaultWallet = wallets.find((w) => !w.isLocked) || wallets[0]
+                if (defaultWallet) setFormWalletId(defaultWallet.id)
+              }
               setIsAddModalOpen(true)
             }}
             className="text-xs sm:text-sm px-3 sm:px-4 ml-auto sm:ml-0"

@@ -198,16 +198,7 @@ export const recurringService = {
       walletName: targetWalletName,
     })
 
-    // 2. Debit wallet balance if walletId is present
-    if (targetWalletId) {
-      try {
-        await walletService.adjustWalletBalance(userId, targetWalletId, -bill.amount)
-      } catch (err) {
-        console.warn(`[recurringService] Failed to deduct wallet ${targetWalletId}:`, err)
-      }
-    }
-
-    // 3. Update bill status & tenor
+    // 2. Update bill status & tenor
     const updatePayload: { lastProcessedMonth: string; paidTenor?: number } = {
       lastProcessedMonth: currentMonthStr,
     }

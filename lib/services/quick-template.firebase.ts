@@ -153,11 +153,5 @@ export const quickTemplateService = {
       walletId: selectedWallet?.id || template.walletId,
       walletName: selectedWallet?.name || template.walletName,
     })
-
-    // 2. Adjust wallet balance if wallet is specified
-    const targetWalletId = selectedWallet?.id || template.walletId
-    if (targetWalletId) {
-      await walletService.adjustWalletBalance(userId, targetWalletId, -template.amount)
-    }
   },
 }

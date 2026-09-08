@@ -72,17 +72,21 @@ export const walletService = {
       // Record initial transaction linked to this wallet
       if (initialBalance > 0) {
         const todayStr = new Date().toISOString().split('T')[0]
-        await transactionService.create(userId, {
-          type: 'INCOME',
-          amount: initialBalance,
-          categoryId: 'initial-balance',
-          categoryName: 'Saldo Awal / Tabungan',
-          categoryIcon: '💰',
-          description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
-          transactionDate: todayStr,
-          walletId: primaryCashWallet.id,
-          walletName: primaryCashWallet.name,
-        })
+        await transactionService.create(
+          userId,
+          {
+            type: 'INCOME',
+            amount: initialBalance,
+            categoryId: 'initial-balance',
+            categoryName: 'Saldo Awal / Tabungan',
+            categoryIcon: '💰',
+            description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
+            transactionDate: todayStr,
+            walletId: primaryCashWallet.id,
+            walletName: primaryCashWallet.name,
+          },
+          { skipWalletAdjustment: true }
+        )
       }
 
       return primaryCashWallet
@@ -99,17 +103,21 @@ export const walletService = {
 
       if (initialBalance > 0) {
         const todayStr = new Date().toISOString().split('T')[0]
-        await transactionService.create(userId, {
-          type: 'INCOME',
-          amount: initialBalance,
-          categoryId: 'initial-balance',
-          categoryName: 'Saldo Awal / Tabungan',
-          categoryIcon: '💰',
-          description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
-          transactionDate: todayStr,
-          walletId: newWallet.id,
-          walletName: newWallet.name,
-        })
+        await transactionService.create(
+          userId,
+          {
+            type: 'INCOME',
+            amount: initialBalance,
+            categoryId: 'initial-balance',
+            categoryName: 'Saldo Awal / Tabungan',
+            categoryIcon: '💰',
+            description: 'Modal / Saldo Awal Saat Mendaftar SaveMe',
+            transactionDate: todayStr,
+            walletId: newWallet.id,
+            walletName: newWallet.name,
+          },
+          { skipWalletAdjustment: true }
+        )
       }
 
       return newWallet
@@ -145,17 +153,21 @@ export const walletService = {
     // If wallet was initialized with a starting balance, record an initial balance transaction
     if (numBalance > 0) {
       const todayStr = new Date().toISOString().split('T')[0]
-      await transactionService.create(userId, {
-        type: 'INCOME',
-        amount: numBalance,
-        categoryId: 'initial-balance',
-        categoryName: 'Saldo Awal / Tabungan',
-        categoryIcon: data.icon || '💰',
-        description: `Saldo Awal Kantong ${data.name.trim()}`,
-        transactionDate: todayStr,
-        walletId: docRef.id,
-        walletName: data.name.trim(),
-      })
+      await transactionService.create(
+        userId,
+        {
+          type: 'INCOME',
+          amount: numBalance,
+          categoryId: 'initial-balance',
+          categoryName: 'Saldo Awal / Tabungan',
+          categoryIcon: data.icon || '💰',
+          description: `Saldo Awal Kantong ${data.name.trim()}`,
+          transactionDate: todayStr,
+          walletId: docRef.id,
+          walletName: data.name.trim(),
+        },
+        { skipWalletAdjustment: true }
+      )
     }
 
     return {
@@ -279,29 +291,37 @@ export const walletService = {
 
     await Promise.all([
       // Outflow record
-      transactionService.create(userId, {
-        type: 'EXPENSE',
-        amount: payload.amount,
-        categoryId: 'transfer',
-        categoryName: 'Transfer Antar Kantong',
-        categoryIcon: '🔄',
-        description: `Transfer ke ${toData.name}${notesText}`,
-        transactionDate: todayStr,
-        walletId: payload.fromWalletId,
-        walletName: fromData.name,
-      }),
+      transactionService.create(
+        userId,
+        {
+          type: 'EXPENSE',
+          amount: payload.amount,
+          categoryId: 'transfer',
+          categoryName: 'Transfer Antar Kantong',
+          categoryIcon: '🔄',
+          description: `Transfer ke ${toData.name}${notesText}`,
+          transactionDate: todayStr,
+          walletId: payload.fromWalletId,
+          walletName: fromData.name,
+        },
+        { skipWalletAdjustment: true }
+      ),
       // Inflow record
-      transactionService.create(userId, {
-        type: 'INCOME',
-        amount: payload.amount,
-        categoryId: 'transfer',
-        categoryName: 'Transfer Antar Kantong',
-        categoryIcon: '🔄',
-        description: `Terima dari ${fromData.name}${notesText}`,
-        transactionDate: todayStr,
-        walletId: payload.toWalletId,
-        walletName: toData.name,
-      }),
+      transactionService.create(
+        userId,
+        {
+          type: 'INCOME',
+          amount: payload.amount,
+          categoryId: 'transfer',
+          categoryName: 'Transfer Antar Kantong',
+          categoryIcon: '🔄',
+          description: `Terima dari ${fromData.name}${notesText}`,
+          transactionDate: todayStr,
+          walletId: payload.toWalletId,
+          walletName: toData.name,
+        },
+        { skipWalletAdjustment: true }
+      ),
     ])
   },
 

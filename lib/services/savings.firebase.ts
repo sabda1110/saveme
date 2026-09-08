@@ -59,17 +59,21 @@ export const savingsService = {
         }
 
         const todayStr = new Date().toISOString().split('T')[0]
-        await transactionService.create(userId, {
-          type: 'EXPENSE',
-          amount: initialCurrent,
-          categoryId: 'savings_deposit',
-          categoryName: 'Alokasi Tabungan',
-          categoryIcon: data.icon || '🎯',
-          description: `[Celengan] Saldo Awal: ${data.name.trim()}`,
-          transactionDate: todayStr,
-          walletId,
-          walletName,
-        })
+        await transactionService.create(
+          userId,
+          {
+            type: 'EXPENSE',
+            amount: initialCurrent,
+            categoryId: 'savings_deposit',
+            categoryName: 'Alokasi Tabungan',
+            categoryIcon: data.icon || '🎯',
+            description: `[Celengan] Saldo Awal: ${data.name.trim()}`,
+            transactionDate: todayStr,
+            walletId,
+            walletName,
+          },
+          { skipWalletAdjustment: true }
+        )
       } catch (err) {
         console.error('[savingsService] Error recording initial deposit tx:', err)
       }
@@ -186,17 +190,21 @@ export const savingsService = {
 
     // 3. Record Transaction
     const todayStr = new Date().toISOString().split('T')[0]
-    await transactionService.create(userId, {
-      type: 'EXPENSE',
-      amount: Number(amount),
-      categoryId: 'savings_deposit',
-      categoryName: 'Alokasi Tabungan',
-      categoryIcon: existing.icon || '🎯',
-      description: `[Celengan] Setor ke: ${existing.name}`,
-      transactionDate: todayStr,
-      walletId,
-      walletName,
-    })
+    await transactionService.create(
+      userId,
+      {
+        type: 'EXPENSE',
+        amount: Number(amount),
+        categoryId: 'savings_deposit',
+        categoryName: 'Alokasi Tabungan',
+        categoryIcon: existing.icon || '🎯',
+        description: `[Celengan] Setor ke: ${existing.name}`,
+        transactionDate: todayStr,
+        walletId,
+        walletName,
+      },
+      { skipWalletAdjustment: true }
+    )
 
     return newCurrent
   },
@@ -247,17 +255,21 @@ export const savingsService = {
 
     // 3. Record Transaction
     const todayStr = new Date().toISOString().split('T')[0]
-    await transactionService.create(userId, {
-      type: 'INCOME',
-      amount: Number(amount),
-      categoryId: 'savings_withdraw',
-      categoryName: 'Tarik Tabungan',
-      categoryIcon: '💵',
-      description: `[Celengan] Tarik dari: ${existing.name}`,
-      transactionDate: todayStr,
-      walletId,
-      walletName,
-    })
+    await transactionService.create(
+      userId,
+      {
+        type: 'INCOME',
+        amount: Number(amount),
+        categoryId: 'savings_withdraw',
+        categoryName: 'Tarik Tabungan',
+        categoryIcon: '💵',
+        description: `[Celengan] Tarik dari: ${existing.name}`,
+        transactionDate: todayStr,
+        walletId,
+        walletName,
+      },
+      { skipWalletAdjustment: true }
+    )
 
     return newCurrent
   },

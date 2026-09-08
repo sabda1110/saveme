@@ -60,9 +60,6 @@ export const salaryAllocationService = {
       walletName: input.primaryWalletName,
     })
 
-    // Increase Primary Wallet balance by totalSalary
-    await walletService.adjustWalletBalance(userId, input.primaryWalletId, input.totalSalary)
-
     // 2. Transfer Pay Yourself First portion to Locked / Emergency Savings Wallet
     let finalLockedWalletId = input.lockedWalletId
     let finalLockedWalletName = input.lockedWalletName

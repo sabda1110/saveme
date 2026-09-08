@@ -47,8 +47,16 @@ export interface BulkDeleteResult {
   adjustedSavingsGoalsCount: number
 }
 
+export interface CreateTransactionOptions {
+  skipWalletAdjustment?: boolean
+}
+
 export const transactionService = {
-  async create(userId: string, data: CreateTransactionDto): Promise<Transaction> {
+  async create(
+    userId: string,
+    data: CreateTransactionDto,
+    options?: CreateTransactionOptions
+  ): Promise<Transaction> {
     if (!userId) throw new Error('Unauthorized: User ID is required')
 
     const payload = {
@@ -60,6 +68,17 @@ export const transactionService = {
     }
 
     const docRef = await addDoc(collection(db, 'transactions'), payload)
+
+    // Automatically adjust wallet balance if walletId is specified and adjustment is not skipped
+    if (!options?.skipWalletAdjustment && data.walletId && Number(data.amount) > 0) {
+      try {
+        const delta = data.type === 'INCOME' ? Number(data.amount) : -Number(data.amount)
+        await walletService.adjustWalletBalance(userId, data.walletId, delta)
+      } catch (err) {
+        console.warn('[transactionService] Failed to adjust wallet balance upon transaction create:', err)
+      }
+    }
+
     return {
       id: docRef.id,
       ...payload,

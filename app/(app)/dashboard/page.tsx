@@ -186,7 +186,8 @@ export default function DashboardPage() {
             setCategoryId(categoryList[0].id)
           }
           if (walletsList.length > 0 && !walletId) {
-            setWalletId(walletsList[0].id)
+            const firstUnlocked = walletsList.find((w) => !w.isLocked) || walletsList[0]
+            setWalletId(firstUnlocked.id)
           }
         }
       } catch (err) {
@@ -402,7 +403,7 @@ export default function DashboardPage() {
     setSubmitting(true)
     try {
       const selectedCategory = categories.find((c) => c.id === categoryId)
-      const selectedWallet = wallets.find((w) => w.id === walletId)
+      const selectedWallet = wallets.find((w) => w.id === walletId) || wallets.find((w) => !w.isLocked) || wallets[0]
 
       const payload: CreateTransactionDto = {
         amount: numAmount,
@@ -410,7 +411,7 @@ export default function DashboardPage() {
         categoryId: categoryId || 'other',
         categoryName: selectedCategory?.name || 'Other',
         categoryIcon: selectedCategory?.icon || '📦',
-        walletId: walletId || wallets[0]?.id || '',
+        walletId: selectedWallet?.id || '',
         walletName: selectedWallet?.name || 'Dompet Utama',
         description: description.trim(),
         transactionDate: normalizeDateToYYYYMMDD(transactionDate),
@@ -437,6 +438,10 @@ export default function DashboardPage() {
       toast.warning('Silakan isi dompet terlebih dahulu melalui Onboarding!')
       setIsOnboardingModalOpen(true)
       return
+    }
+    if (!walletId) {
+      const defaultWallet = wallets.find((w) => !w.isLocked) || wallets[0]
+      if (defaultWallet) setWalletId(defaultWallet.id)
     }
     setIsModalOpen(true)
   }
