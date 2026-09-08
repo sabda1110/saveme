@@ -66,6 +66,56 @@ async function notifyGroupInvite({
   }
 }
 
+/**
+ * Trigger background and FCM push notification for group events (member joined, dissolved, vote request)
+ */
+async function notifyGroupEvent({
+  recipientUserIds,
+  eventType,
+  title,
+  body,
+  groupId,
+  groupName,
+  url,
+}: {
+  recipientUserIds: string[]
+  eventType:
+    | 'GROUP_INVITE'
+    | 'GROUP_MEMBER_JOINED'
+    | 'GROUP_DISSOLVED'
+    | 'GROUP_DISSOLUTION_REQUEST'
+    | 'GROUP_DISSOLUTION_REJECTED'
+  title: string
+  body: string
+  groupId: string
+  groupName?: string
+  url?: string
+}) {
+  if (!recipientUserIds || recipientUserIds.length === 0) return
+
+  try {
+    if (typeof window !== 'undefined') {
+      fetch('/api/notifications/send-group-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientUserIds,
+          eventType,
+          title,
+          body,
+          groupId,
+          groupName,
+          url: url || '/savings',
+        }),
+      }).catch((err) => {
+        console.warn('[groupSavingsService] Failed to call send-group-event API:', err)
+      })
+    }
+  } catch (err) {
+    console.warn('[groupSavingsService] notifyGroupEvent error:', err)
+  }
+}
+
 export interface VerifiedUserProfile {
   uid: string
   name: string
@@ -307,6 +357,47 @@ export const groupSavingsService = {
       status: response,
       respondedAt: serverTimestamp(),
     })
+
+    // If accepted, notify creator and other accepted members
+    if (response === 'ACCEPTED') {
+      try {
+        const groupSnap = await getDoc(doc(db, 'group_savings', data.groupId))
+        const groupName = groupSnap.exists() ? groupSnap.data().name : 'Celengan Bersama'
+        const memberDisplayName = data.displayName || 'Anggota baru'
+
+        // Fetch all active accepted members of this group
+        const otherMembersQ = query(
+          collection(db, 'group_savings_members'),
+          where('groupId', '==', data.groupId),
+          where('status', '==', 'ACCEPTED')
+        )
+        const otherMembersSnap = await getDocs(otherMembersQ)
+        const recipientUserIds = otherMembersSnap.docs
+          .map((d) => d.data().userId as string)
+          .filter((uId) => uId && uId !== userId)
+
+        // Ensure host is included if not already in list
+        if (groupSnap.exists() && groupSnap.data().createdBy && groupSnap.data().createdBy !== userId) {
+          if (!recipientUserIds.includes(groupSnap.data().createdBy)) {
+            recipientUserIds.push(groupSnap.data().createdBy)
+          }
+        }
+
+        if (recipientUserIds.length > 0) {
+          notifyGroupEvent({
+            recipientUserIds,
+            eventType: 'GROUP_MEMBER_JOINED',
+            title: `🎉 Anggota Bergabung: ${groupName}`,
+            body: `${memberDisplayName} telah menerima undangan dan bergabung ke Celengan Bersama "${groupName}"!`,
+            groupId: data.groupId,
+            groupName,
+            url: '/savings?tab=bersama',
+          })
+        }
+      } catch (err) {
+        console.warn('[groupSavingsService] Failed to notify members of accepted invite:', err)
+      }
+    }
   },
 
   // ── Get all groups where user is a member (ACCEPTED) ─────────────────────
@@ -497,6 +588,33 @@ export const groupSavingsService = {
         dissolvedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       })
+
+      // Notify all members of cancellation
+      try {
+        const groupName = groupSnap.data().name || 'Celengan Bersama'
+        const membersQ = query(
+          collection(db, 'group_savings_members'),
+          where('groupId', '==', groupId)
+        )
+        const membersSnap = await getDocs(membersQ)
+        const recipientUserIds = membersSnap.docs
+          .map((d) => d.data().userId as string)
+          .filter((uId) => uId && uId !== userId)
+
+        if (recipientUserIds.length > 0) {
+          notifyGroupEvent({
+            recipientUserIds,
+            eventType: 'GROUP_DISSOLVED',
+            title: `⚠️ Celengan Bersama Dibatalkan`,
+            body: `Celengan Bersama "${groupName}" telah dibatalkan oleh pembuat grup.`,
+            groupId,
+            groupName,
+            url: '/savings',
+          })
+        }
+      } catch (err) {
+        console.warn('[groupSavingsService] Failed to notify members of group deletion:', err)
+      }
     } else {
       // Non-creator leaves: mark their member record as REJECTED
       const memberQ = query(
@@ -576,6 +694,29 @@ export const groupSavingsService = {
       },
       updatedAt: serverTimestamp(),
     })
+
+    // Notify other members of dissolution request
+    try {
+      const groupName = groupSnap.data().name || 'Celengan Bersama'
+      const recipientUserIds = acceptedMembers
+        .map((m) => m.userId)
+        .filter((uId) => uId && uId !== userId)
+
+      if (recipientUserIds.length > 0) {
+        notifyGroupEvent({
+          recipientUserIds,
+          eventType: 'GROUP_DISSOLUTION_REQUEST',
+          title: `🗳️ Permintaan Pembubaran: ${groupName}`,
+          body: `${userDisplayName || 'Seorang anggota'} mengajukan pembubaran Celengan Bersama "${groupName}". Mohon berikan persetujuanmu di Dashboard.`,
+          groupId,
+          groupName,
+          url: '/dashboard',
+        })
+      }
+    } catch (err) {
+      console.warn('[groupSavingsService] Failed to notify members of dissolution request:', err)
+    }
+
     return false
   },
 
@@ -605,6 +746,35 @@ export const groupSavingsService = {
         [`dissolutionRequest.votes.${userId}`]: 'REJECTED',
         updatedAt: serverTimestamp(),
       })
+
+      // Notify members that dissolution was rejected
+      try {
+        const groupName = groupData.name || 'Celengan Bersama'
+        const membersQ = query(
+          collection(db, 'group_savings_members'),
+          where('groupId', '==', groupId),
+          where('status', '==', 'ACCEPTED')
+        )
+        const membersSnap = await getDocs(membersQ)
+        const recipientUserIds = membersSnap.docs
+          .map((d) => d.data().userId as string)
+          .filter((uId) => uId && uId !== userId)
+
+        if (recipientUserIds.length > 0) {
+          notifyGroupEvent({
+            recipientUserIds,
+            eventType: 'GROUP_DISSOLUTION_REJECTED',
+            title: `ℹ️ Pembubaran Celengan Ditolak`,
+            body: `Pengajuan pembubaran Celengan Bersama "${groupName}" telah ditolak oleh salah satu anggota. Celengan tetap aktif.`,
+            groupId,
+            groupName,
+            url: '/savings?tab=bersama',
+          })
+        }
+      } catch (err) {
+        console.warn('[groupSavingsService] Failed to notify members of dissolution rejection:', err)
+      }
+
       return { allApproved: false, rejected: true }
     }
 
@@ -636,6 +806,26 @@ export const groupSavingsService = {
         dissolutionDismissedBy: [], // reset so all members see the notice
         updatedAt: serverTimestamp(),
       })
+
+      // Notify all accepted members that group is officially dissolved
+      try {
+        const groupName = groupData.name || 'Celengan Bersama'
+        const recipientUserIds = acceptedMemberIds.filter((mId) => mId && mId !== userId)
+        if (recipientUserIds.length > 0) {
+          notifyGroupEvent({
+            recipientUserIds,
+            eventType: 'GROUP_DISSOLVED',
+            title: `⚠️ Celengan Bersama Resmi Dibubarkan`,
+            body: `Seluruh anggota telah menyetujui. Celengan Bersama "${groupName}" resmi dibubarkan. Cek rincian saldomu di Dashboard.`,
+            groupId,
+            groupName,
+            url: '/dashboard',
+          })
+        }
+      } catch (err) {
+        console.warn('[groupSavingsService] Failed to notify members of final dissolution:', err)
+      }
+
       return { allApproved: true, rejected: false }
     } else {
       // Vote recorded, still waiting for other members

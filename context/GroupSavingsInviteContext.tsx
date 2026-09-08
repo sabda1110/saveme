@@ -102,6 +102,92 @@ export const GroupSavingsInviteProvider: React.FC<{ children: React.ReactNode }>
       }
     )
 
+    // Real-time Firestore listener on user's incoming in-app notifications
+    let isNotifFirstLoad = true
+    const notifQ = query(
+      collection(db, 'notifications'),
+      where('userId', '==', user.uid),
+      where('isRead', '==', false)
+    )
+
+    const unsubscribeNotifs = onSnapshot(
+      notifQ,
+      (snapshot) => {
+        if (!isNotifFirstLoad) {
+          const addedChanges = snapshot.docChanges().filter((change) => change.type === 'added')
+          for (const change of addedChanges) {
+            const data = change.doc.data()
+            const type = data.type as string
+
+            // If it's a group event notification
+            if (
+              type === 'GROUP_MEMBER_JOINED' ||
+              type === 'GROUP_DISSOLVED' ||
+              type === 'GROUP_DISSOLUTION_REQUEST' ||
+              type === 'GROUP_DISSOLUTION_REJECTED'
+            ) {
+              const title = data.title || 'SaveMe'
+              const body = data.body || ''
+
+              // 1. Show toast if tab is visible
+              if (type === 'GROUP_MEMBER_JOINED') {
+                toast.success(body || title)
+              } else if (type === 'GROUP_DISSOLVED') {
+                toast.warning(body || title)
+              } else if (type === 'GROUP_DISSOLUTION_REQUEST') {
+                toast.info(body || title)
+              } else if (type === 'GROUP_DISSOLUTION_REJECTED') {
+                toast.info(body || title)
+              }
+
+              // 2. Dispatch global refresh event so Dashboard & Savings auto-fetch data
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('saveme:group-invites-updated'))
+              }
+
+              // 3. If tab is in background/minimized, trigger OS notification
+              if (
+                typeof document !== 'undefined' &&
+                document.visibilityState === 'hidden' &&
+                'Notification' in window &&
+                Notification.permission === 'granted'
+              ) {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.ready
+                    .then((reg) => {
+                      reg.showNotification(title, {
+                        body,
+                        icon: '/logo.svg',
+                        badge: '/logo.svg',
+                        tag: `group-${type.toLowerCase()}-${Date.now()}`,
+                        data: { url: data.data?.url || '/savings' },
+                      })
+                    })
+                    .catch(() => {
+                      try {
+                        new Notification(title, { body, icon: '/logo.svg' })
+                      } catch {
+                        // ignore
+                      }
+                    })
+                } else {
+                  try {
+                    new Notification(title, { body, icon: '/logo.svg' })
+                  } catch {
+                    // ignore
+                  }
+                }
+              }
+            }
+          }
+        }
+        isNotifFirstLoad = false
+      },
+      (err) => {
+        console.warn('[GroupSavingsInviteContext] Notification listener error:', err)
+      }
+    )
+
     // Listen for Service Worker background messages
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       if (
@@ -120,6 +206,7 @@ export const GroupSavingsInviteProvider: React.FC<{ children: React.ReactNode }>
 
     return () => {
       unsubscribe()
+      unsubscribeNotifs()
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
       }

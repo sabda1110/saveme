@@ -9,37 +9,52 @@ self.addEventListener('push', (event) => {
     const notification = payload.notification || {}
     const data = payload.data || {}
 
-    const isGroupInvite = data.type === 'GROUP_INVITE' || notification.type === 'GROUP_INVITE'
-    const defaultUrl = isGroupInvite ? '/savings' : '/daily'
+    const isGroupEvent =
+      data.type === 'GROUP_INVITE' ||
+      data.type === 'GROUP_MEMBER_JOINED' ||
+      data.type === 'GROUP_DISSOLVED' ||
+      data.type === 'GROUP_DISSOLUTION_REQUEST' ||
+      data.type === 'GROUP_DISSOLUTION_REJECTED' ||
+      notification.type === 'GROUP_INVITE'
+
+    const defaultUrl = isGroupEvent ? '/savings' : '/daily'
     const targetUrl = data.url || notification.click_action || defaultUrl
 
-    const title =
-      notification.title ||
-      (isGroupInvite
-        ? '📩 Undangan Celengan Bersama Baru!'
-        : 'SaveMe - Asisten Finansial')
+    let defaultTitle = 'SaveMe - Asisten Finansial'
+    let defaultBody = 'Cek jatah belanja harianmu hari ini!'
 
-    const body =
-      notification.body ||
-      (isGroupInvite
-        ? 'Kamu diajak menabung bersama! Buka aplikasi untuk merespon undangan.'
-        : 'Cek jatah belanja harianmu hari ini!')
+    if (data.type === 'GROUP_INVITE') {
+      defaultTitle = '📩 Undangan Celengan Bersama Baru!'
+      defaultBody = 'Kamu diajak menabung bersama! Buka aplikasi untuk merespon undangan.'
+    } else if (data.type === 'GROUP_MEMBER_JOINED') {
+      defaultTitle = '🎉 Anggota Baru Bergabung!'
+      defaultBody = 'Seseorang telah bergabung ke Celengan Bersama.'
+    } else if (data.type === 'GROUP_DISSOLVED') {
+      defaultTitle = '⚠️ Celengan Bersama Dibatalkan / Dibubarkan'
+      defaultBody = 'Celengan bersama telah dibatalkan atau dibubarkan.'
+    } else if (data.type === 'GROUP_DISSOLUTION_REQUEST') {
+      defaultTitle = '🗳️ Pengajuan Pembubaran Celengan'
+      defaultBody = 'Ada pengajuan pembubaran celengan bersama yang membutuhkan persetujuanmu.'
+    }
 
-    const tag = isGroupInvite
-      ? `group-invite-${data.groupId || Date.now()}`
+    const title = notification.title || defaultTitle
+    const body = notification.body || defaultBody
+
+    const tag = isGroupEvent
+      ? `group-${(data.type || 'event').toLowerCase()}-${data.groupId || Date.now()}`
       : (notification.tag || 'daily-spending-reminder')
 
     const options = {
       body,
       icon: notification.icon || '/logo.svg',
       badge: '/logo.svg',
-      vibrate: isGroupInvite ? [200, 100, 200, 100, 200] : [200, 100, 200],
+      vibrate: isGroupEvent ? [200, 100, 200, 100, 200] : [200, 100, 200],
       tag,
       renotify: true,
-      requireInteraction: isGroupInvite, // Keep invite notification prominent until user interacts
+      requireInteraction: isGroupEvent, // Keep group notification prominent until user interacts
       data: {
         url: targetUrl,
-        type: data.type || (isGroupInvite ? 'GROUP_INVITE' : 'GENERAL'),
+        type: data.type || (isGroupEvent ? 'GROUP_EVENT' : 'GENERAL'),
         groupId: data.groupId,
         dateOfArrival: Date.now(),
       },
