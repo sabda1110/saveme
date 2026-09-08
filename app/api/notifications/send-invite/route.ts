@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase/config'
+import { getAdminMessaging } from '@/lib/firebase/admin'
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export async function POST(req: NextRequest) {
@@ -71,39 +72,76 @@ export async function POST(req: NextRequest) {
 
     // 3. Dispatch FCM Push to recipient device token if configured
     let fcmDispatched = false
+    const adminMessaging = getAdminMessaging()
     const fcmServerKey =
       process.env.FIREBASE_SERVER_KEY || process.env.FIREBASE_MESSAGING_SERVER_KEY
 
-    if (recipientToken && fcmServerKey) {
-      try {
-        const fcmPayload = {
-          to: recipientToken,
-          notification: {
-            title,
-            body: messageBody,
-            icon: '/logo.svg',
-            click_action: targetUrl,
-          },
-          data: {
-            url: targetUrl,
-            type: 'GROUP_INVITE',
-            groupId: groupId || '',
-            timestamp: new Date().toISOString(),
-          },
+    if (recipientToken && !recipientToken.startsWith('web_token_')) {
+      if (adminMessaging) {
+        try {
+          await adminMessaging.send({
+            token: recipientToken,
+            notification: {
+              title,
+              body: messageBody,
+            },
+            webpush: {
+              headers: {
+                Urgency: 'high',
+                TTL: '86400',
+              },
+              notification: {
+                title,
+                body: messageBody,
+                icon: '/logo.svg',
+                badge: '/logo.svg',
+              },
+              fcmOptions: {
+                link: targetUrl,
+              },
+            },
+            data: {
+              url: targetUrl,
+              type: 'GROUP_INVITE',
+              groupId: String(groupId || ''),
+              timestamp: new Date().toISOString(),
+            },
+          })
+          fcmDispatched = true
+        } catch (err) {
+          console.warn('[send-invite] FCM HTTP v1 push error:', err)
         }
+      } else if (fcmServerKey) {
+        try {
+          const fcmPayload = {
+            to: recipientToken,
+            notification: {
+              title,
+              body: messageBody,
+              icon: '/logo.svg',
+              click_action: targetUrl,
+            },
+            data: {
+              url: targetUrl,
+              type: 'GROUP_INVITE',
+              groupId: groupId || '',
+              timestamp: new Date().toISOString(),
+            },
+          }
 
-        const res = await fetch('https://fcm.googleapis.com/fcm/send', {
-          method: 'POST',
-          headers: {
-            Authorization: `key=${fcmServerKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(fcmPayload),
-        })
+          const res = await fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+              Authorization: `key=${fcmServerKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(fcmPayload),
+          })
 
-        fcmDispatched = res.ok
-      } catch (err) {
-        console.warn('[send-invite] FCM direct push error:', err)
+          fcmDispatched = res.ok
+        } catch (err) {
+          console.warn('[send-invite] FCM direct push error:', err)
+        }
       }
     }
 

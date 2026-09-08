@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase/config'
+import { getAdminMessaging } from '@/lib/firebase/admin'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 
 /**
@@ -70,11 +71,63 @@ async function processDailyNotification({
 
   const targetUrl = '/daily'
 
-  // Send via Google FCM HTTP API if Server Key is configured
+  // Send via Firebase Admin FCM HTTP v1 (modern) or legacy FCM API (fallback)
+  const adminMessaging = getAdminMessaging()
   const fcmServerKey = process.env.FIREBASE_SERVER_KEY || process.env.FIREBASE_MESSAGING_SERVER_KEY
-  let fcmResult = null
+  let fcmResult: any = null
 
-  if (fcmServerKey) {
+  if (adminMessaging) {
+    try {
+      const baseMessage = {
+        notification: {
+          title,
+          body: messageBody,
+        },
+        webpush: {
+          headers: {
+            Urgency: 'high',
+            TTL: '86400',
+          },
+          notification: {
+            title,
+            body: messageBody,
+            icon: '/logo.svg',
+            badge: '/logo.svg',
+          },
+          fcmOptions: {
+            link: targetUrl,
+          },
+        },
+        data: {
+          url: targetUrl,
+          zoneCode,
+          timestamp: new Date().toISOString(),
+        },
+      }
+
+      if (token && !token.startsWith('web_token_')) {
+        fcmResult = await adminMessaging.send({
+          ...baseMessage,
+          token,
+        })
+      } else if (topic) {
+        const topicName = topic.replace(/^\/topics\//, '')
+        fcmResult = await adminMessaging.send({
+          ...baseMessage,
+          topic: topicName,
+        })
+      } else if (!token) {
+        const defaultTopic = `daily-reminder-${zoneCode.toLowerCase()}`
+        fcmResult = await adminMessaging.send({
+          ...baseMessage,
+          topic: defaultTopic,
+        })
+      }
+    } catch (adminErr) {
+      console.warn('[send-daily] Firebase Admin FCM push error:', adminErr)
+      fcmResult = { error: String(adminErr) }
+    }
+  } else if (fcmServerKey) {
     const fcmPayload: Record<string, unknown> = {
       notification: {
         title,

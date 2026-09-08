@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase/config'
+import { getAdminMessaging } from '@/lib/firebase/admin'
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export type GroupEventType =
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const adminMessaging = getAdminMessaging()
     const fcmServerKey =
       process.env.FIREBASE_SERVER_KEY || process.env.FIREBASE_MESSAGING_SERVER_KEY
 
@@ -76,39 +78,76 @@ export async function POST(req: NextRequest) {
             console.warn('[send-group-event] Failed to write in-app notification doc:', notifErr)
           }
 
-          // 3. Dispatch FCM Push if server key and token exist
+          // 3. Dispatch FCM Push via FCM HTTP v1 (firebase-admin) or legacy fallback
           let fcmDispatched = false
-          if (recipientToken && fcmServerKey) {
-            try {
-              const fcmPayload = {
-                to: recipientToken,
-                notification: {
-                  title,
-                  body: messageBody,
-                  icon: '/logo.svg',
-                  click_action: url,
-                },
-                data: {
-                  url,
-                  type: eventType,
-                  groupId,
-                  groupName,
-                  timestamp: new Date().toISOString(),
-                },
+          if (recipientToken && !recipientToken.startsWith('web_token_')) {
+            if (adminMessaging) {
+              try {
+                await adminMessaging.send({
+                  token: recipientToken,
+                  notification: {
+                    title,
+                    body: messageBody,
+                  },
+                  webpush: {
+                    headers: {
+                      Urgency: 'high',
+                      TTL: '86400',
+                    },
+                    notification: {
+                      title,
+                      body: messageBody,
+                      icon: '/logo.svg',
+                      badge: '/logo.svg',
+                    },
+                    fcmOptions: {
+                      link: url,
+                    },
+                  },
+                  data: {
+                    url,
+                    type: eventType,
+                    groupId: String(groupId),
+                    groupName: String(groupName),
+                    timestamp: new Date().toISOString(),
+                  },
+                })
+                fcmDispatched = true
+              } catch (fcmErr) {
+                console.warn('[send-group-event] FCM HTTP v1 push error for user:', recipientUserId, fcmErr)
               }
+            } else if (fcmServerKey) {
+              try {
+                const fcmPayload = {
+                  to: recipientToken,
+                  notification: {
+                    title,
+                    body: messageBody,
+                    icon: '/logo.svg',
+                    click_action: url,
+                  },
+                  data: {
+                    url,
+                    type: eventType,
+                    groupId,
+                    groupName,
+                    timestamp: new Date().toISOString(),
+                  },
+                }
 
-              const res = await fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
-                headers: {
-                  Authorization: `key=${fcmServerKey}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(fcmPayload),
-              })
+                const res = await fetch('https://fcm.googleapis.com/fcm/send', {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `key=${fcmServerKey}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(fcmPayload),
+                })
 
-              fcmDispatched = res.ok
-            } catch (fcmErr) {
-              console.warn('[send-group-event] FCM push error for user:', recipientUserId, fcmErr)
+                fcmDispatched = res.ok
+              } catch (fcmErr) {
+                console.warn('[send-group-event] FCM legacy push error for user:', recipientUserId, fcmErr)
+              }
             }
           }
 

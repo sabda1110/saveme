@@ -31,6 +31,7 @@ import {
   Trash2,
   AlertTriangle,
   Sparkles,
+  Smartphone,
 } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
 import {
@@ -798,6 +799,20 @@ export default function ProfilePage() {
                 </span>
               </div>
             )}
+          </div>
+
+          {/* iOS / iPhone PWA Background Push Notice */}
+          <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/25 border border-indigo-200 dark:border-indigo-500/30 flex items-start gap-3 text-xs">
+            <Smartphone className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold text-indigo-950 dark:text-indigo-200 block">
+                Catatan Khusus Pengguna iPhone / iPad (iOS)
+              </span>
+              <p className="text-[11px] text-indigo-800/90 dark:text-indigo-300/90 leading-relaxed">
+                Apple mewajibkan aplikasi ditambahkan ke Layar Utama agar notifikasi tetap masuk saat aplikasi ditutup:
+                Buka Safari &gt; tekan tombol <strong>Bagikan (Share)</strong> &gt; pilih <strong>"Tambahkan ke Layar Utama" (Add to Home Screen)</strong>.
+              </p>
+            </div>
           </div>
 
           {/* Test & Simulation Actions */}

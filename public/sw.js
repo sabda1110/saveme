@@ -1,3 +1,10 @@
+// Import FCM Messaging background worker to support push notifications on all platforms (including iOS PWA)
+try {
+  importScripts('/firebase-messaging-sw.js')
+} catch (e) {
+  console.warn('[SW] Could not import firebase-messaging-sw.js:', e)
+}
+
 const CACHE_NAME = 'saveme-cache-v1'
 const STATIC_ASSETS = [
   '/',

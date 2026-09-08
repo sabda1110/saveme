@@ -62,16 +62,24 @@ self.addEventListener('push', (event) => {
 
     event.waitUntil(
       (async () => {
-        // 1. Show native OS / Desktop notification
-        await self.registration.showNotification(title, options)
+        // 1. Show native OS / Desktop notification immediately (critical for iOS WebKit)
+        try {
+          await self.registration.showNotification(title, options)
+        } catch (showErr) {
+          console.warn('[SW] showNotification error:', showErr)
+        }
 
         // 2. Also notify any open client tabs to auto-refresh data immediately
-        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-        for (const client of clients) {
-          client.postMessage({
-            type: 'SAVEME_BACKGROUND_NOTIFICATION',
-            payload: { title, body, data: options.data },
-          })
+        try {
+          const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+          for (const client of clients) {
+            client.postMessage({
+              type: 'SAVEME_BACKGROUND_NOTIFICATION',
+              payload: { title, body, data: options.data },
+            })
+          }
+        } catch (clientErr) {
+          // ignore
         }
       })()
     )

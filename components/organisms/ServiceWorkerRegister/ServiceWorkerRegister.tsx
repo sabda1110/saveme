@@ -4,13 +4,9 @@ import { useEffect } from 'react'
 
 export function ServiceWorkerRegister() {
   useEffect(() => {
-    if (
-      typeof window !== 'undefined' &&
-      'serviceWorker' in navigator &&
-      process.env.NODE_ENV === 'production'
-    ) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/sw.js', { scope: '/' })
         .then((reg) => {
           console.log('[PWA] Service Worker registered successfully with scope:', reg.scope)
         })
