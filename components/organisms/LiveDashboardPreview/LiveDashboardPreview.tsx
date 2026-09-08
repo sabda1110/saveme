@@ -126,7 +126,7 @@ export function LiveDashboardPreview() {
 
                 <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/20 text-xs">
                   <p className="font-bold text-emerald-800 dark:text-emerald-300">Status Keuangan</p>
-                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400">Arus Kas Sangat Sehat 🚀</p>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400">Arus Kas Sangat Sehat</p>
                 </div>
               </div>
 

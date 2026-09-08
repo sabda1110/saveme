@@ -866,14 +866,14 @@ export default function PayrollPage() {
 
                   {/* 1. Kas Belanja Harian */}
                   <div className="p-3.5 rounded-2xl bg-green-50/80 dark:bg-[#141824] border border-green-500/25 flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Unlock className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Unlock className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                           1. Kas Belanja Harian ({operatingPct}%)
                         </span>
                       </div>
-                      <span className="text-sm font-black font-mono text-green-700 dark:text-green-400">
+                      <span className="text-sm font-black font-mono text-green-700 dark:text-green-400 shrink-0">
                         {formatRupiah(calcOperatingAmount)}
                       </span>
                     </div>
@@ -881,15 +881,15 @@ export default function PayrollPage() {
                       Uang siap pakai untuk kebutuhan harian &amp; jatah belanja (*Safe-to-Spend*).
                     </span>
 
-                    {/* Masuk ke rekening/dompet belanja */}
-                    <div className="flex items-center justify-between gap-2 pt-1">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {/* Masuk ke rekening/dompet belanja (Responsif Mobile & Desktop) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pt-1">
+                      <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 shrink-0">
                         Masuk ke dompet/rekening:
                       </span>
                       <select
                         value={primaryWalletId}
                         onChange={(e) => setPrimaryWalletId(e.target.value)}
-                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-white/10 text-xs text-green-700 dark:text-green-300 focus:outline-none"
+                        className="w-full sm:w-auto sm:max-w-[280px] truncate px-3 py-1.5 sm:py-1 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-green-700 dark:text-green-300 focus:outline-none focus:ring-1 focus:ring-green-500 cursor-pointer shadow-xs"
                       >
                         {spendingWallets.map((w) => (
                           <option key={w.id} value={w.id}>
@@ -923,14 +923,14 @@ export default function PayrollPage() {
 
                   {/* 2. Tabungan Darurat Beku */}
                   <div className="p-3.5 rounded-2xl bg-purple-50/80 dark:bg-[#141824] border border-purple-500/25 flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                           2. Tabungan Darurat Beku ({lockedPct}%)
                         </span>
                       </div>
-                      <span className="text-sm font-black font-mono text-purple-700 dark:text-purple-400">
+                      <span className="text-sm font-black font-mono text-purple-700 dark:text-purple-400 shrink-0">
                         {formatRupiah(calcLockedAmount)}
                       </span>
                     </div>
@@ -939,14 +939,14 @@ export default function PayrollPage() {
                     </span>
 
                     {lockedWallets.length > 0 ? (
-                      <div className="flex items-center justify-between gap-2 pt-1">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pt-1">
+                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 shrink-0">
                           Simpan di kantong:
                         </span>
                         <select
                           value={lockedWalletId || lockedWallets[0]?.id || ''}
                           onChange={(e) => setLockedWalletId(e.target.value)}
-                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-white/10 text-xs text-purple-700 dark:text-purple-300 focus:outline-none"
+                          className="w-full sm:w-auto sm:max-w-[280px] truncate px-3 py-1.5 sm:py-1 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-purple-700 dark:text-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer shadow-xs"
                         >
                           {lockedWallets.map((w) => (
                             <option key={w.id} value={w.id}>
@@ -985,27 +985,27 @@ export default function PayrollPage() {
 
                   {/* 3. Celengan Impian */}
                   <div className="p-3.5 rounded-2xl bg-blue-50/80 dark:bg-[#141824] border border-blue-500/25 flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Target className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                           3. Celengan Impian ({goalsPct}%)
                         </span>
                       </div>
-                      <span className="text-sm font-black font-mono text-blue-700 dark:text-blue-400">
+                      <span className="text-sm font-black font-mono text-blue-700 dark:text-blue-400 shrink-0">
                         {formatRupiah(calcGoalsAmount)}
                       </span>
                     </div>
 
                     {savingsGoals.length > 0 ? (
-                      <div className="flex items-center justify-between gap-2 pt-1">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pt-1">
+                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 shrink-0">
                           Setor ke celengan:
                         </span>
                         <select
                           value={selectedGoalId || savingsGoals[0]?.id || ''}
                           onChange={(e) => setSelectedGoalId(e.target.value)}
-                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-white/10 text-xs text-blue-700 dark:text-blue-300 focus:outline-none"
+                          className="w-full sm:w-auto sm:max-w-[280px] truncate px-3 py-1.5 sm:py-1 rounded-xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-blue-700 dark:text-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs"
                         >
                           {savingsGoals.map((g) => (
                             <option key={g.id} value={g.id}>
@@ -1065,7 +1065,7 @@ export default function PayrollPage() {
                   )}
                   rightIcon={<ChevronRight className="w-5 h-5" />}
                 >
-                  🚀 Bagi &amp; Masukkan ke Dompet Sekarang
+                  Bagi &amp; Masukkan ke Dompet Sekarang
                 </Button>
                 {!isExact100 && (
                   <p className="text-center text-xs text-rose-500 font-semibold">

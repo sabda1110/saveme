@@ -118,7 +118,7 @@ export function PlaygroundSection() {
       description: 'Luar biasa! Tingkat tabunganmu di atas 45%. Jalur cepat kebebasan finansial!',
       scoreColor: 'text-emerald-400',
       gaugeBg: 'bg-emerald-400',
-      icon: '🚀',
+      icon: '💎',
     }
   }, [netBalance, savingsRate])
 

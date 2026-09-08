@@ -112,7 +112,7 @@ git diff --stat
 
 ### Step 9 — Report to User
 
-Berikan ringkasan ke user lengkap dengan **rekomendasi pesan dan deskripsi commit** (Conventional Commits):
+Berikan ringkasan ke user lengkap dengan **rekomendasi commit untuk GitHub Desktop** (Conventional Commits):
 
 ```markdown
 ✅ Feature: [Nama Feature]
@@ -126,24 +126,18 @@ Berikan ringkasan ke user lengkap dengan **rekomendasi pesan dan deskripsi commi
 1. ...
 2. ...
 
-### 💡 Rekomendasi Commit Message & Deskripsi
+### 💡 Rekomendasi Commit (GitHub Desktop)
 
-**Judul Commit:**
-`type(scope): brief summary in lowercase`
-
-**Deskripsi Commit:**
+**Summary (Judul Commit):**
 ```
 type(scope): brief summary in lowercase
+```
 
+**Description (Deskripsi / Ringkasan):**
+```
 - Detail perubahan 1
 - Detail perubahan 2
 - Rationale atau perbaikan yang dilakukan
-```
-
-**Perintah Git:**
-```bash
-git add .
-git commit -m "type(scope): brief summary in lowercase" -m "- Detail perubahan 1\n- Detail perubahan 2"
 ```
 
 ### Catatan

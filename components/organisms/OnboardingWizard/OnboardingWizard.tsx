@@ -930,7 +930,7 @@ export function OnboardingWizard({
                 onClick={() => handleFinish(false)}
                 leftIcon={<CheckCircle2 className="w-4 h-4" />}
               >
-                Selesai & Buka Dashboard! 🚀
+                Selesai & Buka Dashboard!
               </Button>
             </div>
           </div>
