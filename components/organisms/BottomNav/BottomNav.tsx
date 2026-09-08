@@ -13,12 +13,14 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
+import { useGroupSavingsInvites } from '@/context/GroupSavingsInviteContext'
 import { cn } from '@/lib/utils/cn'
 
 export function BottomNav() {
   const pathname = usePathname()
   const { userProfile } = useAuth()
   const { toast } = useToast()
+  const { pendingInvitesCount } = useGroupSavingsInvites()
 
   const navItems = [
     {
@@ -93,6 +95,11 @@ export function BottomNav() {
                 )}
               >
                 {item.icon}
+                {item.href === '/savings' && pendingInvitesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-amber-500 text-slate-950 text-[9px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse">
+                    {pendingInvitesCount}
+                  </span>
+                )}
                 {isLocked && (
                   <span className="absolute -top-1 -right-1 bg-slate-200 dark:bg-slate-700 rounded-full p-0.5 shadow-xs">
                     <Lock className="w-2.5 h-2.5 text-slate-500 dark:text-slate-300" />

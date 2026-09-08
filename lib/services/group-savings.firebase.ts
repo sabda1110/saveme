@@ -29,6 +29,43 @@ function toDate(val: unknown): Date {
   return new Date(val as string)
 }
 
+/**
+ * Trigger background and FCM push notification for newly invited member
+ */
+async function notifyGroupInvite({
+  recipientUserId,
+  inviterName,
+  groupName,
+  targetAmount,
+  groupId,
+}: {
+  recipientUserId: string
+  inviterName: string
+  groupName: string
+  targetAmount: number
+  groupId: string
+}) {
+  try {
+    if (typeof window !== 'undefined') {
+      fetch('/api/notifications/send-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientUserId,
+          inviterName,
+          groupName,
+          targetAmount,
+          groupId,
+        }),
+      }).catch((err) => {
+        console.warn('[groupSavingsService] Failed to call send-invite API:', err)
+      })
+    }
+  } catch (err) {
+    console.warn('[groupSavingsService] notifyGroupInvite error:', err)
+  }
+}
+
 export interface VerifiedUserProfile {
   uid: string
   name: string
@@ -127,11 +164,11 @@ export const groupSavingsService = {
       respondedAt: serverTimestamp(),
     })
 
-    // 2. Add All Invitees (PENDING)
+    // 2. Add All Invitees (PENDING) & Trigger Push Notifications
     await Promise.all(
       invitees.map(async (inv) => {
         const myTarget = Math.round((totalTarget * inv.percentage) / 100)
-        return addDoc(collection(db, 'group_savings_members'), {
+        const docRef = await addDoc(collection(db, 'group_savings_members'), {
           groupId,
           userId: inv.userId,
           displayName: inv.displayName.trim(),
@@ -142,6 +179,17 @@ export const groupSavingsService = {
           status: 'PENDING',
           invitedAt: serverTimestamp(),
         })
+
+        // Notify recipient in background / FCM
+        notifyGroupInvite({
+          recipientUserId: inv.userId,
+          inviterName: hostDisplayName,
+          groupName: groupData.name,
+          targetAmount: myTarget,
+          groupId,
+        })
+
+        return docRef
       })
     )
 
@@ -216,8 +264,27 @@ export const groupSavingsService = {
       status: 'PENDING',
       invitedAt: serverTimestamp(),
     }
-
     const docRef = await addDoc(collection(db, 'group_savings_members'), payload)
+
+    // Notify recipient in background / FCM
+    try {
+      getDoc(doc(db, 'group_savings', groupId)).then(async (groupSnap) => {
+        const groupName = groupSnap.exists() ? groupSnap.data().name : 'Celengan Bersama'
+        const inviterSnap = await getDoc(doc(db, 'users', invitedByUserId))
+        const inviterName = inviterSnap.exists() ? inviterSnap.data().name : 'Teman'
+
+        notifyGroupInvite({
+          recipientUserId: invitee.userId,
+          inviterName,
+          groupName,
+          targetAmount: myTarget,
+          groupId,
+        })
+      })
+    } catch {
+      // ignore
+    }
+
     return { id: docRef.id, ...payload } as unknown as GroupSavingsMember
   },
 
@@ -268,7 +335,7 @@ export const groupSavingsService = {
           if (!groupSnap.exists()) return null
 
           const group = { id: groupSnap.id, ...groupSnap.data() } as GroupSavings
-          if (group.status !== 'ACTIVE') return null
+          if (group.status !== 'ACTIVE' && group.status !== 'DISSOLUTION_PENDING') return null
 
           // Fetch all members of this group
           const allMembersQ = query(
@@ -427,6 +494,7 @@ export const groupSavingsService = {
       // Creator deletes entire group
       await updateDoc(doc(db, 'group_savings', groupId), {
         status: 'CANCELLED',
+        dissolvedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       })
     } else {
@@ -440,6 +508,220 @@ export const groupSavingsService = {
       if (!memberSnap.empty) {
         await deleteDoc(memberSnap.docs[0].ref)
       }
+    }
+  },
+
+  // ── Request Group Dissolution (Requires Consensus if >= 2 Members) ────────
+  async requestGroupDissolution(
+    groupId: string,
+    userId: string,
+    userDisplayName: string,
+    reason?: string
+  ): Promise<boolean> {
+    if (!userId) throw new Error('Unauthorized')
+
+    const groupRef = doc(db, 'group_savings', groupId)
+    const groupSnap = await getDoc(groupRef)
+    if (!groupSnap.exists()) throw new Error('Grup tidak ditemukan')
+
+    // Fetch all active accepted members of this group
+    const membersQ = query(
+      collection(db, 'group_savings_members'),
+      where('groupId', '==', groupId),
+      where('status', '==', 'ACCEPTED')
+    )
+    const membersSnap = await getDocs(membersQ)
+    const acceptedMembers = membersSnap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    })) as GroupSavingsMember[]
+
+    // Verify user is among the accepted members
+    const isMember = acceptedMembers.some((m) => m.userId === userId)
+    if (!isMember && groupSnap.data().createdBy !== userId) {
+      throw new Error('Hanya anggota aktif yang dapat mengajukan pembubaran grup')
+    }
+
+    // If only 1 accepted member or none, disband immediately
+    if (acceptedMembers.length <= 1) {
+      await updateDoc(groupRef, {
+        status: 'CANCELLED',
+        dissolvedAt: serverTimestamp(),
+        dissolutionRequest: {
+          requestedBy: userId,
+          requestedByName: userDisplayName || 'Anggota',
+          reason: reason?.trim() || 'Dibubarkan oleh anggota tunggal',
+          requestedAt: serverTimestamp(),
+          status: 'APPROVED',
+          votes: { [userId]: 'APPROVED' },
+        },
+        dissolutionDismissedBy: [userId],
+        updatedAt: serverTimestamp(),
+      })
+      return true
+    }
+
+    // 2 or more members: Initiate dissolution consensus
+    await updateDoc(groupRef, {
+      status: 'DISSOLUTION_PENDING',
+      dissolutionRequest: {
+        requestedBy: userId,
+        requestedByName: userDisplayName || 'Anggota',
+        reason: reason?.trim() || 'Pengajuan pembubaran grup',
+        requestedAt: serverTimestamp(),
+        status: 'PENDING',
+        votes: {
+          [userId]: 'APPROVED', // initiator votes approved by default
+        },
+      },
+      updatedAt: serverTimestamp(),
+    })
+    return false
+  },
+
+  // ── Vote on Group Dissolution (Approve or Reject) ──────────────────────────
+  async voteGroupDissolution(
+    groupId: string,
+    userId: string,
+    decision: 'APPROVED' | 'REJECTED'
+  ): Promise<{ allApproved: boolean; rejected: boolean }> {
+    if (!userId) throw new Error('Unauthorized')
+
+    const groupRef = doc(db, 'group_savings', groupId)
+    const groupSnap = await getDoc(groupRef)
+    if (!groupSnap.exists()) throw new Error('Grup tidak ditemukan')
+
+    const groupData = groupSnap.data()
+    const req = groupData.dissolutionRequest
+    if (!req || req.status !== 'PENDING') {
+      throw new Error('Tidak ada pengajuan pembubaran yang sedang aktif')
+    }
+
+    // If user rejects, cancel the dissolution immediately
+    if (decision === 'REJECTED') {
+      await updateDoc(groupRef, {
+        status: 'ACTIVE',
+        'dissolutionRequest.status': 'REJECTED',
+        [`dissolutionRequest.votes.${userId}`]: 'REJECTED',
+        updatedAt: serverTimestamp(),
+      })
+      return { allApproved: false, rejected: true }
+    }
+
+    // User approves: record vote and check if all members agreed
+    const currentVotes = (req.votes || {}) as Record<string, 'APPROVED' | 'REJECTED'>
+    const updatedVotes = {
+      ...currentVotes,
+      [userId]: 'APPROVED' as const,
+    }
+
+    // Get all accepted members
+    const membersQ = query(
+      collection(db, 'group_savings_members'),
+      where('groupId', '==', groupId),
+      where('status', '==', 'ACCEPTED')
+    )
+    const membersSnap = await getDocs(membersQ)
+    const acceptedMemberIds = membersSnap.docs.map((d) => d.data().userId)
+
+    const allApproved = acceptedMemberIds.every((mId) => updatedVotes[mId] === 'APPROVED')
+
+    if (allApproved) {
+      // Group is officially dissolved upon full consensus
+      await updateDoc(groupRef, {
+        status: 'CANCELLED',
+        dissolvedAt: serverTimestamp(),
+        'dissolutionRequest.status': 'APPROVED',
+        'dissolutionRequest.votes': updatedVotes,
+        dissolutionDismissedBy: [], // reset so all members see the notice
+        updatedAt: serverTimestamp(),
+      })
+      return { allApproved: true, rejected: false }
+    } else {
+      // Vote recorded, still waiting for other members
+      await updateDoc(groupRef, {
+        'dissolutionRequest.votes': updatedVotes,
+        updatedAt: serverTimestamp(),
+      })
+      return { allApproved: false, rejected: false }
+    }
+  },
+
+  // ── Cancel Group Dissolution (Only Initiator) ─────────────────────────────
+  async cancelGroupDissolution(groupId: string, userId: string): Promise<void> {
+    const groupRef = doc(db, 'group_savings', groupId)
+    const groupSnap = await getDoc(groupRef)
+    if (!groupSnap.exists()) throw new Error('Grup tidak ditemukan')
+
+    const req = groupSnap.data().dissolutionRequest
+    if (!req || req.requestedBy !== userId) {
+      throw new Error('Hanya pengaju pembubaran yang dapat membatalkan pengajuan')
+    }
+
+    await updateDoc(groupRef, {
+      status: 'ACTIVE',
+      dissolutionRequest: deleteField(),
+      updatedAt: serverTimestamp(),
+    })
+  },
+
+  // ── Get Dissolved Group Notices for a User ────────────────────────────────
+  async getDissolvedGroupNotices(userId: string): Promise<{
+    group: GroupSavings
+    member: GroupSavingsMember
+  }[]> {
+    if (!userId) return []
+
+    try {
+      const memberQ = query(
+        collection(db, 'group_savings_members'),
+        where('userId', '==', userId),
+        where('status', '==', 'ACCEPTED')
+      )
+      const memberSnap = await getDocs(memberQ)
+      if (memberSnap.empty) return []
+
+      const results = await Promise.all(
+        memberSnap.docs.map(async (mDoc) => {
+          const mData = { id: mDoc.id, ...mDoc.data() } as GroupSavingsMember
+          const gSnap = await getDoc(doc(db, 'group_savings', mData.groupId))
+          if (!gSnap.exists()) return null
+          const gData = { id: gSnap.id, ...gSnap.data() } as GroupSavings
+
+          // Group was cancelled/dissolved, has dissolvedAt, and not yet dismissed by this user
+          if (gData.status === 'CANCELLED' && gData.dissolvedAt) {
+            const dismissed = gData.dissolutionDismissedBy || []
+            if (!dismissed.includes(userId)) {
+              return { group: gData, member: mData }
+            }
+          }
+          return null
+        })
+      )
+
+      return results.filter((r): r is NonNullable<typeof r> => r !== null)
+    } catch (err) {
+      console.error('[groupSavingsService] getDissolvedGroupNotices error:', err)
+      return []
+    }
+  },
+
+  // ── Dismiss Dissolution Notice ────────────────────────────────────────────
+  async dismissDissolutionNotice(groupId: string, userId: string): Promise<void> {
+    if (!groupId || !userId) return
+    try {
+      const gRef = doc(db, 'group_savings', groupId)
+      const gSnap = await getDoc(gRef)
+      if (!gSnap.exists()) return
+      const dismissed = (gSnap.data().dissolutionDismissedBy || []) as string[]
+      if (!dismissed.includes(userId)) {
+        await updateDoc(gRef, {
+          dissolutionDismissedBy: [...dismissed, userId],
+          updatedAt: serverTimestamp(),
+        })
+      }
+    } catch (err) {
+      console.error('[groupSavingsService] dismissDissolutionNotice error:', err)
     }
   },
 

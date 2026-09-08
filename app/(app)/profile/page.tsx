@@ -29,7 +29,10 @@ import {
   KeyRound,
   CreditCard,
   Trash2,
+  AlertTriangle,
+  Sparkles,
 } from 'lucide-react'
+import { useToast } from '@/context/ToastContext'
 import {
   detectUserTimezone,
   requestNotificationPermission,
@@ -38,11 +41,14 @@ import {
 } from '@/lib/firebase/messaging'
 import { notificationService } from '@/lib/services/notification.firebase'
 import { SetPinModal } from '@/components/organisms/SetPinModal/SetPinModal'
+import { NotificationPermissionGuideModal } from '@/components/molecules/NotificationPermissionGuideModal'
+import { dispatchMorningBriefingNotification } from '@/components/organisms/MorningBriefingAlarm/MorningBriefingAlarm'
 import { cn } from '@/lib/utils/cn'
 
 export default function ProfilePage() {
   const { user, userProfile, sessionInfo, refreshProfile, logout } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { toast } = useToast()
 
   // Form State
   const [name, setName] = useState(userProfile?.name || '')
@@ -99,6 +105,11 @@ export default function ProfilePage() {
   const [notifEnabled, setNotifEnabled] = useState(false)
   const [notifLoading, setNotifLoading] = useState(false)
   const [isTestingNotif, setIsTestingNotif] = useState(false)
+  const [isSimulatingMorning, setIsSimulatingMorning] = useState(false)
+  const [isPermissionGuideOpen, setIsPermissionGuideOpen] = useState(false)
+  const [browserPermission, setBrowserPermission] = useState<
+    'default' | 'granted' | 'denied' | 'unsupported'
+  >('default')
   const [testNotifResult, setTestNotifResult] = useState<{
     success: boolean
     message: string
@@ -142,6 +153,14 @@ export default function ProfilePage() {
   }, [userProfile?.name])
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('Notification' in window) {
+        setBrowserPermission(Notification.permission)
+      } else {
+        setBrowserPermission('unsupported')
+      }
+    }
+
     async function loadNotificationSettings() {
       if (!user?.uid) return
       try {
@@ -162,34 +181,89 @@ export default function ProfilePage() {
 
     try {
       if (enabled) {
-        const perm = await requestNotificationPermission()
-        if (perm !== 'granted') {
-          setErrorMessage(
-            'Izin notifikasi ditolak di browser. Silakan aktifkan izin notifikasi di setelan browser.'
+        // Direct browser prompt and sync
+        const notifResult = await notificationService.promptAndSyncNotification(user.uid)
+        if (notifResult.status === 'granted') {
+          setBrowserPermission('granted')
+          setNotifEnabled(true)
+          const currentTz = detectUserTimezone()
+          setTzInfo(currentTz)
+          toast.success(
+            `Notifikasi briefing jam 07:00 berhasil diaktifkan untuk zona waktu ${currentTz.zoneCode}!`
           )
-          setNotifLoading(false)
-          return
+        } else if (notifResult.status === 'denied') {
+          setBrowserPermission('denied')
+          setIsPermissionGuideOpen(true)
+          toast.error(
+            'Izin notifikasi diblokir browser. Anda tidak akan menerima briefing jam 07:00 atau undangan celengan. Buka blokir di setelan browser.'
+          )
+        } else {
+          setBrowserPermission('default')
+          toast.info('Izin notifikasi browser belum diaktifkan.')
         }
-
-        const currentTz = detectUserTimezone()
-        setTzInfo(currentTz)
-        const token = await getFCMRegistrationToken()
-        const effectiveToken = token || `web_token_${user.uid}_${Date.now()}`
-
-        await notificationService.saveUserFcmToken(user.uid, effectiveToken, currentTz)
-        setNotifEnabled(true)
-        setSuccessMessage(`Notifikasi harian berhasil diaktifkan untuk zona waktu ${currentTz.zoneCode}!`)
       } else {
         await notificationService.updatePreferences(user.uid, false)
         setNotifEnabled(false)
-        setSuccessMessage('Notifikasi harian dinonaktifkan.')
+        toast.info('Notifikasi briefing jam 07:00 dinonaktifkan.')
       }
     } catch (err: unknown) {
       console.error('[profile] Error toggling notification:', err)
       const errObj = err as { message?: string }
-      setErrorMessage(errObj.message || 'Gagal mengubah pengaturan notifikasi.')
+      toast.error(errObj.message || 'Gagal mengubah pengaturan notifikasi.')
     } finally {
       setNotifLoading(false)
+    }
+  }
+
+  // Simulate exact 07:00 AM briefing notification
+  const handleSimulateMorningAlarm = async () => {
+    if (!user?.uid) return
+    setIsSimulatingMorning(true)
+    try {
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission === 'denied'
+      ) {
+        setIsPermissionGuideOpen(true)
+        toast.error('Izin notifikasi diblokir browser. Izinkan terlebih dahulu.')
+        return
+      }
+
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission !== 'granted'
+      ) {
+        const perm = await requestNotificationPermission()
+        setBrowserPermission(perm)
+        if (perm !== 'granted') {
+          if (perm === 'denied') setIsPermissionGuideOpen(true)
+          toast.error('Izin notifikasi belum diaktifkan di browser.')
+          return
+        }
+      }
+
+      const result = await dispatchMorningBriefingNotification({
+        userId: user.uid,
+        userName: userProfile?.name,
+        isSimulation: true,
+      })
+
+      if (result.success) {
+        toast.success(
+          `Simulasi berhasil! Notifikasi jatah ${result.formattedLimit} telah dikirim ke perangkat Anda.`
+        )
+      } else {
+        toast.warning(
+          'Notifikasi tidak dapat dipicu. Pastikan izin notifikasi diizinkan di browser/sistem operasi Anda.'
+        )
+      }
+    } catch (err: unknown) {
+      console.error('[profile] Error simulating morning alarm:', err)
+      toast.error('Gagal menjalankan simulasi notifikasi pagi.')
+    } finally {
+      setIsSimulatingMorning(false)
     }
   }
 
@@ -199,28 +273,81 @@ export default function ProfilePage() {
     setTestNotifResult(null)
 
     try {
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission === 'denied'
+      ) {
+        setIsPermissionGuideOpen(true)
+        toast.error('Izin notifikasi diblokir browser.')
+        return
+      }
+
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission !== 'granted'
+      ) {
+        const perm = await requestNotificationPermission()
+        setBrowserPermission(perm)
+        if (perm !== 'granted') {
+          if (perm === 'denied') setIsPermissionGuideOpen(true)
+          toast.error('Izin notifikasi belum diaktifkan di browser.')
+          return
+        }
+      }
+
       const currentTz = tzInfo || detectUserTimezone()
       const token = (await getFCMRegistrationToken()) || `web_token_${user.uid}`
 
+      // Fire direct local browser notification first
+      let localShown = false
+      if ('serviceWorker' in navigator) {
+        try {
+          const reg = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 800)),
+          ])
+          if (reg && reg.showNotification) {
+            await reg.showNotification('🧪 SaveMe: Uji Coba Pengingat Harian', {
+              body: 'Notifikasi berhasil terhubung! Batas belanja harian kamu siap dikirim setiap jam 07:00 pagi.',
+              icon: '/logo.svg',
+              badge: '/logo.svg',
+              data: { url: '/daily' },
+            })
+            localShown = true
+          }
+        } catch {
+          // Fallback
+        }
+      }
+
+      if (!localShown && 'Notification' in window) {
+        try {
+          new Notification('🧪 SaveMe: Uji Coba Pengingat Harian', {
+            body: 'Notifikasi berhasil terhubung! Batas belanja harian kamu siap dikirim setiap jam 07:00 pagi.',
+            icon: '/logo.svg',
+          })
+          localShown = true
+        } catch {
+          // ignore
+        }
+      }
+
+      // Also call backend route
       const res = await notificationService.sendTestPushNotification(
         user.uid,
         token,
         currentTz.zoneCode
       )
 
-      setTestNotifResult(res)
-
-      // Show native browser notification immediately as verification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification('🧪 SaveMe: Uji Coba Pengingat Harian', {
-            body: 'Notifikasi berhasil terhubung! Batas belanja kamu siap dikirim setiap jam 07:00 pagi.',
-            icon: '/globe.svg',
-          })
-        } catch {
-          // ignore
-        }
-      }
+      setTestNotifResult({
+        success: localShown || res.success,
+        message: localShown
+          ? 'Notifikasi uji coba berhasil dikirim ke layar perangkat ini!'
+          : res.message,
+      })
+      toast.success('Notifikasi uji coba berhasil dikirim ke perangkat ini!')
     } catch (err: unknown) {
       console.error('[profile] Error sending test notification:', err)
       const errObj = err as { message?: string }
@@ -228,6 +355,7 @@ export default function ProfilePage() {
         success: false,
         message: errObj.message || 'Gagal mengirim notifikasi uji coba.',
       })
+      toast.error('Gagal mengirim notifikasi uji coba.')
     } finally {
       setIsTestingNotif(false)
     }
@@ -564,19 +692,32 @@ export default function ProfilePage() {
 
         {/* Section 3: Pengingat & Notifikasi Harian (FCM & Multi-Zona Waktu) */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl space-y-5 text-slate-900 dark:text-white">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348] gap-3">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                 <Bell className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-sm sm:text-base font-extrabold tracking-tight">
                     Pengingat Jatah Belanja Harian
                   </h3>
                   <Badge variant={notifEnabled ? 'brand' : 'neutral'} size="sm">
                     {notifEnabled ? 'Aktif' : 'Nonaktif'}
                   </Badge>
+                  {browserPermission === 'denied' ? (
+                    <Badge variant="warning" size="sm">
+                      ⚠️ Izin Browser: Diblokir
+                    </Badge>
+                  ) : browserPermission === 'granted' ? (
+                    <Badge variant="brand" size="sm">
+                      ✓ Izin Browser: Diizinkan
+                    </Badge>
+                  ) : (
+                    <Badge variant="neutral" size="sm">
+                      Izin Browser: Belum Diatur
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Kirim notifikasi setiap jam 07:00 pagi waktu lokal (WIB / WITA / WIT)
@@ -585,12 +726,36 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Browser Permission Blocked Alert */}
+          {browserPermission === 'denied' && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <div className="text-xs">
+                  <p className="font-bold">Izin Notifikasi Diblokir oleh Browser Anda</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                    Browser Anda melarang pop-up notifikasi untuk situs ini. Buka setelan di bilah URL (ikon gembok) untuk mengizinkan.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsPermissionGuideOpen(true)}
+                className="text-xs shrink-0 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 font-bold"
+              >
+                Panduan Buka Blokir
+              </Button>
+            </div>
+          )}
+
           {/* Toggle Activation & Timezone Info */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/50 border border-slate-200 dark:border-[#2d3348] space-y-3.5">
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-0.5">
                 <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block">
-                  Terima Notifikasi Briefing Pagi
+                  Terima Notifikasi Briefing Jam 07:00 Pagi
                 </span>
                 <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 block leading-relaxed">
                   Otomatis dikirim ke HP / desktop setiap jam 07:00 waktu setempat tanpa perlu buka aplikasi.
@@ -635,28 +800,57 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Test Notification Action */}
-          <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-blue-900 dark:text-blue-200 block">
-                🧪 Uji Coba Pengiriman Notifikasi
-              </span>
-              <span className="text-[11px] text-blue-700 dark:text-blue-400 block mt-0.5">
-                Kirim notifikasi langsung ke perangkat ini sekarang untuk menguji apakah notifikasi berhasil masuk.
-              </span>
+          {/* Test & Simulation Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Action 1: Simulate exact 07:00 AM briefing */}
+            <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/30 flex flex-col justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Simulasikan Jam 07:00 Pagi
+                </span>
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 block mt-1 leading-relaxed">
+                  Hitung jatah belanja harian live dan kirim notifikasi briefing pagi sekarang persis seperti yang akan muncul jam 7 pagi.
+                </span>
+              </div>
+
+              <Button
+                type="button"
+                variant="glow"
+                size="sm"
+                loading={isSimulatingMorning}
+                onClick={handleSimulateMorningAlarm}
+                className="text-xs font-bold w-full"
+                leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+              >
+                Simulasikan Notifikasi Jam 07:00
+              </Button>
             </div>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              loading={isTestingNotif}
-              onClick={handleSendTestNotification}
-              className="text-xs shrink-0 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/10"
-              leftIcon={<Send className="w-3.5 h-3.5" />}
-            >
-              Kirim Notifikasi Uji Coba
-            </Button>
+            {/* Action 2: Quick Test Notification */}
+            <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/30 flex flex-col justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                  <Send className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Uji Koneksi Notifikasi
+                </span>
+                <span className="text-[11px] text-blue-700 dark:text-blue-400 block mt-1 leading-relaxed">
+                  Kirim notifikasi uji coba cepat ke perangkat ini untuk memastikan browser mengizinkan notifikasi masuk.
+                </span>
+              </div>
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={isTestingNotif}
+                onClick={handleSendTestNotification}
+                className="text-xs w-full text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/10 font-semibold"
+                leftIcon={<Send className="w-3.5 h-3.5" />}
+              >
+                Kirim Notifikasi Uji Coba
+              </Button>
+            </div>
           </div>
 
           {/* Test Result Message */}
@@ -677,6 +871,25 @@ export default function ProfilePage() {
               <span>{testNotifResult.message}</span>
             </div>
           )}
+
+          {/* How It Works & Reliability Notes */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#21263a]/40 border border-slate-200 dark:border-[#2d3348] space-y-2 text-xs text-slate-600 dark:text-slate-400">
+            <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-emerald-500" />
+              Cara Kerja Pengingat Jam 07:00 Pagi di SaveMe:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-[11px] leading-relaxed">
+              <li>
+                <strong>Saat Aplikasi / Tab Aktif:</strong> Alarm cerdas SaveMe di browser akan otomatis membunyikan dan memunculkan notifikasi briefing pagi tepat jam 07:00:00 waktu setempat (WIB/WITA/WIT).
+              </li>
+              <li>
+                <strong>Morning Catch-Up:</strong> Jika Anda membuka SaveMe pertama kali setelah jam 07:00 pagi, briefing jatah hari itu akan otomatis disajikan.
+              </li>
+              <li>
+                <strong>Saat Browser Ditutup Total:</strong> Notifikasi latar belakang memerlukan Service Worker terpasang dan izin notifikasi aktif di browser Anda.
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Section 4: Kunci PIN Keamanan Aplikasi */}
@@ -796,6 +1009,12 @@ export default function ProfilePage() {
           await refreshProfile()
           setSuccessMessage('PIN 6-digit keamanan aplikasi berhasil disimpan!')
         }}
+      />
+
+      {/* Notification Permission Blocked Guide Modal */}
+      <NotificationPermissionGuideModal
+        isOpen={isPermissionGuideOpen}
+        onClose={() => setIsPermissionGuideOpen(false)}
       />
     </div>
   )

@@ -138,7 +138,12 @@ export async function getFCMRegistrationToken(): Promise<string | null> {
  * Foreground message listener (when app is active/in focus)
  */
 export async function setupForegroundMessageListener(
-  onMessageReceived: (payload: { title?: string; body?: string; url?: string }) => void
+  onMessageReceived: (payload: {
+    title?: string
+    body?: string
+    url?: string
+    data?: Record<string, any>
+  }) => void
 ): Promise<(() => void) | null> {
   const messaging = await getMessagingInstance()
   if (!messaging) return null
@@ -147,7 +152,7 @@ export async function setupForegroundMessageListener(
     const title = payload.notification?.title || 'SaveMe'
     const body = payload.notification?.body || ''
     const url = payload.data?.url || '/daily'
-    onMessageReceived({ title, body, url })
+    onMessageReceived({ title, body, url, data: payload.data })
   })
 
   return unsubscribe

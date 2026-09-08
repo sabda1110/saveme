@@ -8,6 +8,7 @@ import { Input } from '@/components/atoms/Input'
 import { Button } from '@/components/atoms/Button'
 import { registerWithEmail, signInWithGoogle } from '@/lib/auth/firebase-auth'
 import { initSession } from '@/lib/auth/session'
+import { notificationService } from '@/lib/services/notification.firebase'
 import { useToast } from '@/context/ToastContext'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth.schema'
 import { GoogleIcon } from '@/components/atoms/GoogleIcon'
@@ -55,6 +56,29 @@ export function RegisterForm() {
       const user = await registerWithEmail(formData.name, formData.email, formData.password)
       // Initialize 7-day session
       initSession(user.uid)
+
+      // Direct native browser notification permission prompt on register gesture
+      try {
+        const notifResult = await notificationService.promptAndSyncNotification(user.uid)
+        if (notifResult.status === 'granted') {
+          toast.success(
+            'Notifikasi browser aktif! Anda siap menerima briefing pagi jam 07:00 & undangan celengan.'
+          )
+        } else if (notifResult.status === 'denied') {
+          toast.warning(
+            'Izin notifikasi diblokir browser. Anda mungkin melewatkan briefing jam 07:00 & undangan celengan. Anda dapat mengaktifkannya di menu Profil.',
+            { duration: 6000 }
+          )
+        } else if (notifResult.status === 'default') {
+          toast.info(
+            'Notifikasi browser belum diaktifkan. Anda dapat mengaktifkannya kapan saja di menu Profil.',
+            { duration: 5000 }
+          )
+        }
+      } catch (notifErr) {
+        console.warn('[auth] Error prompting notification on register:', notifErr)
+      }
+
       toast.success('Pendaftaran akun berhasil! Selamat datang di SaveMe.')
       router.push('/dashboard')
     } catch (err: unknown) {
@@ -79,6 +103,29 @@ export function RegisterForm() {
     try {
       const { user } = await signInWithGoogle()
       initSession(user.uid)
+
+      // Direct native browser notification permission prompt on Google register gesture
+      try {
+        const notifResult = await notificationService.promptAndSyncNotification(user.uid)
+        if (notifResult.status === 'granted') {
+          toast.success(
+            'Notifikasi browser aktif! Anda siap menerima briefing pagi jam 07:00 & undangan celengan.'
+          )
+        } else if (notifResult.status === 'denied') {
+          toast.warning(
+            'Izin notifikasi diblokir browser. Anda mungkin melewatkan briefing jam 07:00 & undangan celengan. Anda dapat mengaktifkannya di menu Profil.',
+            { duration: 6000 }
+          )
+        } else if (notifResult.status === 'default') {
+          toast.info(
+            'Notifikasi browser belum diaktifkan. Anda dapat mengaktifkannya kapan saja di menu Profil.',
+            { duration: 5000 }
+          )
+        }
+      } catch (notifErr) {
+        console.warn('[auth] Error prompting notification on Google register:', notifErr)
+      }
+
       toast.success('Berhasil masuk dengan akun Google!')
       router.push('/dashboard')
     } catch (err: unknown) {

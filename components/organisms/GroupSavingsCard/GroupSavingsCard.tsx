@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { groupSavingsService } from '@/lib/services/group-savings.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { Button } from '@/components/atoms/Button'
 import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
@@ -45,6 +46,7 @@ export function GroupSavingsCard({
   onRefresh,
 }: GroupSavingsCardProps) {
   const { user, userProfile } = useAuth()
+  const { toast } = useToast()
   const [expanded, setExpanded] = useState(false)
   const [contributions, setContributions] = useState<GroupSavingsContribution[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
@@ -61,8 +63,22 @@ export function GroupSavingsCard({
   // Leave/delete confirm
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
 
+  // Dissolution consensus state
+  const [dissolutionModalOpen, setDissolutionModalOpen] = useState(false)
+  const [dissolutionReason, setDissolutionReason] = useState('')
+  const [isSubmittingDissolution, setIsSubmittingDissolution] = useState(false)
+
   const isCreator = group.createdBy === user?.uid
   const acceptedMembers = allMembers.filter((m) => m.status === 'ACCEPTED')
+  const hasMultipleMembers = acceptedMembers.length >= 2
+  const isDissolutionPending =
+    group.status === 'DISSOLUTION_PENDING' &&
+    group.dissolutionRequest?.status === 'PENDING'
+  const req = group.dissolutionRequest
+  const myVote = req?.votes?.[user?.uid || '']
+  const isInitiator = req?.requestedBy === user?.uid
+  const approvedCount = Object.values(req?.votes || {}).filter((v) => v === 'APPROVED').length
+
   const totalContributed = acceptedMembers.reduce((s, m) => s + m.myContributed, 0)
   const progressPercent = Math.min(100, Math.round((totalContributed / group.targetAmount) * 100))
 
@@ -139,6 +155,59 @@ export function GroupSavingsCard({
     }
   }
 
+  async function handleRequestDissolution() {
+    if (!user?.uid) return
+    setIsSubmittingDissolution(true)
+    try {
+      const immediate = await groupSavingsService.requestGroupDissolution(
+        group.id,
+        user.uid,
+        userProfile?.name || user.email?.split('@')[0] || 'Anggota',
+        dissolutionReason
+      )
+      if (immediate) {
+        toast.success('Grup celengan bersama berhasil dibubarkan.')
+      } else {
+        toast.info('Pengajuan pembubaran telah dikirim ke seluruh anggota untuk disetujui.')
+      }
+      setDissolutionModalOpen(false)
+      onRefresh()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mengajukan pembubaran'
+      toast.error(msg)
+    } finally {
+      setIsSubmittingDissolution(false)
+    }
+  }
+
+  async function handleVoteDissolution(decision: 'APPROVED' | 'REJECTED') {
+    if (!user?.uid) return
+    try {
+      const res = await groupSavingsService.voteGroupDissolution(group.id, user.uid, decision)
+      if (res.rejected) {
+        toast.warning('Pembubaran grup ditolak. Grup celengan bersama kembali aktif.')
+      } else if (res.allApproved) {
+        toast.success('Seluruh anggota telah menyetujui. Grup resmi dibubarkan!')
+      } else {
+        toast.info('Pilihanmu tersimpan. Menunggu persetujuan anggota lain...')
+      }
+      onRefresh()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Gagal memproses suara')
+    }
+  }
+
+  async function handleCancelDissolution() {
+    if (!user?.uid) return
+    try {
+      await groupSavingsService.cancelGroupDissolution(group.id, user.uid)
+      toast.success('Pengajuan pembubaran grup telah dibatalkan.')
+      onRefresh()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Gagal membatalkan pengajuan')
+    }
+  }
+
   const [resolutionLoading, setResolutionLoading] = useState<string | null>(null)
 
   async function handleResolveDeadline(memberId: string, requestedDate?: string) {
@@ -184,6 +253,80 @@ export function GroupSavingsCard({
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-[#2d3348] bg-white dark:bg-[#1a1d27] overflow-hidden shadow-sm">
+      {/* ⚠️ GROUP DISSOLUTION PENDING BANNER */}
+      {isDissolutionPending && (
+        <div className="p-4 bg-amber-50/90 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/60 text-slate-900 dark:text-white space-y-3 animate-in fade-in">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
+                    Pengajuan Pembubaran Grup
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    Diajukan oleh: {req?.requestedByName}
+                  </span>
+                </div>
+                {req?.reason && (
+                  <p className="text-xs text-slate-600 dark:text-slate-400 italic bg-white/70 dark:bg-[#131620]/70 p-2 rounded-lg border border-amber-200 dark:border-amber-900/40">
+                    &ldquo;{req.reason}&rdquo;
+                  </p>
+                )}
+                <div className="flex items-center gap-2 flex-wrap text-xs text-slate-600 dark:text-slate-300 pt-1">
+                  <span>
+                    Status Suara: <strong className="font-mono text-amber-600 dark:text-amber-400">{approvedCount}/{acceptedMembers.length}</strong> anggota menyetujui
+                  </span>
+                  {myVote === 'APPROVED' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                      ✓ Kamu sudah setuju
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded-full animate-pulse">
+                      ⏳ Menunggu persetujuanmu
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {isInitiator && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white shrink-0"
+                onClick={handleCancelDissolution}
+              >
+                Batalkan
+              </Button>
+            )}
+          </div>
+
+          {!myVote && (
+            <div className="pt-2 border-t border-amber-200 dark:border-amber-900/40 flex gap-2">
+              <Button
+                variant="danger"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => handleVoteDissolution('APPROVED')}
+              >
+                Setujui Pembubaran
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => handleVoteDissolution('REJECTED')}
+              >
+                Tolak Pembubaran
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 💬 HOST RESOLUTION BANNER FOR MEMBER CHANGE REQUESTS */}
       {isCreator && membersWithRequests.length > 0 && (
         <div className="p-4 bg-purple-50/80 dark:bg-purple-950/40 border-b border-purple-200 dark:border-purple-800/60 space-y-3">
@@ -493,21 +636,39 @@ export function GroupSavingsCard({
 
           {/* Actions */}
           <div className="p-3 flex justify-end">
-            <button
-              onClick={() => setLeaveConfirmOpen(true)}
-              className="flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 transition-colors"
-            >
-              {isCreator ? (
-                <><Trash2 className="w-3.5 h-3.5" /> Bubarkan Grup</>
-              ) : (
-                <><LogOut className="w-3.5 h-3.5" /> Keluar dari Grup</>
-              )}
-            </button>
+            {isCreator ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (hasMultipleMembers) {
+                    setDissolutionModalOpen(true)
+                  } else {
+                    setLeaveConfirmOpen(true)
+                  }
+                }}
+                disabled={isDissolutionPending}
+                className={cn(
+                  'flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 transition-colors cursor-pointer',
+                  isDissolutionPending && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {hasMultipleMembers ? 'Ajukan Pembubaran Grup' : 'Bubarkan Grup'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setLeaveConfirmOpen(true)}
+                className="flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Keluar dari Grup
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {/* Confirm leave/delete */}
+      {/* Confirm leave / direct single-member delete */}
       <ConfirmModal
         isOpen={leaveConfirmOpen}
         title={isCreator ? 'Bubarkan Grup?' : 'Keluar dari Grup?'}
@@ -521,6 +682,55 @@ export function GroupSavingsCard({
         onConfirm={handleLeave}
         onClose={() => setLeaveConfirmOpen(false)}
       />
+
+      {/* ⚠️ MODAL AJUKAN PEMBUBARAN DENGAN KONSENSUS KELOMPOK */}
+      {dissolutionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-3xl w-full max-w-md p-6 shadow-2xl relative text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-bold flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              Ajukan Pembubaran Grup?
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+              Karena grup <strong>&ldquo;{group.name}&rdquo;</strong> memiliki <strong>{acceptedMembers.length} anggota aktif</strong>, pembubaran grup memerlukan <strong>verifikasi dan persetujuan seluruh anggota kelompok</strong> agar adil, transparan, dan tidak merugikan siapapun.
+            </p>
+
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                Alasan Pembubaran (Opsional)
+              </label>
+              <textarea
+                value={dissolutionReason}
+                onChange={(e) => setDissolutionReason(e.target.value)}
+                placeholder="Contoh: Kebutuhan mendesak / target patungan selesai lebih awal..."
+                rows={3}
+                className="w-full text-xs p-3 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
+              />
+            </div>
+
+            <div className="mt-5 flex gap-2.5">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => setDissolutionModalOpen(false)}
+                disabled={isSubmittingDissolution}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={handleRequestDissolution}
+                loading={isSubmittingDissolution}
+              >
+                Kirim Pengajuan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

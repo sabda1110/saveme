@@ -27,6 +27,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
+import { useGroupSavingsInvites } from '@/context/GroupSavingsInviteContext'
+
 interface NavItem {
   label: string
   href: string
@@ -42,6 +44,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { user, userProfile, isAdmin, isSuperAdmin, logout } = useAuth()
   const { toast } = useToast()
+  const { pendingInvitesCount } = useGroupSavingsInvites()
 
   const navGroups: NavGroup[] = [
     {
@@ -188,11 +191,18 @@ export function Sidebar() {
                       <span>{item.label}</span>
                     </div>
 
-                    {isLocked ? (
-                      <Lock className="w-3.5 h-3.5 text-slate-400/80 dark:text-slate-500/80 shrink-0" />
-                    ) : isActive ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    ) : null}
+                    <div className="flex items-center gap-1.5">
+                      {item.href === '/savings' && pendingInvitesCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 shadow-xs animate-pulse">
+                          {pendingInvitesCount}
+                        </span>
+                      )}
+                      {isLocked ? (
+                        <Lock className="w-3.5 h-3.5 text-slate-400/80 dark:text-slate-500/80 shrink-0" />
+                      ) : isActive ? (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      ) : null}
+                    </div>
                   </Link>
                 )
               })}

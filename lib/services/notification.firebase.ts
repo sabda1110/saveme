@@ -6,7 +6,12 @@ import {
   updateDoc,
   serverTimestamp,
 } from 'firebase/firestore'
-import type { UserTimeZoneInfo } from '@/lib/firebase/messaging'
+import {
+  detectUserTimezone,
+  getFCMRegistrationToken,
+  requestNotificationPermission,
+  type UserTimeZoneInfo,
+} from '@/lib/firebase/messaging'
 
 export interface UserNotificationSettings {
   enabled: boolean
@@ -136,6 +141,60 @@ export const notificationService = {
       return {
         success: false,
         message: 'Gagal menghubungi server pengirim notifikasi.',
+      }
+    }
+  },
+
+  /**
+   * Request native browser permission directly and sync FCM token + timezone to Firestore.
+   * Returns granted, denied, default, or unsupported with detailed status.
+   */
+  async promptAndSyncNotification(userId: string): Promise<{
+    permission: NotificationPermission | 'unsupported'
+    token: string | null
+    status: 'granted' | 'denied' | 'default' | 'unsupported'
+  }> {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return { permission: 'unsupported', token: null, status: 'unsupported' }
+    }
+
+    try {
+      let currentPermission = Notification.permission
+
+      // If still default, invoke native browser prompt directly
+      if (currentPermission === 'default') {
+        currentPermission = await requestNotificationPermission()
+      }
+
+      if (currentPermission === 'granted') {
+        const timeZoneInfo = detectUserTimezone()
+        const token = await getFCMRegistrationToken()
+        const effectiveToken = token || `web_token_${userId}_${Date.now()}`
+        await this.saveUserFcmToken(userId, effectiveToken, timeZoneInfo)
+        return {
+          permission: 'granted',
+          token: effectiveToken,
+          status: 'granted',
+        }
+      } else if (currentPermission === 'denied') {
+        return {
+          permission: 'denied',
+          token: null,
+          status: 'denied',
+        }
+      } else {
+        return {
+          permission: 'default',
+          token: null,
+          status: 'default',
+        }
+      }
+    } catch (err) {
+      console.error('[notificationService] Error in promptAndSyncNotification:', err)
+      return {
+        permission: Notification.permission || 'default',
+        token: null,
+        status: (Notification.permission as 'granted' | 'denied' | 'default') || 'default',
       }
     }
   },

@@ -43,6 +43,7 @@ import {
   DollarSign,
   Bell,
   AlertTriangle,
+  AlertCircle,
 } from 'lucide-react'
 import type {
   Category,
@@ -82,6 +83,16 @@ export default function DashboardPage() {
     member: GroupSavingsMember
     allMembers: GroupSavingsMember[]
   }[]>([])
+  const [pendingGroupInvites, setPendingGroupInvites] = useState<{
+    invite: GroupSavingsMember
+    group: GroupSavings
+  }[]>([])
+  const [dissolvedGroupNotices, setDissolvedGroupNotices] = useState<{
+    group: GroupSavings
+    member: GroupSavingsMember
+  }[]>([])
+  const [processingInviteId, setProcessingInviteId] = useState<string | null>(null)
+  const [votingGroupId, setVotingGroupId] = useState<string | null>(null)
 
   const [activePeriod, setActivePeriod] = useState<PeriodFilter>('month')
   const [loading, setLoading] = useState(true)
@@ -160,6 +171,8 @@ export default function DashboardPage() {
           templatesList,
           notifSettings,
           groupsList,
+          pendingInvitesList,
+          dissolvedNoticesList,
         ] = await Promise.all([
           transactionService.getDashboardSummary(user.uid, dateFrom),
           categoryService.getCategories(),
@@ -169,6 +182,8 @@ export default function DashboardPage() {
           quickTemplateService.getUserTemplates(user.uid),
           notificationService.getSettings(user.uid),
           groupSavingsService.getUserGroups(user.uid),
+          groupSavingsService.getPendingInvites(user.uid),
+          groupSavingsService.getDissolvedGroupNotices(user.uid),
         ])
 
         if (isMounted) {
@@ -180,6 +195,8 @@ export default function DashboardPage() {
           setTemplates(templatesList)
           setHasNotificationEnabled(Boolean(notifSettings?.enabled))
           setGroupSavings(groupsList)
+          setPendingGroupInvites(pendingInvitesList)
+          setDissolvedGroupNotices(dissolvedNoticesList)
 
           // Set default Category & Wallet for Add Transaction Form
           if (categoryList.length > 0 && !categoryId) {
@@ -206,12 +223,40 @@ export default function DashboardPage() {
     }
   }, [user?.uid, activePeriod, refreshTrigger, userProfile])
 
+  // Reactive listener: Auto-fetch dashboard data when group savings invites arrive
+  useEffect(() => {
+    const handleInvitesUpdated = () => {
+      setRefreshTrigger((prev) => prev + 1)
+    }
+    window.addEventListener('saveme:group-invites-updated', handleInvitesUpdated)
+    return () => {
+      window.removeEventListener('saveme:group-invites-updated', handleInvitesUpdated)
+    }
+  }, [])
+
   // Dedicated reactive listener: Auto-open Onboarding Wizard if user has not completed onboarding
   useEffect(() => {
     if (userProfile && userProfile.hasCompletedOnboarding === false) {
       setIsOnboardingModalOpen(true)
     }
   }, [userProfile?.hasCompletedOnboarding])
+
+  // Auto-prompt notification setup after login if not already enabled and onboarding completed
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const shouldPrompt = sessionStorage.getItem('saveme_prompt_notif_post_login') === 'true'
+    if (shouldPrompt) {
+      sessionStorage.removeItem('saveme_prompt_notif_post_login')
+      if (
+        userProfile?.hasCompletedOnboarding !== false &&
+        !hasNotificationEnabled &&
+        'Notification' in window &&
+        Notification.permission === 'default'
+      ) {
+        setIsNotifModalOpen(true)
+      }
+    }
+  }, [userProfile?.hasCompletedOnboarding, hasNotificationEnabled])
 
   // Multi-wallet segregated calculations
   const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
@@ -270,12 +315,22 @@ export default function DashboardPage() {
   const groupSavingsDailyRequired = useMemo(() => {
     const now = new Date()
     return groupSavings.reduce((sum, g) => {
+      if (g.group.status === 'DISSOLUTION_PENDING') return sum
       if (!g.group.targetDate) return sum
       const targetD = new Date(g.group.targetDate)
       const diffDays = Math.max(1, Math.ceil((targetD.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       const remainingTarget = Math.max(0, g.member.myTarget - g.member.myContributed)
       return sum + Math.round(remainingTarget / diffDays)
     }, 0)
+  }, [groupSavings])
+
+  // Active dissolution requests requiring user review/attention
+  const pendingDissolutionGroups = useMemo(() => {
+    return groupSavings.filter(
+      (g) =>
+        g.group.status === 'DISSOLUTION_PENDING' &&
+        g.group.dissolutionRequest?.status === 'PENDING'
+    )
   }, [groupSavings])
 
   // Combined Daily Savings Commitment (Pribadi + Bersama)
@@ -496,6 +551,62 @@ export default function DashboardPage() {
     }
   }
 
+  // Handle Respond Group Invite from Dashboard
+  const handleRespondGroupInvite = async (inviteId: string, response: 'ACCEPTED' | 'REJECTED') => {
+    if (!user?.uid) return
+    setProcessingInviteId(inviteId)
+    try {
+      await groupSavingsService.respondToInvite(inviteId, user.uid, response)
+      toast.success(
+        response === 'ACCEPTED'
+          ? 'Berhasil bergabung dengan Celengan Bersama! 🎉'
+          : 'Undangan Celengan Bersama ditolak.'
+      )
+      setRefreshTrigger((prev) => prev + 1)
+    } catch (err: any) {
+      console.error('[Dashboard] Error responding to group invite:', err)
+      toast.error(err?.message || 'Gagal merespon undangan Celengan Bersama.')
+    } finally {
+      setProcessingInviteId(null)
+    }
+  }
+
+  // Handle Vote Group Dissolution from Dashboard
+  const handleVoteGroupDissolution = async (groupId: string, decision: 'APPROVED' | 'REJECTED') => {
+    if (!user?.uid) return
+    setVotingGroupId(groupId)
+    try {
+      const result = await groupSavingsService.voteGroupDissolution(groupId, user.uid, decision)
+      if (decision === 'APPROVED') {
+        if (result.allApproved) {
+          toast.success('Konsensus tercapai! Celengan Bersama resmi dibubarkan.')
+        } else {
+          toast.success('Persetujuan pembubaran kamu telah dicatat. Menunggu anggota lain.')
+        }
+      } else {
+        toast.info('Pengajuan pembubaran Celengan Bersama telah kamu tolak. Grup tetap aktif.')
+      }
+      setRefreshTrigger((prev) => prev + 1)
+    } catch (err: any) {
+      console.error('[Dashboard] Error voting group dissolution:', err)
+      toast.error(err?.message || 'Gagal memproses voting pembubaran grup.')
+    } finally {
+      setVotingGroupId(null)
+    }
+  }
+
+  // Handle Dismiss Dissolved Group Notice
+  const handleDismissDissolvedNotice = async (groupId: string) => {
+    if (!user?.uid) return
+    try {
+      await groupSavingsService.dismissDissolutionNotice(groupId, user.uid)
+      setDissolvedGroupNotices((prev) => prev.filter((item) => item.group.id !== groupId))
+    } catch (err: any) {
+      console.error('[Dashboard] Error dismissing dissolution notice:', err)
+      setDissolvedGroupNotices((prev) => prev.filter((item) => item.group.id !== groupId))
+    }
+  }
+
   // Formatted Current Date String (Indonesian)
   const currentDateFormatted = useMemo(() => {
     return new Date().toLocaleDateString('id-ID', {
@@ -688,6 +799,221 @@ export default function DashboardPage() {
               <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Celengan Bersama: Pending Invitations Banner */}
+      {pendingGroupInvites.length > 0 && (
+        <div className="space-y-3">
+          {pendingGroupInvites.map(({ invite, group }) => (
+            <div
+              key={invite.id}
+              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-blue-500/10 border border-teal-500/30 text-slate-900 dark:text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-teal-500 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
+                  <PiggyBank className="w-5 h-5 text-slate-950" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="cyan" size="sm">
+                      Undangan Celengan Bersama
+                    </Badge>
+                    <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                      {group.name}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    Kamu diajak menabung bersama dengan target total{' '}
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      Rp {group.targetAmount.toLocaleString('id-ID')}
+                    </span>
+                    {invite.myTarget > 0 && (
+                      <>
+                        {' '}
+                        (porsi targetmu:{' '}
+                        <span className="font-semibold text-teal-600 dark:text-teal-400">
+                          Rp {invite.myTarget.toLocaleString('id-ID')}
+                        </span>
+                        )
+                      </>
+                    )}
+                    .
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleRespondGroupInvite(invite.id, 'REJECTED')}
+                  disabled={processingInviteId === invite.id}
+                  className="text-xs font-semibold hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                >
+                  Tolak
+                </Button>
+                <Button
+                  size="sm"
+                  variant="glow"
+                  onClick={() => handleRespondGroupInvite(invite.id, 'ACCEPTED')}
+                  loading={processingInviteId === invite.id}
+                  leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                  className="text-xs font-bold shadow-sm"
+                >
+                  Terima Undangan
+                </Button>
+                <Link href="/group-savings">
+                  <Button size="sm" variant="ghost" className="text-xs px-2" title="Detail Celengan">
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Celengan Bersama: Dissolution Voting / Consensus Banner */}
+      {pendingDissolutionGroups.length > 0 && (
+        <div className="space-y-3">
+          {pendingDissolutionGroups.map(({ group, allMembers }) => {
+            const req = group.dissolutionRequest
+            if (!req) return null
+            const myVote = user?.uid ? req.votes?.[user.uid] : undefined
+            const approvedVotes = Object.values(req.votes || {}).filter(
+              (v) => v === 'APPROVED'
+            ).length
+            const totalMembers = allMembers.length
+
+            return (
+              <div
+                key={group.id}
+                className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 text-slate-900 dark:text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm animate-in fade-in"
+              >
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shrink-0 shadow-md">
+                    <AlertTriangle className="w-5 h-5 text-slate-950" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="warning" size="sm">
+                        Permintaan Pembubaran Grup
+                      </Badge>
+                      <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                        {group.name}
+                      </span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300">
+                        {approvedVotes}/{totalMembers} Persetujuan
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
+                      Diajukan oleh <span className="font-bold">{req.requestedByName}</span>. Alasan:{' '}
+                      <span className="italic font-medium">"{req.reason}"</span>
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Sesuai aturan transparansi, grup hanya akan dibubarkan jika seluruh anggota menyetujui. Jika 1 orang menolak, grup tetap aktif.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
+                  {myVote === 'APPROVED' ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="income" size="sm" className="px-3 py-1 text-xs">
+                        ✓ Kamu Sudah Menyetujui
+                      </Badge>
+                      <Link href="/group-savings">
+                        <Button size="sm" variant="outline" className="text-xs font-medium">
+                          Buka Grup
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleVoteGroupDissolution(group.id, 'REJECTED')}
+                        disabled={votingGroupId === group.id}
+                        className="text-xs font-semibold hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                      >
+                        Tolak Pembubaran
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleVoteGroupDissolution(group.id, 'APPROVED')}
+                        loading={votingGroupId === group.id}
+                        className="text-xs font-bold shadow-sm"
+                      >
+                        Setujui Pembubaran
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Celengan Bersama: Dissolved Notice Banner */}
+      {dissolvedGroupNotices.length > 0 && (
+        <div className="space-y-3">
+          {dissolvedGroupNotices.map(({ group, member }) => (
+            <div
+              key={group.id}
+              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold shrink-0">
+                  <AlertCircle className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="neutral" size="sm">
+                      Grup Telah Dibubarkan
+                    </Badge>
+                    <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                      {group.name}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    Celengan bersama ini resmi dibubarkan atas persetujuan semua anggota.
+                    {member.myContributed > 0 ? (
+                      <>
+                        {' '}
+                        Saldo tabungan yang telah kamu setorkan adalah{' '}
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                          Rp {member.myContributed.toLocaleString('id-ID')}
+                        </span>
+                        . Silakan kelola kembali dana tersebut di dompet pribadimu.
+                      </>
+                    ) : (
+                      ' Tidak ada saldo aktif yang tersisa.'
+                    )}
+                  </p>
+                  {group.dissolutionRequest?.reason && (
+                    <p className="text-[11px] text-slate-500 italic mt-0.5">
+                      Alasan: "{group.dissolutionRequest.reason}"
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDismissDissolvedNotice(group.id)}
+                  className="text-xs font-semibold"
+                >
+                  Tutup Informasi
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

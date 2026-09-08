@@ -192,6 +192,30 @@ export default function SavingsPage() {
     }
   }, [user?.uid, refreshTrigger])
 
+  // Auto-switch tab if URL contains ?tab=undangan or ?tab=bersama
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      if (tabParam === 'undangan') {
+        setActiveTab('undangan')
+      } else if (tabParam === 'bersama') {
+        setActiveTab('bersama')
+      }
+    }
+  }, [])
+
+  // Reactive listener: Auto-fetch savings data when group savings invites arrive
+  useEffect(() => {
+    const handleInvitesUpdated = () => {
+      setRefreshTrigger((prev) => prev + 1)
+    }
+    window.addEventListener('saveme:group-invites-updated', handleInvitesUpdated)
+    return () => {
+      window.removeEventListener('saveme:group-invites-updated', handleInvitesUpdated)
+    }
+  }, [])
+
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',

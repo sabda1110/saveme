@@ -35,13 +35,18 @@ import {
   HandCoins,
   Lock,
 } from 'lucide-react'
+import {
+  GroupSavingsInviteProvider,
+  useGroupSavingsInvites,
+} from '@/context/GroupSavingsInviteContext'
 import { cn } from '@/lib/utils/cn'
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const { user, userProfile, isAdmin, isSuperAdmin, loading, logout } = useAuth()
   const { toast } = useToast()
+  const { pendingInvitesCount } = useGroupSavingsInvites()
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false)
 
@@ -61,20 +66,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user, userProfile, loading, pathname, router, toast])
 
+  // Register Service Worker globally for notifications and background tasks
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/firebase-messaging-sw.js', { scope: '/' })
+        .catch((err) => {
+          console.warn('[SW] Service worker registration failed:', err)
+        })
+    }
+  }, [])
+
   // Setup foreground FCM notification listener
   useEffect(() => {
     let unsubscribe: (() => void) | null = null
     setupForegroundMessageListener((payload) => {
+      const isGroupInvite = payload.data?.type === 'GROUP_INVITE'
+      const title =
+        payload.title ||
+        (isGroupInvite
+          ? '📩 Undangan Celengan Bersama Baru!'
+          : 'SaveMe - Pengingat Harian')
+      const targetUrl = payload.url || (isGroupInvite ? '/savings' : '/daily')
+
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification(payload.title || 'SaveMe - Pengingat Harian', {
+          new Notification(title, {
             body: payload.body || '',
-            icon: '/globe.svg',
-            data: { url: payload.url || '/daily' },
+            icon: '/logo.svg',
+            data: { url: targetUrl },
           })
         } catch {
           // ignore
         }
+      }
+
+      if (isGroupInvite && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('saveme:group-invites-updated'))
       }
     }).then((unsub) => {
       unsubscribe = unsub
@@ -252,9 +280,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                               <span>{item.label}</span>
                             </div>
 
-                            {isLocked && (
-                              <Lock className="w-3.5 h-3.5 text-slate-400/80 dark:text-slate-500/80 shrink-0" />
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {item.href === '/savings' && pendingInvitesCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 shadow-xs animate-pulse">
+                                  {pendingInvitesCount}
+                                </span>
+                              )}
+                              {isLocked && (
+                                <Lock className="w-3.5 h-3.5 text-slate-400/80 dark:text-slate-500/80 shrink-0" />
+                              )}
+                            </div>
                           </Link>
                         )
                       })}
@@ -338,5 +373,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile Bottom Navigation */}
       <BottomNav />
     </div>
+  )
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <GroupSavingsInviteProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </GroupSavingsInviteProvider>
   )
 }

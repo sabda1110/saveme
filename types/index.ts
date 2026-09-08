@@ -236,8 +236,17 @@ export interface UpdateQuickTemplateDto {
 
 // ─── Group Savings (Celengan Bersama) ────────────────────────────────────────
 
-export type GroupSavingsStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+export type GroupSavingsStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'DISSOLUTION_PENDING'
 export type GroupMemberStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
+
+export interface GroupDissolutionRequest {
+  requestedBy: string
+  requestedByName: string
+  reason?: string
+  requestedAt: unknown
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  votes: Record<string, 'APPROVED' | 'REJECTED'> // userId -> vote
+}
 
 export interface GroupSavings {
   id: string
@@ -247,6 +256,9 @@ export interface GroupSavings {
   targetAmount: number
   targetDate?: string // YYYY-MM-DD
   status: GroupSavingsStatus
+  dissolutionRequest?: GroupDissolutionRequest
+  dissolvedAt?: unknown
+  dissolutionDismissedBy?: string[] // list of userIds who dismissed the notice
   createdAt?: unknown
   updatedAt?: unknown
 }
