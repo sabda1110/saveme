@@ -7,6 +7,7 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
+  writeBatch,
   query,
   where,
   serverTimestamp,
@@ -24,6 +25,26 @@ export interface CreateTransactionDto {
   transactionDate: string // YYYY-MM-DD
   walletId?: string
   walletName?: string
+}
+
+export interface BulkDeleteOptions {
+  mode: 'RANGE' | 'ALL'
+  typeFilter?: 'ALL' | 'EXPENSE' | 'INCOME'
+  startDate?: string // YYYY-MM-DD
+  endDate?: string // YYYY-MM-DD
+  walletAction: 'KEEP' | 'RESET_CUSTOM'
+  customWalletBalances?: Record<string, number> // walletId -> new balance
+  syncOtherModules?: boolean // default true: sync salary allocation, recurring bills, savings goals
+}
+
+export interface BulkDeleteResult {
+  deletedCount: number
+  totalIncomeDeleted: number
+  totalExpenseDeleted: number
+  affectedWalletsCount: number
+  unlockedSalaryMonths: string[]
+  adjustedBillsCount: number
+  adjustedSavingsGoalsCount: number
 }
 
 export const transactionService = {
@@ -248,6 +269,222 @@ export const transactionService = {
       savingsRate,
       transactions: filtered,
       categoryBreakdown: categoryBreakdown.sort((a, b) => b.amount - a.amount),
+    }
+  },
+
+  async bulkDelete(userId: string, options: BulkDeleteOptions): Promise<BulkDeleteResult> {
+    if (!userId) throw new Error('Unauthorized: User ID is required')
+
+    // 1. Fetch user's transactions
+    const q = query(
+      collection(db, 'transactions'),
+      where('userId', '==', userId)
+    )
+    const snapshot = await getDocs(q)
+    const allDocs = snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    })) as unknown as Transaction[]
+
+    // 2. Filter target transactions
+    const targetTxs = allDocs.filter((t) => {
+      if (options.typeFilter && options.typeFilter !== 'ALL' && t.type !== options.typeFilter) {
+        return false
+      }
+      if (options.mode === 'RANGE') {
+        if (options.startDate && t.transactionDate < options.startDate) return false
+        if (options.endDate && t.transactionDate > options.endDate) return false
+      }
+      return true
+    })
+
+    if (targetTxs.length === 0) {
+      return {
+        deletedCount: 0,
+        totalIncomeDeleted: 0,
+        totalExpenseDeleted: 0,
+        affectedWalletsCount: 0,
+        unlockedSalaryMonths: [],
+        adjustedBillsCount: 0,
+        adjustedSavingsGoalsCount: 0,
+      }
+    }
+
+    // 3. Compute totals
+    let totalIncomeDeleted = 0
+    let totalExpenseDeleted = 0
+    targetTxs.forEach((t) => {
+      const amt = Number(t.amount) || 0
+      if (t.type === 'INCOME') totalIncomeDeleted += amt
+      if (t.type === 'EXPENSE') totalExpenseDeleted += amt
+    })
+
+    // 4. Handle Wallet Action
+    let affectedWalletsCount = 0
+    if (options.walletAction === 'RESET_CUSTOM' && options.customWalletBalances) {
+      for (const [walletId, newBalance] of Object.entries(options.customWalletBalances)) {
+        try {
+          const walletRef = doc(db, 'wallets', walletId)
+          const wSnap = await getDoc(walletRef)
+          if (wSnap.exists() && wSnap.data().userId === userId) {
+            await updateDoc(walletRef, {
+              balance: Math.max(0, Number(newBalance) || 0),
+              updatedAt: serverTimestamp(),
+            })
+            affectedWalletsCount++
+          }
+        } catch (err) {
+          console.warn(`[bulkDelete] Error updating wallet ${walletId}:`, err)
+        }
+      }
+    }
+
+    // 5. Sync other modules (unless explicitly disabled)
+    const unlockedSalaryMonths: string[] = []
+    let adjustedBillsCount = 0
+    let adjustedSavingsGoalsCount = 0
+
+    if (options.syncOtherModules !== false) {
+      // 5a. Salary Allocations / Payroll
+      const salaryMonthsSet = new Set<string>()
+      for (const t of targetTxs) {
+        const isSalary =
+          t.type === 'INCOME' &&
+          (t.categoryId === 'salary' ||
+            t.categoryId === 'allowance' ||
+            (typeof t.description === 'string' &&
+              (t.description.includes('[Gaji Masuk]') || t.description.includes('[Uang Saku Masuk]'))))
+        if (isSalary && t.transactionDate) {
+          salaryMonthsSet.add(t.transactionDate.substring(0, 7))
+        }
+      }
+
+      for (const monthStr of Array.from(salaryMonthsSet)) {
+        try {
+          const allocQuery = query(
+            collection(db, 'salary_allocations'),
+            where('userId', '==', userId),
+            where('monthStr', '==', monthStr)
+          )
+          const allocSnap = await getDocs(allocQuery)
+          for (const aDoc of allocSnap.docs) {
+            await deleteDoc(doc(db, 'salary_allocations', aDoc.id))
+          }
+          unlockedSalaryMonths.push(monthStr)
+        } catch (err) {
+          console.warn(`[bulkDelete] Failed to clean salary_allocation for ${monthStr}:`, err)
+        }
+      }
+
+      if (unlockedSalaryMonths.length > 0) {
+        try {
+          const userRef = doc(db, 'users', userId)
+          await updateDoc(userRef, {
+            lastAllocatedMonth: '',
+            updatedAt: serverTimestamp(),
+          })
+        } catch (err) {
+          console.warn('[bulkDelete] Failed to reset lastAllocatedMonth in user profile:', err)
+        }
+      }
+
+      // 5b. Recurring Bills
+      const billTxRegex = /^\[(Cicilan\s+\d+\/\d+|Pembayaran Tagihan)\]\s+(.+)$/
+      const billNamesAffected = new Set<string>()
+      for (const t of targetTxs) {
+        if (t.description) {
+          const match = t.description.match(billTxRegex)
+          if (match && match[2]) {
+            billNamesAffected.add(match[2].trim())
+          }
+        }
+      }
+
+      if (billNamesAffected.size > 0) {
+        try {
+          const billsQuery = query(collection(db, 'recurring_bills'), where('userId', '==', userId))
+          const billsSnap = await getDocs(billsQuery)
+          for (const bDoc of billsSnap.docs) {
+            const bData = bDoc.data()
+            if (billNamesAffected.has(bData.name)) {
+              const updateData: Record<string, unknown> = {
+                lastProcessedMonth: '',
+                updatedAt: serverTimestamp(),
+              }
+              if (typeof bData.paidTenor === 'number' && bData.paidTenor > 0) {
+                updateData.paidTenor = Math.max(0, bData.paidTenor - 1)
+              }
+              await updateDoc(doc(db, 'recurring_bills', bDoc.id), updateData)
+              adjustedBillsCount++
+            }
+          }
+        } catch (err) {
+          console.warn('[bulkDelete] Failed to revert recurring bills:', err)
+        }
+      }
+
+      // 5c. Savings Goals
+      const savingsTxRegex = /^\[Celengan\]\s+(Setor ke|Saldo Awal|Tarik dari):\s+(.+)$/
+      const savingsAdjustments: Record<string, number> = {}
+
+      for (const t of targetTxs) {
+        if (t.description) {
+          const match = t.description.match(savingsTxRegex)
+          if (match && match[2]) {
+            const action = match[1]
+            const goalName = match[2].trim()
+            if (!savingsAdjustments[goalName]) savingsAdjustments[goalName] = 0
+            if (action === 'Setor ke' || action === 'Saldo Awal') {
+              savingsAdjustments[goalName] -= Number(t.amount) || 0
+            } else if (action === 'Tarik dari') {
+              savingsAdjustments[goalName] += Number(t.amount) || 0
+            }
+          }
+        }
+      }
+
+      if (Object.keys(savingsAdjustments).length > 0) {
+        try {
+          const goalsQuery = query(collection(db, 'savings_goals'), where('userId', '==', userId))
+          const goalsSnap = await getDocs(goalsQuery)
+          for (const gDoc of goalsSnap.docs) {
+            const gData = gDoc.data()
+            const delta = savingsAdjustments[gData.name]
+            if (delta !== undefined && delta !== 0) {
+              const currentAmt = Number(gData.currentAmount) || 0
+              const newAmt = Math.max(0, currentAmt + delta)
+              await updateDoc(doc(db, 'savings_goals', gDoc.id), {
+                currentAmount: newAmt,
+                updatedAt: serverTimestamp(),
+              })
+              adjustedSavingsGoalsCount++
+            }
+          }
+        } catch (err) {
+          console.warn('[bulkDelete] Failed to adjust savings goals:', err)
+        }
+      }
+    }
+
+    // 6. Batch Delete the Transaction Documents in Chunks of 400
+    const CHUNK_SIZE = 400
+    for (let i = 0; i < targetTxs.length; i += CHUNK_SIZE) {
+      const chunk = targetTxs.slice(i, i + CHUNK_SIZE)
+      const batch = writeBatch(db)
+      for (const t of chunk) {
+        batch.delete(doc(db, 'transactions', t.id))
+      }
+      await batch.commit()
+    }
+
+    return {
+      deletedCount: targetTxs.length,
+      totalIncomeDeleted,
+      totalExpenseDeleted,
+      affectedWalletsCount,
+      unlockedSalaryMonths,
+      adjustedBillsCount,
+      adjustedSavingsGoalsCount,
     }
   },
 }

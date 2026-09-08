@@ -282,3 +282,95 @@ export interface GroupSavingsContribution {
   notes?: string
   contributedAt?: unknown
 }
+
+// ─── Debts & Loans (Pencatatan Peminjaman Uang / Hutang Piutang) ─────────────
+
+export type DebtType = 'LENT' | 'BORROWED' // LENT: Saya meminjamkan (Piutang) | BORROWED: Saya meminjam (Hutang)
+export type DebtStatus = 'UNPAID' | 'PARTIAL' | 'PAID'
+export type DebtRelationship = 'FAMILY' | 'FRIEND' | 'COLLEAGUE' | 'OTHER'
+
+export interface DebtRepayment {
+  id: string
+  amount: number
+  repaymentDate: string // YYYY-MM-DD
+  walletId?: string
+  walletName?: string
+  notes?: string
+  createdAt?: unknown
+}
+
+export interface DebtAddition {
+  id: string
+  amount: number
+  additionDate: string // YYYY-MM-DD
+  walletId?: string
+  walletName?: string
+  notes?: string
+  createdAt?: unknown
+}
+
+export interface Debt {
+  id: string
+  userId: string
+  type: DebtType
+  personName: string
+  personRelationship?: DebtRelationship
+  personContact?: string // WhatsApp or phone number
+  totalAmount: number
+  paidAmount: number
+  status: DebtStatus
+  startDate: string // YYYY-MM-DD
+  dueDate?: string // YYYY-MM-DD (optional, if negotiated)
+  isFlexible?: boolean // true if without rigid deadline ("kapan saja / ada rezeki")
+  notes?: string
+  walletId?: string
+  walletName?: string
+  repayments?: DebtRepayment[]
+  additions?: DebtAddition[]
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+export interface CreateDebtDto {
+  type: DebtType
+  personName: string
+  personRelationship?: DebtRelationship
+  personContact?: string
+  totalAmount: number
+  startDate: string
+  dueDate?: string
+  isFlexible?: boolean
+  notes?: string
+  walletId?: string
+  walletName?: string
+  affectWalletBalance?: boolean
+}
+
+export interface UpdateDebtDto {
+  personName?: string
+  personRelationship?: DebtRelationship
+  personContact?: string
+  dueDate?: string
+  isFlexible?: boolean
+  notes?: string
+}
+
+export interface AddDebtRepaymentDto {
+  amount: number
+  repaymentDate: string
+  walletId?: string
+  walletName?: string
+  notes?: string
+  affectWalletBalance?: boolean
+}
+
+export interface AddDebtLoanDto {
+  amount: number
+  additionDate: string
+  walletId?: string
+  walletName?: string
+  notes?: string
+  affectWalletBalance?: boolean
+}
+
+

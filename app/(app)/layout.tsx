@@ -31,6 +31,7 @@ import {
   User,
   Zap,
   DollarSign,
+  HandCoins,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -100,6 +101,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         { label: 'Kantong & Rekening', href: '/wallets', icon: <WalletIcon className="w-4 h-4" /> },
         { label: 'Celengan Impian', href: '/savings', icon: <Target className="w-4 h-4" /> },
         { label: 'Cicilan & Tagihan', href: '/bills', icon: <CreditCard className="w-4 h-4" /> },
+        { label: 'Hutang & Piutang', href: '/debts', icon: <HandCoins className="w-4 h-4" /> },
       ],
     },
     {

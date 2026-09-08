@@ -28,6 +28,7 @@ import {
   Unlock,
   KeyRound,
   CreditCard,
+  Trash2,
 } from 'lucide-react'
 import {
   detectUserTimezone,
@@ -530,6 +531,35 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Section: Pembersihan & Reset Transaksi */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-rose-950/20 via-white dark:via-[#1a1d27] to-white dark:to-[#1a1d27] border border-rose-500/30 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0 mt-0.5 sm:mt-0">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Pembersihan &amp; Reset Transaksi
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                  Data Reset
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+                Hapus riwayat transaksi berdasarkan rentang tanggal atau bersihkan seluruh catatan lama untuk memulai lembaran baru dengan opsi mempertahankan saldo atau mengatur ulang saldo kantong.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/transactions?action=bulk-delete"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-bold transition-all shrink-0 cursor-pointer"
+          >
+            <span>Buka Pembersihan</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* Section 3: Pengingat & Notifikasi Harian (FCM & Multi-Zona Waktu) */}

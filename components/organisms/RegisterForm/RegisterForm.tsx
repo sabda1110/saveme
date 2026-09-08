@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import { FormField } from '@/components/molecules/FormField'
 import { Input } from '@/components/atoms/Input'
 import { Button } from '@/components/atoms/Button'
-import { registerWithEmail } from '@/lib/auth/firebase-auth'
+import { registerWithEmail, signInWithGoogle } from '@/lib/auth/firebase-auth'
 import { initSession } from '@/lib/auth/session'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth.schema'
+import { GoogleIcon } from '@/components/atoms/GoogleIcon'
 import { User, Mail, Lock, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react'
 
 export function RegisterForm() {
@@ -22,6 +23,7 @@ export function RegisterForm() {
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterInput, string>>>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   const handleChange = (field: keyof RegisterInput, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -67,6 +69,34 @@ export function RegisterForm() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setServerError(null)
+    setGoogleLoading(true)
+    try {
+      const { user } = await signInWithGoogle()
+      initSession(user.uid)
+      router.push('/dashboard')
+    } catch (err: unknown) {
+      console.error('[auth] Google sign-in error:', err)
+      const firebaseError = err as { code?: string; message?: string }
+      if (
+        firebaseError.code === 'auth/popup-closed-by-user' ||
+        firebaseError.code === 'auth/cancelled-popup-request'
+      ) {
+        return
+      }
+      if (firebaseError.code === 'auth/popup-blocked') {
+        setServerError('Pop-up Google diblokir browser. Harap izinkan pop-up untuk situs ini.')
+      } else if (firebaseError.code === 'auth/network-request-failed') {
+        setServerError('Gagal terhubung ke Google. Periksa koneksi internet Anda.')
+      } else {
+        setServerError(firebaseError.message || 'Gagal masuk dengan Google. Silakan coba lagi.')
+      }
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
   return (
     <div className="w-full max-w-md bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors">
       <div className="text-center mb-8">
@@ -92,7 +122,7 @@ export function RegisterForm() {
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             leftIcon={<User className="w-4 h-4" />}
-            disabled={loading}
+            disabled={loading || googleLoading}
             error={errors.name}
           />
         </FormField>
@@ -104,7 +134,7 @@ export function RegisterForm() {
             value={formData.email}
             onChange={(e) => handleChange('email', e.target.value)}
             leftIcon={<Mail className="w-4 h-4" />}
-            disabled={loading}
+            disabled={loading || googleLoading}
             error={errors.email}
           />
         </FormField>
@@ -116,7 +146,7 @@ export function RegisterForm() {
             value={formData.password}
             onChange={(e) => handleChange('password', e.target.value)}
             leftIcon={<Lock className="w-4 h-4" />}
-            disabled={loading}
+            disabled={loading || googleLoading}
             error={errors.password}
           />
         </FormField>
@@ -128,7 +158,7 @@ export function RegisterForm() {
             value={formData.confirmPassword}
             onChange={(e) => handleChange('confirmPassword', e.target.value)}
             leftIcon={<Lock className="w-4 h-4" />}
-            disabled={loading}
+            disabled={loading || googleLoading}
             error={errors.confirmPassword}
           />
         </FormField>
@@ -143,12 +173,39 @@ export function RegisterForm() {
           variant="glow"
           size="lg"
           loading={loading}
+          disabled={loading || googleLoading}
           className="w-full mt-2 justify-center text-sm font-semibold"
           rightIcon={<ArrowRight className="w-4 h-4" />}
         >
           Daftar Akun Baru
         </Button>
       </form>
+
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200 dark:border-[#2d3348]" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white dark:bg-[#1a1d27] px-3 text-slate-400 dark:text-slate-500 font-medium">
+            Atau daftar dengan
+          </span>
+        </div>
+      </div>
+
+      {/* Google Sign-in Button */}
+      <Button
+        type="button"
+        variant="secondary"
+        size="lg"
+        loading={googleLoading}
+        disabled={loading || googleLoading}
+        onClick={handleGoogleSignIn}
+        className="w-full justify-center text-sm font-semibold hover:border-slate-300 dark:hover:border-slate-500"
+        leftIcon={<GoogleIcon size={18} />}
+      >
+        Daftar dengan Google
+      </Button>
 
       {/* Login redirect link */}
       <div className="mt-8 pt-6 border-t border-slate-200 dark:border-[#2d3348]/70 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">

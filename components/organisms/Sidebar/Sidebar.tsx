@@ -21,6 +21,7 @@ import {
   Zap,
   DollarSign,
   ChevronRight,
+  HandCoins,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -82,6 +83,11 @@ export function Sidebar() {
           label: 'Cicilan & Tagihan',
           href: '/bills',
           icon: <CreditCard className="w-4 h-4" />,
+        },
+        {
+          label: 'Hutang & Piutang',
+          href: '/debts',
+          icon: <HandCoins className="w-4 h-4" />,
         },
       ],
     },

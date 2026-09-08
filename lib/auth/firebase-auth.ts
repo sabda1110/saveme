@@ -1,5 +1,7 @@
 import { auth, db } from '@/lib/firebase/config'
 import {
+  GoogleAuthProvider,
+  signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -11,6 +13,10 @@ import {
   setDoc,
   getDoc,
   updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
 import type { UserProfile, UserRole } from '@/types'
@@ -23,6 +29,62 @@ function determineInitialRole(email: string): UserRole {
     return 'SUPER_ADMIN'
   }
   return 'USER'
+}
+
+export async function signInWithGoogle(): Promise<{ user: FirebaseUser; isNewUser: boolean }> {
+  const provider = new GoogleAuthProvider()
+  provider.setCustomParameters({ prompt: 'select_account' })
+
+  const credential = await signInWithPopup(auth, provider)
+  const user = credential.user
+
+  if (!user.email) {
+    throw new Error('Akun Google tidak memiliki alamat email yang terverifikasi.')
+  }
+
+  // 1. Check if user document already exists in Firestore by UID
+  const userRef = doc(db, 'users', user.uid)
+  const userSnap = await getDoc(userRef)
+
+  if (userSnap.exists()) {
+    // Existing account: update last login timestamp only, do not touch wallet/profile/onboarding
+    await updateDoc(userRef, {
+      updatedAt: serverTimestamp(),
+    })
+    return { user, isNewUser: false }
+  }
+
+  // 2. Check if email already exists in Firestore (e.g. from an existing registration)
+  const emailQuery = query(
+    collection(db, 'users'),
+    where('email', '==', user.email.toLowerCase())
+  )
+  const emailSnap = await getDocs(emailQuery)
+
+  if (!emailSnap.empty) {
+    // Profile already exists with this email! Link/sync to this UID to maintain data consistency
+    const existingData = emailSnap.docs[0].data()
+    await setDoc(userRef, {
+      ...existingData,
+      uid: user.uid,
+      updatedAt: serverTimestamp(),
+    })
+    return { user, isNewUser: false }
+  }
+
+  // 3. Completely new user: initialize basic profile
+  const role: UserRole = determineInitialRole(user.email)
+  await setDoc(userRef, {
+    uid: user.uid,
+    name: user.displayName || 'Pengguna SaveMe',
+    email: user.email.toLowerCase(),
+    role,
+    hasCompletedOnboarding: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+
+  return { user, isNewUser: true }
 }
 
 export async function registerWithEmail(name: string, email: string, password: string): Promise<FirebaseUser> {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
-import { transactionService, type CreateTransactionDto } from '@/lib/services/transaction.firebase'
+import { transactionService, type CreateTransactionDto, type BulkDeleteResult } from '@/lib/services/transaction.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { quickTemplateService } from '@/lib/services/quick-template.firebase'
@@ -13,6 +13,7 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
+import { BulkDeleteModal } from '@/components/organisms/BulkDeleteModal'
 import { TransactionCalendar } from '@/components/organisms/TransactionCalendar'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
@@ -71,6 +72,8 @@ export default function TransactionsPage() {
   // Create / Edit Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isScanModalOpen, setIsScanModalOpen] = useState(false)
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false)
+  const [bulkDeleteSuccessInfo, setBulkDeleteSuccessInfo] = useState<string | null>(null)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -84,6 +87,16 @@ export default function TransactionsPage() {
   const [isSavingsDeposit, setIsSavingsDeposit] = useState(false)
   const [targetGoalId, setTargetGoalId] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+
+  // Check query parameter ?action=bulk-delete to open modal automatically
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('action') === 'bulk-delete') {
+        setIsBulkDeleteModalOpen(true)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -425,6 +438,21 @@ export default function TransactionsPage() {
     }
   }
 
+  const handleBulkDeleteSuccess = (result: BulkDeleteResult) => {
+    setRefreshTrigger((p) => p + 1)
+    let info = `Berhasil membersihkan ${result.deletedCount} transaksi!`
+    if (result.totalExpenseDeleted > 0 || result.totalIncomeDeleted > 0) {
+      info += ` (Pengeluaran dihapus: ${formatRupiah(result.totalExpenseDeleted)}, Pemasukan: ${formatRupiah(result.totalIncomeDeleted)})`
+    }
+    if (result.affectedWalletsCount > 0) {
+      info += ` • ${result.affectedWalletsCount} saldo kantong diperbarui.`
+    }
+    setBulkDeleteSuccessInfo(info)
+    setTimeout(() => {
+      setBulkDeleteSuccessInfo(null)
+    }, 8000)
+  }
+
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-4">
       {/* Header */}
@@ -460,6 +488,16 @@ export default function TransactionsPage() {
           <Button
             variant="secondary"
             size="sm"
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="text-xs sm:text-sm text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/10 hover:border-rose-500/50 cursor-pointer"
+            leftIcon={<Trash2 className="w-4 h-4 text-rose-500" />}
+          >
+            Bersihkan Transaksi
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setIsScanModalOpen(true)}
             className="text-xs sm:text-sm text-purple-300 border-purple-500/30 hover:bg-purple-500/10"
             leftIcon={<Camera className="w-4 h-4 text-purple-400" />}
@@ -484,6 +522,22 @@ export default function TransactionsPage() {
           </Button>
         </div>
       </div>
+
+      {bulkDeleteSuccessInfo && (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
+            <span className="text-xs sm:text-sm font-medium">{bulkDeleteSuccessInfo}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setBulkDeleteSuccessInfo(null)}
+            className="text-emerald-500 hover:text-emerald-700 p-1 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* View Mode Switcher (List vs Calendar) */}
       <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348]">
@@ -1146,6 +1200,16 @@ export default function TransactionsPage() {
         isOpen={isScanModalOpen}
         onClose={() => setIsScanModalOpen(false)}
         onApplyResult={handleApplyScanResult}
+      />
+
+      {/* Bulk Delete Transactions Modal */}
+      <BulkDeleteModal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        onSuccess={handleBulkDeleteSuccess}
+        transactions={transactions}
+        wallets={wallets}
+        formatRupiah={formatRupiah}
       />
     </div>
   )
