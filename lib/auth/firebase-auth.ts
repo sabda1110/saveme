@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   updateProfile,
   User as FirebaseUser,
@@ -116,6 +117,10 @@ export async function loginWithEmail(email: string, password: string): Promise<F
 
 export async function logoutUser(): Promise<void> {
   await signOut(auth)
+}
+
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email.trim())
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {

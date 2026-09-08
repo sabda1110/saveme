@@ -153,7 +153,23 @@ export function LoginForm() {
           />
         </FormField>
 
-        <FormField label="Kata Sandi" required error={errors.password}>
+        <FormField
+          label="Kata Sandi"
+          required
+          error={errors.password}
+          rightAction={
+            <Link
+              href={
+                formData.email.trim()
+                  ? `/forgot-password?email=${encodeURIComponent(formData.email.trim())}`
+                  : '/forgot-password'
+              }
+              className="text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium hover:underline transition-colors select-none"
+            >
+              Lupa kata sandi?
+            </Link>
+          }
+        >
           <Input
             isPassword
             placeholder="Minimal 6 karakter"

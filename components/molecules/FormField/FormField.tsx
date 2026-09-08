@@ -8,6 +8,7 @@ export interface FormFieldProps {
   required?: boolean
   error?: string
   hint?: string
+  rightAction?: React.ReactNode
   children: React.ReactNode
   className?: string
 }
@@ -18,15 +19,21 @@ export function FormField({
   required,
   error,
   hint,
+  rightAction,
   children,
   className,
 }: FormFieldProps) {
   return (
     <div className={cn('flex flex-col gap-1.5 w-full', className)}>
-      {label && (
-        <Label htmlFor={id} required={required}>
-          {label}
-        </Label>
+      {(label || rightAction) && (
+        <div className="flex items-center justify-between">
+          {label && (
+            <Label htmlFor={id} required={required}>
+              {label}
+            </Label>
+          )}
+          {rightAction}
+        </div>
       )}
       {children}
       {error ? (

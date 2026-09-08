@@ -19,3 +19,10 @@ export const registerSchema = z
 
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Format email tidak valid').min(1, 'Alamat email wajib diisi'),
+})
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+
