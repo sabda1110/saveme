@@ -9,11 +9,16 @@ import {
   Wallet,
   Target,
   CreditCard,
+  Lock,
 } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { cn } from '@/lib/utils/cn'
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { userProfile } = useAuth()
+  const { toast } = useToast()
 
   const navItems = [
     {
@@ -48,13 +53,29 @@ export function BottomNav() {
       <nav className="flex items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href
+          const isLocked = Boolean(
+            userProfile &&
+              userProfile.hasCompletedOnboarding === false &&
+              item.href !== '/dashboard'
+          )
+
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={(e) => {
+                if (isLocked) {
+                  e.preventDefault()
+                  toast.warning(
+                    'Silakan selesaikan panduan onboarding dan isi dompet terlebih dahulu!'
+                  )
+                }
+              }}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 py-1.5 px-2.5 rounded-2xl transition-all duration-150 relative min-w-[54px]',
-                isActive
+                isLocked
+                  ? 'text-slate-400 dark:text-slate-600 opacity-60'
+                  : isActive
                   ? 'text-green-600 dark:text-green-400 font-bold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               )}
@@ -66,11 +87,17 @@ export function BottomNav() {
 
               <div
                 className={cn(
-                  'p-1 rounded-xl transition-all',
-                  isActive ? 'bg-green-500/15' : 'bg-transparent'
+                  'p-1 rounded-xl transition-all relative',
+                  isActive ? 'bg-green-500/15' : 'bg-transparent',
+                  isLocked && 'opacity-60'
                 )}
               >
                 {item.icon}
+                {isLocked && (
+                  <span className="absolute -top-1 -right-1 bg-slate-200 dark:bg-slate-700 rounded-full p-0.5 shadow-xs">
+                    <Lock className="w-2.5 h-2.5 text-slate-500 dark:text-slate-300" />
+                  </span>
+                )}
               </div>
 
               <span className="text-[10px] tracking-tight">{item.label}</span>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { Sidebar } from '@/components/organisms/Sidebar'
 import { BottomNav } from '@/components/organisms/BottomNav'
 import { SingleTabGuard } from '@/components/organisms/SingleTabGuard'
@@ -32,6 +33,7 @@ import {
   Zap,
   DollarSign,
   HandCoins,
+  Lock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -39,6 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const { user, userProfile, isAdmin, isSuperAdmin, loading, logout } = useAuth()
+  const { toast } = useToast()
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false)
 
@@ -47,6 +50,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.push('/login')
     }
   }, [user, loading, router])
+
+  // Route guard: force new users to complete onboarding and initialize wallet first
+  useEffect(() => {
+    if (!loading && user && userProfile && userProfile.hasCompletedOnboarding === false) {
+      if (pathname !== '/dashboard' && pathname !== '/profile') {
+        toast.warning('Silakan selesaikan panduan onboarding dan isi dompet terlebih dahulu!')
+        router.replace('/dashboard')
+      }
+    }
+  }, [user, userProfile, loading, pathname, router, toast])
 
   // Setup foreground FCM notification listener
   useEffect(() => {
@@ -192,22 +205,56 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <div className="space-y-0.5 pt-1">
                       {group.items.map((item) => {
                         const isActive = pathname === item.href
+                        const isLocked = Boolean(
+                          userProfile &&
+                            userProfile.hasCompletedOnboarding === false &&
+                            item.href !== '/dashboard'
+                        )
+
                         return (
                           <Link
                             key={item.href}
                             href={item.href}
-                            onClick={() => setMobileDrawerOpen(false)}
+                            onClick={(e) => {
+                              if (isLocked) {
+                                e.preventDefault()
+                                toast.warning(
+                                  'Silakan selesaikan panduan onboarding dan isi dompet terlebih dahulu!'
+                                )
+                                setMobileDrawerOpen(false)
+                                router.push('/dashboard')
+                                return
+                              }
+                              setMobileDrawerOpen(false)
+                            }}
                             className={cn(
-                              'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors',
-                              isActive
+                              'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors',
+                              isLocked
+                                ? 'text-slate-400 dark:text-slate-600 opacity-60'
+                                : isActive
                                 ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200/80 dark:border-emerald-500/20'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
                             )}
                           >
-                            <span className={cn('shrink-0 transition-colors', isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500')}>
-                              {item.icon}
-                            </span>
-                            <span>{item.label}</span>
+                            <div className="flex items-center gap-2.5">
+                              <span
+                                className={cn(
+                                  'shrink-0 transition-colors',
+                                  isLocked
+                                    ? 'text-slate-400 dark:text-slate-600'
+                                    : isActive
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : 'text-slate-400 dark:text-slate-500'
+                                )}
+                              >
+                                {item.icon}
+                              </span>
+                              <span>{item.label}</span>
+                            </div>
+
+                            {isLocked && (
+                              <Lock className="w-3.5 h-3.5 text-slate-400/80 dark:text-slate-500/80 shrink-0" />
+                            )}
                           </Link>
                         )
                       })}

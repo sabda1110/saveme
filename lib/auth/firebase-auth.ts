@@ -85,6 +85,13 @@ export async function signInWithGoogle(): Promise<{ user: FirebaseUser; isNewUse
     updatedAt: serverTimestamp(),
   })
 
+  // Auto-seed initial operational cash wallet with Rp 0
+  try {
+    await walletService.syncInitialBalanceWallet(user.uid, 0)
+  } catch (err) {
+    console.error('[auth] Error auto-seeding wallet for Google user:', err)
+  }
+
   return { user, isNewUser: true }
 }
 
@@ -106,6 +113,13 @@ export async function registerWithEmail(name: string, email: string, password: s
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+
+  // Auto-seed initial operational cash wallet with Rp 0
+  try {
+    await walletService.syncInitialBalanceWallet(user.uid, 0)
+  } catch (err) {
+    console.error('[auth] Error auto-seeding wallet for registered user:', err)
+  }
 
   return user
 }
@@ -186,6 +200,10 @@ export interface OnboardingData {
   savingsTarget: number
   monthlyBudget?: number
   monthlyBudgetMonth?: string
+  incomeType?: 'SALARIED' | 'STUDENT_ALLOWANCE' | 'FREELANCE_VARIABLE' | 'NONE'
+  hasFixedSalary?: boolean
+  paydayDay?: number
+  paydayScheduleType?: 'START_OF_MONTH' | 'END_OF_MONTH' | 'CUSTOM'
 }
 
 export async function completeUserOnboarding(uid: string, data: OnboardingData): Promise<void> {
@@ -196,7 +214,17 @@ export async function completeUserOnboarding(uid: string, data: OnboardingData):
     initialBalance: data.initialBalance,
     monthlyIncome: data.monthlyIncome,
     savingsTarget: data.savingsTarget,
+    incomeType: data.incomeType ?? (data.monthlyIncome > 0 ? 'SALARIED' : 'NONE'),
+    hasFixedSalary: data.hasFixedSalary ?? (data.monthlyIncome > 0),
     updatedAt: serverTimestamp(),
+  }
+
+  if (data.paydayDay !== undefined) {
+    payload.paydayDay = data.paydayDay
+  }
+  if (data.paydayScheduleType !== undefined) {
+    payload.paydayScheduleType = data.paydayScheduleType
+    payload.isEndOfMonthPayday = data.paydayScheduleType === 'END_OF_MONTH'
   }
 
   if (data.monthlyBudget !== undefined) {
@@ -209,8 +237,10 @@ export async function completeUserOnboarding(uid: string, data: OnboardingData):
   // Update profile fields
   await updateDoc(docRef, payload)
 
-  // Sync initial balance directly into primary cash wallet & record linked transaction
-  if (data.initialBalance > 0) {
+  // ALWAYS sync initial balance directly into primary cash wallet (even if 0, ensures wallet exists)
+  try {
     await walletService.syncInitialBalanceWallet(uid, data.initialBalance)
+  } catch (err) {
+    console.error('[auth] Error syncing wallet in completeUserOnboarding:', err)
   }
 }

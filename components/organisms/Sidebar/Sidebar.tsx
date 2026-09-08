@@ -7,6 +7,7 @@ import { BrandLogo } from '@/components/atoms/BrandLogo'
 import { Badge } from '@/components/atoms/Badge'
 import { ThemeToggle } from '@/components/molecules/ThemeToggle'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import {
   LayoutDashboard,
   Compass,
@@ -22,6 +23,7 @@ import {
   DollarSign,
   ChevronRight,
   HandCoins,
+  Lock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -39,6 +41,7 @@ interface NavGroup {
 export function Sidebar() {
   const pathname = usePathname()
   const { user, userProfile, isAdmin, isSuperAdmin, logout } = useAuth()
+  const { toast } = useToast()
 
   const navGroups: NavGroup[] = [
     {
@@ -142,13 +145,29 @@ export function Sidebar() {
             <div className="space-y-0.5 pt-1">
               {group.items.map((item) => {
                 const isActive = pathname === item.href
+                const isLocked = Boolean(
+                  userProfile &&
+                    userProfile.hasCompletedOnboarding === false &&
+                    item.href !== '/dashboard'
+                )
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={(e) => {
+                      if (isLocked) {
+                        e.preventDefault()
+                        toast.warning(
+                          'Silakan selesaikan panduan onboarding dan isi dompet terlebih dahulu!'
+                        )
+                      }
+                    }}
                     className={cn(
                       'group relative flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150',
-                      isActive
+                      isLocked
+                        ? 'text-slate-400 dark:text-slate-600 opacity-60 hover:opacity-100 cursor-not-allowed'
+                        : isActive
                         ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200/80 dark:border-emerald-500/20'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-white/5'
                     )}
@@ -157,7 +176,9 @@ export function Sidebar() {
                       <span
                         className={cn(
                           'transition-colors',
-                          isActive
+                          isLocked
+                            ? 'text-slate-400 dark:text-slate-600'
+                            : isActive
                             ? 'text-emerald-600 dark:text-emerald-400'
                             : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                         )}
@@ -167,9 +188,11 @@ export function Sidebar() {
                       <span>{item.label}</span>
                     </div>
 
-                    {isActive && (
+                    {isLocked ? (
+                      <Lock className="w-3.5 h-3.5 text-slate-400/80 dark:text-slate-500/80 shrink-0" />
+                    ) : isActive ? (
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    )}
+                    ) : null}
                   </Link>
                 )
               })}

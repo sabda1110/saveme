@@ -125,12 +125,13 @@ export const walletService = {
 
     const isLocked = Boolean(data.isLocked)
     const isEarmarked = Boolean(data.isEarmarked)
+    const numBalance = Number(data.balance) || 0
 
     const docRef = await addDoc(collection(db, 'wallets'), {
       userId,
       name: data.name.trim(),
       type: data.type,
-      balance: Number(data.balance) || 0,
+      balance: numBalance,
       accountNumber: data.accountNumber?.trim() || '',
       icon: data.icon || '💳',
       color: data.color || '#22c55e',
@@ -141,13 +142,29 @@ export const walletService = {
       updatedAt: serverTimestamp(),
     })
 
+    // If wallet was initialized with a starting balance, record an initial balance transaction
+    if (numBalance > 0) {
+      const todayStr = new Date().toISOString().split('T')[0]
+      await transactionService.create(userId, {
+        type: 'INCOME',
+        amount: numBalance,
+        categoryId: 'initial-balance',
+        categoryName: 'Saldo Awal / Tabungan',
+        categoryIcon: data.icon || '💰',
+        description: `Saldo Awal Kantong ${data.name.trim()}`,
+        transactionDate: todayStr,
+        walletId: docRef.id,
+        walletName: data.name.trim(),
+      })
+    }
+
     return {
       id: docRef.id,
       userId,
       ...data,
       isLocked,
       isEarmarked,
-      balance: Number(data.balance) || 0,
+      balance: numBalance,
     }
   },
 
@@ -320,10 +337,50 @@ export const walletService = {
 
   /**
    * Recalculate and synchronize ALL wallets' balances from recorded transactions.
+   * Also performs self-healing by detecting and cleaning up orphan transfer transactions
+   * from reset/deleted salary allocations.
    */
   async syncAllWalletsFromTransactions(userId: string): Promise<void> {
     if (!userId) throw new Error('User ID is required')
 
+    try {
+      // 1. Self-healing: Find active salary allocation months
+      const allocSnap = await getDocs(
+        query(collection(db, 'salary_allocations'), where('userId', '==', userId))
+      )
+      const activeAllocations = allocSnap.docs.map((d) => d.data())
+      const activeMonthStrs = new Set(
+        activeAllocations.map((a) => (typeof a.monthStr === 'string' ? a.monthStr : ''))
+      )
+
+      // 2. Scan all transactions for orphan Pay Yourself First transfers
+      const txSnap = await getDocs(
+        query(collection(db, 'transactions'), where('userId', '==', userId))
+      )
+      for (const tDoc of txSnap.docs) {
+        const tData = tDoc.data()
+        if (tData.categoryId === 'transfer') {
+          const desc = typeof tData.description === 'string' ? tData.description : ''
+          const isPayYourselfFirst =
+            desc.includes('[Pay Yourself First]') ||
+            desc.includes('Alokasi Tabungan Beku') ||
+            desc.includes('Tabungan Beku & Darurat')
+
+          if (isPayYourselfFirst) {
+            const dateStr = typeof tData.transactionDate === 'string' ? tData.transactionDate : ''
+            const txMonthStr = dateStr.substring(0, 7)
+            // If the allocation for this month was already deleted/reset, clean up this orphan transfer!
+            if (!activeMonthStrs.has(txMonthStr)) {
+              await deleteDoc(doc(db, 'transactions', tDoc.id))
+            }
+          }
+        }
+      }
+    } catch (cleanErr) {
+      console.warn('[walletService] Orphan transfer cleanup warning:', cleanErr)
+    }
+
+    // 3. Recalculate and synchronize balances for all wallets
     const wallets = await this.getUserWallets(userId)
     await Promise.all(
       wallets.map((w) => this.syncWalletBalanceFromTransactions(userId, w.id))

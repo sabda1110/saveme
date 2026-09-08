@@ -54,9 +54,16 @@ export function OnboardingWizard({
   const [initialBalance, setInitialBalance] = useState(
     initialData?.initialBalance ? initialData.initialBalance.toString() : ''
   )
+  const [hasFixedSalary, setHasFixedSalary] = useState<boolean>(
+    initialData?.monthlyIncome !== undefined ? initialData.monthlyIncome > 0 : true
+  )
   const [monthlyIncome, setMonthlyIncome] = useState(
     initialData?.monthlyIncome ? initialData.monthlyIncome.toString() : ''
   )
+  const [paydayScheduleType, setPaydayScheduleType] = useState<
+    'START_OF_MONTH' | 'END_OF_MONTH' | 'CUSTOM'
+  >('CUSTOM')
+  const [paydayDay, setPaydayDay] = useState<string>('25')
 
   // Step 3: Multi-Cicilan Bulanan
   const [hasInstallment, setHasInstallment] = useState<boolean>(false)
@@ -177,19 +184,33 @@ export function OnboardingWizard({
       }
 
       // 2. Simpan profil user & budget bulanan langsung aktif
+      const isSalaried = hasFixedSalary && numIncome > 0
+
       const computedSavingsPct =
-        isCustomSavings && effectiveBaseIncome > 0
+        isSalaried && isCustomSavings && effectiveBaseIncome > 0
           ? Math.round((chosenSavingsAmount / effectiveBaseIncome) * 100)
-          : savingsTarget
+          : isSalaried
+          ? savingsTarget
+          : 0
 
       const data: OnboardingData = {
         initialBalance: skip
           ? initialData?.initialBalance || 0
           : Number(initialBalance) || 0,
-        monthlyIncome: skip ? initialData?.monthlyIncome || 0 : numIncome,
+        monthlyIncome: skip ? initialData?.monthlyIncome || 0 : isSalaried ? numIncome : 0,
         savingsTarget: skip ? initialData?.savingsTarget || 20 : computedSavingsPct,
-        monthlyBudget: skip ? undefined : operatingMonthlyBudget,
-        monthlyBudgetMonth: skip ? undefined : currentMonthStr,
+        monthlyBudget: skip ? undefined : isSalaried ? operatingMonthlyBudget : undefined,
+        monthlyBudgetMonth: skip ? undefined : isSalaried ? currentMonthStr : undefined,
+        incomeType: isSalaried ? 'SALARIED' : 'FREELANCE_VARIABLE',
+        hasFixedSalary: isSalaried,
+        paydayDay: isSalaried
+          ? paydayScheduleType === 'START_OF_MONTH'
+            ? 1
+            : paydayScheduleType === 'END_OF_MONTH'
+            ? 28
+            : Number(paydayDay) || 25
+          : undefined,
+        paydayScheduleType: isSalaried ? paydayScheduleType : undefined,
       }
 
       await completeUserOnboarding(userId, data)
@@ -342,7 +363,7 @@ export function OnboardingWizard({
           </div>
         )}
 
-        {/* STEP 2: Pemasukan Bulanan */}
+        {/* STEP 2: Pemasukan Bulanan (Opsional) */}
         {step === 2 && (
           <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4">
             <div className="flex items-center gap-3">
@@ -351,47 +372,156 @@ export function OnboardingWizard({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Berapa Pemasukan Rutinmu?
+                  Pemasukan &amp; Gajian Rutin
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                  Estimasi gaji bulanan, uang saku, atau omset usaha per bulan.
+                  Apakah kamu memiliki gaji bulanan tetap atau penghasilan fleksibel?
                 </p>
               </div>
             </div>
 
-            <FormField
-              label="Pemasukan Rata-Rata Bulanan (Rp)"
-              hint="Digunakan sebagai dasar jatah belanja harianmu"
-            >
-              <Input
-                type="number"
-                placeholder="Contoh: 5000000"
-                value={monthlyIncome}
-                onChange={(e) => setMonthlyIncome(e.target.value)}
-                autoFocus
-              />
-            </FormField>
+            {/* Income Type Toggle Choice */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setHasFixedSalary(true)}
+                className={cn(
+                  'p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
+                  hasFixedSalary
+                    ? 'bg-blue-500/15 border-blue-500 text-slate-900 dark:text-white shadow-md'
+                    : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
+                )}
+              >
+                <span className="text-xl">💼</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Punya Gaji Tetap
+                </span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                  Gaji bulanan atau uang saku rutin terprediksi
+                </span>
+              </button>
 
-            {/* Quick Chips */}
-            <div className="flex flex-wrap gap-2">
-              {[2000000, 3500000, 5000000, 8000000, 15000000].map((nominal) => (
-                <button
-                  key={nominal}
-                  type="button"
-                  onClick={() => setMonthlyIncome(nominal.toString())}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#21263a] hover:bg-slate-200 dark:hover:bg-[#2d3348] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              <button
+                type="button"
+                onClick={() => {
+                  setHasFixedSalary(false)
+                  setMonthlyIncome('')
+                }}
+                className={cn(
+                  'p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
+                  !hasFixedSalary
+                    ? 'bg-emerald-500/15 border-emerald-500 text-slate-900 dark:text-white shadow-md'
+                    : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
+                )}
+              >
+                <span className="text-xl">🕊️</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Tanpa Gaji Tetap
+                </span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                  Freelancer, usaha, mahasiswa, atau fleksibel
+                </span>
+              </button>
+            </div>
+
+            {hasFixedSalary ? (
+              <div className="flex flex-col gap-4 animate-in fade-in">
+                <FormField
+                  label="Pemasukan Rata-Rata Bulanan (Rp)"
+                  hint="Digunakan sebagai dasar jatah belanja harianmu"
                 >
-                  {formatRupiahPreview(nominal)}/bulan
-                </button>
-              ))}
-            </div>
+                  <Input
+                    type="number"
+                    placeholder="Contoh: 5000000"
+                    value={monthlyIncome}
+                    onChange={(e) => setMonthlyIncome(e.target.value)}
+                    autoFocus
+                  />
+                </FormField>
 
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-              <span>
-                SaveMe akan membagi pemasukan ini menjadi jatah belanja harian agar kamu tidak boncos sebelum akhir bulan!
-              </span>
-            </div>
+                {/* Quick Chips */}
+                <div className="flex flex-wrap gap-2">
+                  {[2000000, 3500000, 5000000, 8000000, 15000000].map((nominal) => (
+                    <button
+                      key={nominal}
+                      type="button"
+                      onClick={() => setMonthlyIncome(nominal.toString())}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#21263a] hover:bg-slate-200 dark:hover:bg-[#2d3348] border border-slate-200 dark:border-[#2d3348] text-xs text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      {formatRupiahPreview(nominal)}/bulan
+                    </button>
+                  ))}
+                </div>
+
+                {/* Payday Quick Selector */}
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Jadwal Gajian Setiap Bulan:
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaydayScheduleType('START_OF_MONTH')}
+                      className={cn(
+                        'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
+                        paydayScheduleType === 'START_OF_MONTH'
+                          ? 'bg-blue-600 border-blue-500 text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      )}
+                    >
+                      <span className="text-xs font-bold">Awal Bulan</span>
+                      <span className="text-[10px] opacity-75">Tgl 1</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaydayScheduleType('CUSTOM')
+                        setPaydayDay('25')
+                      }}
+                      className={cn(
+                        'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
+                        paydayScheduleType === 'CUSTOM' && paydayDay === '25'
+                          ? 'bg-blue-600 border-blue-500 text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      )}
+                    >
+                      <span className="text-xs font-bold">Tgl 25</span>
+                      <span className="text-[10px] opacity-75">Rata-rata</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaydayScheduleType('END_OF_MONTH')}
+                      className={cn(
+                        'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-0.5',
+                        paydayScheduleType === 'END_OF_MONTH'
+                          ? 'bg-blue-600 border-blue-500 text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      )}
+                    >
+                      <span className="text-xs font-bold">Akhir Bulan</span>
+                      <span className="text-[10px] opacity-75">Tgl 28-31</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    SaveMe akan membagi pemasukan ini menjadi jatah belanja harian agar kamu tidak boncos sebelum akhir bulan!
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-300 flex flex-col gap-2 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-sm text-emerald-900 dark:text-emerald-200">
+                  <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Mode Kas Mandiri Aktif (Zero-Salary Friendly)</span>
+                </div>
+                <p className="leading-relaxed text-slate-700 dark:text-slate-300">
+                  Kamu tidak wajib memiliki gaji bulanan tetap! Di SaveMe, jatah belanjamu akan dihitung secara dinamis dari sisa saldo kas yang ada di dompetmu, dan kamu bisa bebas mencatat uang masuk kapan pun rezeki datang.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#2d3348]">
               <Button
@@ -588,118 +718,200 @@ export function OnboardingWizard({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Mau Disisihkan Berapa Buat Tabungan?
+                  {hasFixedSalary && numIncome > 0
+                    ? 'Mau Disisihkan Berapa Buat Tabungan?'
+                    : 'Target Simpanan & Tabungan'}
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                  {totalInstallments > 0
-                    ? `Dihitung dari sisa uang bersihmu (${formatRupiahPreview(effectiveBaseIncome)} / bulan).`
-                    : 'Pilih nominal uang yang nyaman kamu tabung setiap bulan.'}
+                  {hasFixedSalary && numIncome > 0
+                    ? totalInstallments > 0
+                      ? `Dihitung dari sisa uang bersihmu (${formatRupiahPreview(effectiveBaseIncome)} / bulan).`
+                      : 'Pilih nominal uang yang nyaman kamu tabung setiap bulan.'
+                    : 'Pilih target menabung yang fleksibel sesuai kemampuan kasmu.'}
                 </p>
               </div>
             </div>
 
-            {/* Rupiah Target Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              {savingsOptions.map((opt) => (
+            {hasFixedSalary && numIncome > 0 ? (
+              <>
+                {/* Rupiah Target Options */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {savingsOptions.map((opt) => (
+                    <button
+                      key={opt.pct}
+                      type="button"
+                      onClick={() => {
+                        setSavingsTarget(opt.pct)
+                        setIsCustomSavings(false)
+                      }}
+                      className={cn(
+                        'p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
+                        !isCustomSavings && savingsTarget === opt.pct
+                          ? 'bg-emerald-500/15 dark:bg-gradient-to-br dark:from-emerald-900/40 dark:via-[#1e2333] dark:to-[#161922] border-emerald-500 text-slate-900 dark:text-white shadow-md shadow-emerald-500/10'
+                          : 'bg-slate-50 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-emerald-500/40'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                          {formatRupiahPreview(opt.amount)}
+                        </span>
+                        {!isCustomSavings && savingsTarget === opt.pct && (
+                          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-200">{opt.label}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">{opt.sub}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Nominal Option */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomSavings(true)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer',
+                      isCustomSavings
+                        ? 'bg-emerald-500/20 dark:bg-emerald-950/50 border-emerald-500 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    )}
+                  >
+                    ✍️ Ketik Nominal Sendiri
+                  </button>
+                  {isCustomSavings && (
+                    <div className="flex-1 relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                        Rp
+                      </span>
+                      <input
+                        type="number"
+                        placeholder="Nominal tabungan per bulan"
+                        value={customSavingsAmount}
+                        onChange={(e) => setCustomSavingsAmount(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-emerald-500"
+                        autoFocus
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
-                  key={opt.pct}
                   type="button"
                   onClick={() => {
-                    setSavingsTarget(opt.pct)
+                    setSavingsTarget(0)
                     setIsCustomSavings(false)
                   }}
                   className={cn(
-                    'p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all cursor-pointer',
-                    !isCustomSavings && savingsTarget === opt.pct
-                      ? 'bg-emerald-500/15 dark:bg-gradient-to-br dark:from-emerald-900/40 dark:via-[#1e2333] dark:to-[#161922] border-emerald-500 text-slate-900 dark:text-white shadow-md shadow-emerald-500/10'
-                      : 'bg-slate-50 dark:bg-gradient-to-br dark:from-[#21263a] dark:to-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-emerald-500/40'
+                    'p-4 rounded-2xl border text-left flex flex-col gap-1.5 transition-all cursor-pointer',
+                    !isCustomSavings && savingsTarget === 0
+                      ? 'bg-emerald-500/15 border-emerald-500 text-slate-900 dark:text-white shadow-md'
+                      : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
-                      {formatRupiahPreview(opt.amount)}
-                    </span>
-                    {!isCustomSavings && savingsTarget === opt.pct && (
+                    <span className="text-xl">🌱</span>
+                    {!isCustomSavings && savingsTarget === 0 && (
                       <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     )}
                   </div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-200">{opt.label}</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">{opt.sub}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Custom Nominal Option */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsCustomSavings(true)}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer',
-                  isCustomSavings
-                    ? 'bg-emerald-500/20 dark:bg-emerald-950/50 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-slate-100 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                )}
-              >
-                ✍️ Ketik Nominal Sendiri
-              </button>
-              {isCustomSavings && (
-                <div className="flex-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-                    Rp
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Tabung Fleksibel (Rekomendasi)
                   </span>
-                  <input
-                    type="number"
-                    placeholder="Nominal tabungan per bulan"
-                    value={customSavingsAmount}
-                    onChange={(e) => setCustomSavingsAmount(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-emerald-500"
-                    autoFocus
-                  />
-                </div>
-              )}
-            </div>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Simpan dana darurat saat ada sisa uang kas, tanpa beban target bulanan kaku.
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomSavings(true)
+                    setSavingsTarget(10)
+                  }}
+                  className={cn(
+                    'p-4 rounded-2xl border text-left flex flex-col gap-1.5 transition-all cursor-pointer',
+                    isCustomSavings
+                      ? 'bg-emerald-500/15 border-emerald-500 text-slate-900 dark:text-white shadow-md'
+                      : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl">🎯</span>
+                    {isCustomSavings && (
+                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    )}
+                  </div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Target Nominal Kustom
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Tentukan target simpanan tetap jika kamu sudah punya nominal tertentu.
+                  </span>
+                </button>
+              </div>
+            )}
 
             {/* Outcome Summary Breakdown */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-gradient-to-br dark:from-[#1e2333] dark:to-[#131620] border border-slate-200 dark:border-[#2d3348] space-y-2">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                Hasil Perhitungan Uangmu:
+                Hasil Pengaturan Awalmu:
               </div>
               <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-[#2d3348] text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">💼 Pemasukan Bulanan:</span>
-                  <span className="font-semibold font-mono text-slate-900 dark:text-white">
-                    {formatRupiahPreview(numIncome)}
+                  <span className="text-slate-500 dark:text-slate-400">💳 Saldo Kas Awal Dompet:</span>
+                  <span className="font-semibold font-mono text-emerald-600 dark:text-emerald-400">
+                    {formatRupiahPreview(initialBalance || 0)}
                   </span>
                 </div>
-                {totalInstallments > 0 && (
-                  <div className="flex justify-between text-red-600 dark:text-red-400">
-                    <span>🛵 Total Cicilan ({validInstallmentCount} item):</span>
-                    <span className="font-mono font-semibold">
-                      - {formatRupiahPreview(totalInstallments)}
-                    </span>
+
+                {hasFixedSalary && numIncome > 0 ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 dark:text-slate-400">💼 Pemasukan Bulanan:</span>
+                      <span className="font-semibold font-mono text-slate-900 dark:text-white">
+                        {formatRupiahPreview(numIncome)}
+                      </span>
+                    </div>
+                    {totalInstallments > 0 && (
+                      <div className="flex justify-between text-red-600 dark:text-red-400">
+                        <span>🛵 Total Cicilan ({validInstallmentCount} item):</span>
+                        <span className="font-mono font-semibold">
+                          - {formatRupiahPreview(totalInstallments)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>🏦 Uang Ditabung:</span>
+                      <span className="font-mono font-semibold">
+                        - {formatRupiahPreview(chosenSavingsAmount)}
+                      </span>
+                    </div>
+                    <div className="border-t border-slate-200 dark:border-[#2d3348] pt-1.5 flex justify-between">
+                      <span className="text-slate-700 dark:text-slate-300 font-bold">🛍️ Budget Belanja Bulanan:</span>
+                      <span className="font-extrabold font-mono text-slate-900 dark:text-white">
+                        {formatRupiahPreview(operatingMonthlyBudget)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 text-[11px] leading-relaxed">
+                    🌟 <strong>Mode Kas Riil Fleksibel</strong>: Jatah belanja harianmu dihitung langsung dari total saldo kas yang ada di dompetmu, tanpa memaksakan jadwal gajian.
                   </div>
                 )}
-                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                  <span>🏦 Uang Ditabung:</span>
-                  <span className="font-mono font-semibold">
-                    - {formatRupiahPreview(chosenSavingsAmount)}
+              </div>
+
+              {hasFixedSalary && numIncome > 0 && (
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 dark:bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-500/20 dark:border-emerald-500/30 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+                  <span className="text-[11px] font-medium">📅 Jatah Belanja Harian:</span>
+                  <span className="font-extrabold font-mono text-emerald-700 dark:text-emerald-300 text-sm">
+                    {formatRupiahPreview(estimatedDailyBudget)} / hari
                   </span>
                 </div>
-                <div className="border-t border-slate-200 dark:border-[#2d3348] pt-1.5 flex justify-between">
-                  <span className="text-slate-700 dark:text-slate-300 font-bold">🛍️ Budget Belanja Bulanan:</span>
-                  <span className="font-extrabold font-mono text-slate-900 dark:text-white">
-                    {formatRupiahPreview(operatingMonthlyBudget)}
-                  </span>
-                </div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 dark:bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-500/20 dark:border-emerald-500/30 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
-                <span className="text-[11px] font-medium">📅 Jatah Belanja Harian:</span>
-                <span className="font-extrabold font-mono text-emerald-700 dark:text-emerald-300 text-sm">
-                  {formatRupiahPreview(estimatedDailyBudget)} / hari
-                </span>
-              </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#2d3348]">

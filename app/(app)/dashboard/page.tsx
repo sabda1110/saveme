@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { transactionService, CreateTransactionDto } from '@/lib/services/transaction.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
 import { recurringService } from '@/lib/services/recurring.firebase'
@@ -60,6 +61,7 @@ type PeriodFilter = 'today' | 'week' | 'month' | 'all'
 
 export default function DashboardPage() {
   const { user, userProfile, refreshProfile } = useAuth()
+  const { toast } = useToast()
 
   const [summary, setSummary] = useState<DashboardSummary>({
     balance: 0,
@@ -186,11 +188,6 @@ export default function DashboardPage() {
           if (walletsList.length > 0 && !walletId) {
             setWalletId(walletsList[0].id)
           }
-
-          // Trigger onboarding if brand new user
-          if (userProfile && !userProfile.hasCompletedOnboarding && summaryData.transactions.length === 0) {
-            setIsOnboardingModalOpen(true)
-          }
         }
       } catch (err) {
         console.error('[Dashboard] Error fetching data:', err)
@@ -207,6 +204,13 @@ export default function DashboardPage() {
       isMounted = false
     }
   }, [user?.uid, activePeriod, refreshTrigger, userProfile])
+
+  // Dedicated reactive listener: Auto-open Onboarding Wizard if user has not completed onboarding
+  useEffect(() => {
+    if (userProfile && userProfile.hasCompletedOnboarding === false) {
+      setIsOnboardingModalOpen(true)
+    }
+  }, [userProfile?.hasCompletedOnboarding])
 
   // Multi-wallet segregated calculations
   const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked), [wallets])
@@ -427,7 +431,26 @@ export default function DashboardPage() {
     }
   }
 
-  // Handle AI Scan Result
+  // Guarded modal openers (ensure onboarding & wallet exist)
+  const handleOpenAddTransaction = () => {
+    if (userProfile?.hasCompletedOnboarding === false || wallets.length === 0) {
+      toast.warning('Silakan isi dompet terlebih dahulu melalui Onboarding!')
+      setIsOnboardingModalOpen(true)
+      return
+    }
+    setIsModalOpen(true)
+  }
+
+  const handleOpenScanReceipt = () => {
+    if (userProfile?.hasCompletedOnboarding === false || wallets.length === 0) {
+      toast.warning('Silakan isi dompet terlebih dahulu melalui Onboarding!')
+      setIsOnboardingModalOpen(true)
+      return
+    }
+    setIsScanModalOpen(true)
+  }
+
+  // Handle Scan Receipt Success
   const handleScanSuccess = (result: ReceiptScanResult) => {
     setIsScanModalOpen(false)
     setDescription(result.merchantName || 'Struk Belanja')
@@ -578,7 +601,7 @@ export default function DashboardPage() {
           <Button
             variant="glow"
             size="md"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenAddTransaction}
             leftIcon={<PlusCircle className="w-4 h-4" />}
             className="shadow-md shadow-emerald-500/20 text-xs sm:text-sm font-bold"
           >
@@ -588,7 +611,7 @@ export default function DashboardPage() {
           <Button
             variant="secondary"
             size="md"
-            onClick={() => setIsScanModalOpen(true)}
+            onClick={handleOpenScanReceipt}
             leftIcon={<Camera className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
             className="text-xs sm:text-sm font-semibold"
           >
@@ -596,6 +619,34 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      {/* Onboarding Pending Banner */}
+      {userProfile?.hasCompletedOnboarding === false && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-blue-500/10 to-teal-500/15 border border-emerald-500/30 text-slate-900 dark:text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
+              ✨
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm sm:text-base tracking-tight">
+                Satu Langkah Lagi: Isi Dompet &amp; Atur Rencana Keuanganmu!
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                Menu transaksi, cicilan, dan impian akan terbuka penuh setelah kamu menyelesaikan panduan awal dompet ini.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="glow"
+            size="sm"
+            onClick={() => setIsOnboardingModalOpen(true)}
+            className="w-full sm:w-auto shrink-0 text-xs shadow-md font-bold"
+            leftIcon={<Sparkles className="w-4 h-4" />}
+          >
+            Mulai Isi Dompet Sekarang
+          </Button>
+        </div>
+      )}
 
       {/* 2. Compact Dismissible Notification Banner */}
       {!hasNotificationEnabled && !isNotifBannerDismissed && (
@@ -843,7 +894,7 @@ export default function DashboardPage() {
                 <Button
                   size="sm"
                   variant="glow"
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={handleOpenAddTransaction}
                   leftIcon={<PlusCircle className="w-4 h-4" />}
                 >
                   Catat Transaksi Baru
@@ -1279,8 +1330,11 @@ export default function DashboardPage() {
           userId={user.uid}
           userName={userProfile?.name}
           onClose={() => setIsOnboardingModalOpen(false)}
-          onComplete={() => {
+          onComplete={async () => {
             setIsOnboardingModalOpen(false)
+            if (refreshProfile) {
+              await refreshProfile()
+            }
             setRefreshTrigger((p) => p + 1)
           }}
         />

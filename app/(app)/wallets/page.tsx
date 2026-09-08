@@ -10,14 +10,13 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { TransferModal } from '@/components/organisms/TransferModal'
+import { WalletCard } from '@/components/organisms/WalletCard'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import type { Wallet, WalletType, CreateWalletDto } from '@/types'
 import {
   Wallet as WalletIcon,
   PlusCircle,
   ArrowRightLeft,
-  Pencil,
-  Trash2,
   Sparkles,
   X,
   CheckCircle2,
@@ -25,16 +24,20 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
-  AlertCircle,
+  ShieldAlert,
+  Target,
+  Search,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 const WALLET_TYPE_OPTIONS: { type: WalletType; label: string; icon: string; defaultColor: string }[] = [
   { type: 'BANK', label: 'Rekening Bank', icon: '🏦', defaultColor: '#3b82f6' },
-  { type: 'EWALLET', label: 'E-Wallet (GoPay/OVO/Shopee)', icon: '📱', defaultColor: '#8b5cf6' },
+  { type: 'EWALLET', label: 'E-Wallet', icon: '📱', defaultColor: '#8b5cf6' },
   { type: 'CASH', label: 'Uang Tunai (Cash)', icon: '💵', defaultColor: '#22c55e' },
-  { type: 'OTHER', label: 'Lainnya / Investasi', icon: '📦', defaultColor: '#f59e0b' },
+  { type: 'OTHER', label: 'Lainnya / Aset', icon: '📦', defaultColor: '#f59e0b' },
 ]
+
+type FilterTab = 'ALL' | 'OPERATIONAL' | 'EARMARKED' | 'LOCKED'
 
 export default function WalletsPage() {
   const { user } = useAuth()
@@ -43,6 +46,10 @@ export default function WalletsPage() {
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  // Filter & Search States
+  const [activeTab, setActiveTab] = useState<FilterTab>('ALL')
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Add / Edit Wallet Modal State
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
@@ -76,6 +83,20 @@ export default function WalletsPage() {
       try {
         const data = await walletService.getUserWallets(user.uid)
         if (isMounted) {
+          // Auto self-healing jika terdeteksi ada kantong bersaldo minus akibat reset alokasi lama
+          const hasNegative = data.some((w) => Number(w.balance) < 0)
+          if (hasNegative) {
+            try {
+              await walletService.syncAllWalletsFromTransactions(user.uid)
+              const healedData = await walletService.getUserWallets(user.uid)
+              if (isMounted) {
+                setWallets(healedData)
+                return
+              }
+            } catch (healErr) {
+              console.warn('[wallets] Auto-heal warning:', healErr)
+            }
+          }
           setWallets(data)
         }
       } catch (err) {
@@ -93,11 +114,34 @@ export default function WalletsPage() {
     }
   }, [user?.uid, refreshTrigger])
 
-  // Operating: unlocked & not earmarked — counts toward daily spending limit
+  // Categorized Wallets
   const spendingWallets = useMemo(() => wallets.filter((w) => !w.isLocked && !w.isEarmarked), [wallets])
   const lockedWallets = useMemo(() => wallets.filter((w) => w.isLocked), [wallets])
   const earmarkedWallets = useMemo(() => wallets.filter((w) => w.isEarmarked && !w.isLocked), [wallets])
 
+  // Filtered Wallets for Display
+  const filteredWallets = useMemo(() => {
+    return wallets.filter((w) => {
+      const matchesTab =
+        activeTab === 'ALL'
+          ? true
+          : activeTab === 'OPERATIONAL'
+          ? !w.isLocked && !w.isEarmarked
+          : activeTab === 'EARMARKED'
+          ? Boolean(w.isEarmarked) && !w.isLocked
+          : Boolean(w.isLocked)
+
+      const q = searchQuery.toLowerCase().trim()
+      const matchesSearch =
+        !q ||
+        w.name.toLowerCase().includes(q) ||
+        (w.accountNumber && w.accountNumber.includes(q))
+
+      return matchesTab && matchesSearch
+    })
+  }, [wallets, activeTab, searchQuery])
+
+  // Aggregate Balances
   const totalSpendingBalance = useMemo(
     () => spendingWallets.reduce((sum, w) => sum + (Number(w.balance) || 0), 0),
     [spendingWallets]
@@ -204,7 +248,7 @@ export default function WalletsPage() {
 
     // Guard: saat edit, tidak boleh lock satu-satunya kantong non-locked
     if (editingWallet && isLocked && !editingWallet.isLocked && spendingWallets.length <= 1) {
-      const err = 'Tidak bisa dikunci — kamu harus punya minimal 1 kantong aktif (non-locked) sebagai saldo utama.'
+      const err = 'Tidak bisa dikunci — Anda harus memiliki minimal 1 kantong aktif sebagai kas operasional utama.'
       setWalletError(err)
       toast.warning(err)
       return
@@ -288,61 +332,81 @@ export default function WalletsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 pb-4">
-      {/* Top Wallet Error / Guard Alert */}
+    <div className="flex flex-col gap-6 sm:gap-8 pb-8">
+      {/* Top Notification / Guard Alert Banner */}
       {walletError && !isWalletModalOpen && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/60 shadow-sm flex items-start justify-between gap-3 text-xs text-rose-800 dark:text-rose-300 animate-in fade-in">
-          <div className="flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/50 shadow-xs flex items-start justify-between gap-3.5 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
             <div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-0.5">Pemberitahuan Sistem</h4>
-              <p className="leading-relaxed">{walletError}</p>
+              <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-1">Proteksi Saldo Aktif</h4>
+              <p className="leading-relaxed text-slate-700 dark:text-slate-300">{walletError}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setWalletError(null)}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400">
-              <WalletIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+      {/* Sync Success Notification Banner */}
+      {syncSuccessMsg && (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/50 text-emerald-950 dark:text-emerald-200 text-xs flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <CheckCircle2 className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Kantong & Rekening
-                </h1>
-                <Badge variant="brand" size="sm">
-                  Multi-Wallet
-                </Badge>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Kelola kantong belanja operasional dan tabungan beku secara terpisah dan presisi.
-              </p>
+            <span className="font-medium">{syncSuccessMsg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncSuccessMsg(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs">
+            <WalletIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Kantong &amp; Rekening
+              </h1>
+              <Badge variant="brand" size="xs">
+                Multi-Wallet
+              </Badge>
             </div>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Kelola kas belanja harian, pos pengeluaran terpisah, dan tabungan beku secara presisi.
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* Header Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSyncAllWallets}
             disabled={syncingWalletId === 'ALL'}
             title="Hitung ulang & sinkronkan saldo semua kantong dari riwayat transaksi"
-            className="text-xs px-2.5 sm:px-3 text-slate-300 hover:text-emerald-400"
+            className="text-xs text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400"
             leftIcon={
               <RefreshCw
-                className={cn('w-3.5 h-3.5', syncingWalletId === 'ALL' && 'animate-spin text-emerald-400')}
+                className={cn('w-3.5 h-3.5', syncingWalletId === 'ALL' && 'animate-spin text-emerald-500')}
               />
             }
           >
@@ -354,7 +418,7 @@ export default function WalletsPage() {
             size="sm"
             onClick={() => setRefreshTrigger((p) => p + 1)}
             title="Muat ulang data"
-            className="text-xs px-2.5 sm:px-3"
+            className="text-xs text-slate-600 dark:text-slate-300"
             leftIcon={<RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />}
           >
             Refresh
@@ -365,7 +429,7 @@ export default function WalletsPage() {
               variant="secondary"
               size="sm"
               onClick={() => setIsTransferModalOpen(true)}
-              leftIcon={<ArrowRightLeft className="w-4 h-4 text-blue-400" />}
+              leftIcon={<ArrowRightLeft className="w-4 h-4 text-blue-500" />}
               className="text-xs sm:text-sm"
             >
               Transfer Saldo
@@ -377,379 +441,323 @@ export default function WalletsPage() {
             size="sm"
             onClick={handleOpenAdd}
             leftIcon={<PlusCircle className="w-4 h-4" />}
-            className="text-xs sm:text-sm"
+            className="text-xs sm:text-sm shadow-md"
           >
             Tambah Kantong
           </Button>
         </div>
       </div>
 
-      {/* Sync Success Notification Banner */}
-      {syncSuccessMsg && (
-        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="font-medium">{syncSuccessMsg}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSyncSuccessMsg(null)}
-            className="p-1 rounded-lg text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-500/20"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Guard Error Banner (delete/lock blocked) */}
-      {walletError && !editingWallet && (
-        <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center justify-between animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-red-400 shrink-0" />
-            <span className="font-medium">{walletError}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setWalletError(null)}
-            className="p-1 rounded-lg text-red-400/80 hover:text-red-300 hover:bg-red-500/20"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Loading Skeleton */}
+      {/* 4 Summary Stat Cards */}
       {loading && wallets.length === 0 ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="p-5 rounded-2xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-3"
-              >
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-3 w-28" />
-                  <Skeleton className="h-4 w-12 rounded-md" />
-                </div>
-                <Skeleton className="h-7 w-36" />
-                <Skeleton className="h-2.5 w-44" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs space-y-3"
+            >
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-4 w-12 rounded-full" />
               </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/8 shadow-xs space-y-4"
-              >
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-12 h-12 rounded-2xl" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                </div>
-                <Skeleton className="h-6 w-36" />
-                <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-white/8">
-                  <Skeleton className="h-9 rounded-xl" />
-                  <Skeleton className="h-9 rounded-xl" />
-                </div>
-              </div>
-            ))}
-          </div>
+              <Skeleton className="h-7 w-32" />
+              <Skeleton className="h-2.5 w-40" />
+            </div>
+          ))}
         </div>
       ) : (
-        <>
-          {/* 4 Summary Breakdown Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {/* 1. Kas Operasional Likuid */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-green-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 flex items-center gap-1.5">
-                  <Unlock className="w-3.5 h-3.5" /> Kas Operasional (Belanja)
-                </span>
-                <Badge variant="brand" size="sm">
-                  {spendingWallets.length} Kantong
-                </Badge>
-              </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-extrabold font-mono text-green-600 dark:text-green-400 tabular-nums">
-                  {formatRupiah(totalSpendingBalance)}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          {/* 1. Kas Operasional (Belanja) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs hover:border-emerald-500/40 dark:hover:border-emerald-500/30 transition-all group">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Unlock className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-                  Uang siap pakai untuk jatah belanja harian
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                  Kas Belanja
                 </span>
               </div>
+              <Badge variant="brand" size="xs">
+                {spendingWallets.length} Kantong
+              </Badge>
             </div>
-
-            {/* 2. Kantong Bertujuan Khusus (Earmarked) */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                  🎯 Kantong Bertujuan Khusus
-                </span>
-                <Badge variant="neutral" size="sm">
-                  {earmarkedWallets.length} Kantong
-                </Badge>
-              </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-extrabold font-mono text-blue-600 dark:text-blue-400 tabular-nums">
-                  {formatRupiah(totalEarmarkedBalance)}
-                </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-                  Bisa dipakai, tidak masuk jatah harian
-                </span>
-              </div>
+            <div className="text-lg sm:text-2xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">
+              {formatRupiah(totalSpendingBalance)}
             </div>
-
-            {/* 3. Simpanan & Dana Beku */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-amber-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5" /> Tabungan Beku &amp; Darurat
-                </span>
-                <Badge variant="warning" size="sm">
-                  {lockedWallets.length} Kantong
-                </Badge>
-              </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-extrabold font-mono text-amber-700 dark:text-amber-400 tabular-nums">
-                  {formatRupiah(totalLockedBalance)}
-                </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-                  Dana aman (dikecualikan dari jatah harian)
-                </span>
-              </div>
-            </div>
-
-            {/* 3. Total Keseluruhan Dana */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-blue-950/40 dark:via-[#1a1d27] dark:to-[#1a1d27] border border-blue-500/30 shadow-sm dark:shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Total Seluruh Dana
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                  {wallets.length} Kantong Total
-                </span>
-              </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-extrabold font-mono text-slate-900 dark:text-white tabular-nums">
-                  {formatRupiah(totalWalletBalance)}
-                </div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-                  Akumulasi seluruh aset di kantong
-                </span>
-              </div>
-            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block truncate">
+              Masuk jatah harian Safe-to-Spend
+            </span>
           </div>
 
+          {/* 2. Kantong Bertujuan Khusus (Earmarked) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs hover:border-blue-500/40 dark:hover:border-blue-500/30 transition-all group">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Target className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                  Pos Khusus
+                </span>
+              </div>
+              <Badge variant="info" size="xs">
+                {earmarkedWallets.length} Kantong
+              </Badge>
+            </div>
+            <div className="text-lg sm:text-2xl font-extrabold font-mono text-blue-600 dark:text-blue-400 tracking-tight tabular-nums">
+              {formatRupiah(totalEarmarkedBalance)}
+            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block truncate">
+              Bisa dipakai, bukan kas belanja
+            </span>
+          </div>
+
+          {/* 3. Tabungan Beku & Darurat */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs hover:border-amber-500/40 dark:hover:border-amber-500/30 transition-all group">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Lock className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                  Tabungan Beku
+                </span>
+              </div>
+              <Badge variant="warning" size="xs">
+                {lockedWallets.length} Kantong
+              </Badge>
+            </div>
+            <div className="text-lg sm:text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400 tracking-tight tabular-nums">
+              {formatRupiah(totalLockedBalance)}
+            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block truncate">
+              Dana aman &amp; simpanan khusus
+            </span>
+          </div>
+
+          {/* 4. Total Seluruh Dana */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs hover:border-indigo-500/40 dark:hover:border-indigo-500/30 transition-all group">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                  Total Seluruh Dana
+                </span>
+              </div>
+              <Badge variant="neutral" size="xs">
+                {wallets.length} Kantong
+              </Badge>
+            </div>
+            <div className="text-lg sm:text-2xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight tabular-nums">
+              {formatRupiah(totalWalletBalance)}
+            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block truncate">
+              Akumulasi seluruh aset kantong
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Filter Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/5 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('ALL')}
+            className={cn(
+              'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5',
+              activeTab === 'ALL'
+                ? 'bg-white dark:bg-[#1e2334] text-slate-900 dark:text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            )}
+          >
+            Semua
+            <span className={cn(
+              'text-[10px] px-1.5 py-0.2 rounded-full font-mono',
+              activeTab === 'ALL' ? 'bg-slate-100 dark:bg-white/10' : 'opacity-60'
+            )}>
+              {wallets.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('OPERATIONAL')}
+            className={cn(
+              'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5',
+              activeTab === 'OPERATIONAL'
+                ? 'bg-white dark:bg-[#1e2334] text-emerald-600 dark:text-emerald-400 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
+            )}
+          >
+            Kas Belanja
+            <span className={cn(
+              'text-[10px] px-1.5 py-0.2 rounded-full font-mono',
+              activeTab === 'OPERATIONAL' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'opacity-60'
+            )}>
+              {spendingWallets.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('EARMARKED')}
+            className={cn(
+              'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5',
+              activeTab === 'EARMARKED'
+                ? 'bg-white dark:bg-[#1e2334] text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400'
+            )}
+          >
+            Pos Khusus
+            <span className={cn(
+              'text-[10px] px-1.5 py-0.2 rounded-full font-mono',
+              activeTab === 'EARMARKED' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400' : 'opacity-60'
+            )}>
+              {earmarkedWallets.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('LOCKED')}
+            className={cn(
+              'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5',
+              activeTab === 'LOCKED'
+                ? 'bg-white dark:bg-[#1e2334] text-amber-600 dark:text-amber-400 shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
+            )}
+          >
+            Tabungan Beku
+            <span className={cn(
+              'text-[10px] px-1.5 py-0.2 rounded-full font-mono',
+              activeTab === 'LOCKED' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'opacity-60'
+            )}>
+              {lockedWallets.length}
+            </span>
+          </button>
+        </div>
+
+        {/* Quick Search */}
+        {wallets.length >= 3 && (
+          <div className="relative w-full sm:w-60">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Cari kantong / rekening..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Wallets Grid */}
-      {wallets.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center text-center shadow-md dark:shadow-xl">
-          <div className="text-5xl mb-4">💳</div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Belum Ada Kantong Rekening</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6">
-            Mulai daftarkan rekening operasional (BCA, GoPay, Tunai) atau kantong simpanan beku!
+      {loading && wallets.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-6 rounded-3xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-12 h-12 rounded-2xl" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-10 w-full rounded-2xl" />
+              <div className="flex justify-between pt-3 border-t border-slate-100 dark:border-white/5">
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-7 w-20 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : wallets.length === 0 ? (
+        <div className="p-12 sm:p-16 rounded-3xl bg-white dark:bg-[#141824] border border-slate-200/90 dark:border-white/10 flex flex-col items-center justify-center text-center shadow-xs">
+          <div className="w-16 h-16 rounded-3xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-3xl mb-4 shadow-inner">
+            💳
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">Belum Ada Kantong Rekening</h3>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
+            Daftarkan rekening operasional (BCA, Mandiri, Tunai) atau pos simpanan khusus untuk memisahkan jatah belanja harian dengan tabungan aman.
           </p>
           <Button variant="glow" size="md" onClick={handleOpenAdd} leftIcon={<PlusCircle className="w-4 h-4" />}>
             Buat Kantong Pertama
           </Button>
         </div>
+      ) : filteredWallets.length === 0 ? (
+        <div className="p-12 rounded-3xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 flex flex-col items-center justify-center text-center shadow-xs">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Tidak ada kantong di kategori ini
+          </p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+            Coba ganti filter tab atau tambahkan kantong baru sesuai kategori yang diinginkan.
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => { setActiveTab('ALL'); setSearchQuery(''); }}>
+            Tampilkan Semua Kantong
+          </Button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {wallets.map((w) => {
-            const isBank = w.type === 'BANK'
-            const isEwallet = w.type === 'EWALLET'
-            const isCash = w.type === 'CASH'
-            const isLockedWallet = Boolean(w.isLocked)
-            const isEarmarkedWallet = Boolean(w.isEarmarked) && !isLockedWallet
-
-            return (
-              <div
-                key={w.id}
-                className={cn(
-                  'p-6 rounded-2xl border shadow-sm dark:shadow-xl flex flex-col justify-between transition-all group relative overflow-hidden',
-                  isLockedWallet
-                    ? 'bg-white dark:bg-gradient-to-br dark:from-amber-950/20 dark:via-[#1a1d27] dark:to-[#1a1d27] border-amber-500/40 hover:border-amber-500/70'
-                    : isEarmarkedWallet
-                    ? 'bg-white dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-blue-500/40 hover:border-blue-500/70'
-                    : isBank
-                    ? 'bg-white dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-blue-500/30 hover:border-blue-500/60'
-                    : isEwallet
-                    ? 'bg-white dark:bg-gradient-to-br dark:from-purple-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-purple-500/30 hover:border-purple-500/60'
-                    : isCash
-                    ? 'bg-white dark:bg-gradient-to-br dark:from-emerald-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-green-500/30 hover:border-green-500/60'
-                    : 'bg-white dark:bg-gradient-to-br dark:from-slate-900/30 dark:via-[#1a1d27] dark:to-[#1a1d27] border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500'
-                )}
-              >
-                {/* Top Card Header */}
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] text-2xl flex items-center justify-center shrink-0 shadow-inner relative">
-                        {w.icon || '💳'}
-                        {isLockedWallet && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black flex items-center justify-center shadow">
-                            <Lock className="w-3 h-3" />
-                          </div>
-                        )}
-                        {isEarmarkedWallet && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center shadow text-[10px]">
-                            🎯
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-base font-bold text-slate-900 dark:text-white truncate">
-                          {w.name}
-                        </h4>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Badge
-                            variant={isLockedWallet ? 'warning' : isBank ? 'brand' : isEwallet ? 'warning' : 'neutral'}
-                            size="sm"
-                          >
-                            {WALLET_TYPE_OPTIONS.find((t) => t.type === w.type)?.label || w.type}
-                          </Badge>
-                          {isLockedWallet ? (
-                            <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold px-1.5 py-0.5 rounded border border-amber-500/30">
-                              🔒 Beku / Tabungan
-                            </span>
-                          ) : isEarmarkedWallet ? (
-                            <span className="text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold px-1.5 py-0.5 rounded border border-blue-500/30">
-                              🎯 Bertujuan Khusus
-                            </span>
-                          ) : (
-                            <span className="text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 font-bold px-1.5 py-0.5 rounded border border-green-500/30">
-                              🟢 Operasional
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleSyncWallet(w.id, w.name)}
-                        disabled={syncingWalletId === w.id}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors cursor-pointer"
-                        title="Sinkronkan saldo kantong ini dengan riwayat transaksi"
-                      >
-                        <RefreshCw
-                          className={cn(
-                            'w-4 h-4',
-                            syncingWalletId === w.id && 'animate-spin text-emerald-600 dark:text-emerald-400'
-                          )}
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(w)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors cursor-pointer"
-                        title="Edit Kantong"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setWalletToDelete(w)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors cursor-pointer"
-                        title="Hapus Kantong"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Account Number / Details */}
-                  {w.accountNumber ? (
-                    <div className="mb-4 text-xs font-mono text-slate-500 dark:text-slate-400 tracking-wider">
-                      {w.accountNumber}
-                    </div>
-                  ) : (
-                    <div className="mb-4 text-xs text-slate-400 dark:text-slate-500 italic">
-                      {isLockedWallet
-                        ? 'Tabungan Simpanan Khusus'
-                        : isEarmarkedWallet
-                        ? 'Kantong Bertujuan Khusus (tidak dihitung ke jatah harian)'
-                        : 'Kantong Belanja Harian'}
-                    </div>
-                  )}
-
-                  {/* Balance Display */}
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#21263a]/70 border border-slate-200 dark:border-[#2d3348] mb-2">
-                    <span className="text-[11px] uppercase font-semibold text-slate-500 dark:text-slate-400 block">
-                      Saldo Tersedia:
-                    </span>
-                    <span
-                      className={cn(
-                        'text-xl sm:text-2xl font-extrabold font-mono tabular-nums tracking-tight mt-0.5 block',
-                        isLockedWallet
-                          ? 'text-amber-700 dark:text-amber-400'
-                          : isEarmarkedWallet
-                          ? 'text-blue-700 dark:text-blue-400'
-                          : 'text-green-700 dark:text-green-400'
-                      )}
-                    >
-                      {formatRupiah(w.balance)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Footer Transfer Action */}
-                <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] flex items-center justify-between mt-2">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {isLockedWallet ? 'Hanya untuk simpanan' : isEarmarkedWallet ? 'Bisa dipakai, bukan kas harian' : 'Siap untuk jatah belanja'}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsTransferModalOpen(true)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-2.5"
-                    leftIcon={<ArrowRightLeft className="w-3.5 h-3.5" />}
-                  >
-                    Transfer
-                  </Button>
-                </div>
-              </div>
-            )
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {filteredWallets.map((w) => (
+            <WalletCard
+              key={w.id}
+              wallet={w}
+              onEdit={handleOpenEdit}
+              onDelete={setWalletToDelete}
+              onSync={handleSyncWallet}
+              onTransfer={() => setIsTransferModalOpen(true)}
+              isSyncing={syncingWalletId === w.id || syncingWalletId === 'ALL'}
+            />
+          ))}
         </div>
       )}
-    </>
-  )}
 
       {/* Modal Add / Edit Wallet */}
       {isWalletModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200 text-slate-900 dark:text-white">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-[#2d3348]">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                  {editingWallet ? 'Edit Kantong Rekening' : 'Tambah Kantong Baru'}
-                </h3>
+          <div className="bg-white dark:bg-[#141824] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-none duration-200 text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200/80 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    {editingWallet ? 'Edit Kantong Rekening' : 'Tambah Kantong Baru'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Atur nama, kategori, dan peran jatah belanja kantong ini
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsWalletModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {walletError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
-                {walletError}
+              <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800/50 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+                <span>{walletError}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmitWallet} className="flex flex-col gap-4">
               <FormField label="Nama Kantong / Rekening" required>
                 <Input
-                  placeholder="Contoh: BCA Utama / GoPay / Dana Darurat"
+                  placeholder="Contoh: BCA Utama / GoPay / Tabungan Nikah"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -768,13 +776,13 @@ export default function WalletsPage() {
                         setIcon(opt.icon)
                       }}
                       className={cn(
-                        'flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
+                        'flex items-center gap-2.5 p-3 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-left',
                         type === opt.type
-                          ? 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-white shadow-md font-bold'
-                          : 'bg-slate-50 dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          ? 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300 font-bold shadow-xs'
+                          : 'bg-slate-50 dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/8'
                       )}
                     >
-                      <span className="text-lg">{opt.icon}</span>
+                      <span className="text-xl shrink-0">{opt.icon}</span>
                       <span className="truncate">{opt.label}</span>
                     </button>
                   ))}
@@ -800,12 +808,14 @@ export default function WalletsPage() {
               </FormField>
 
               {/* Locked / Frozen Wallet Toggle */}
-              <div className={cn(
-                'p-3.5 rounded-xl border flex items-start gap-3 transition-all',
-                isLocked
-                  ? 'bg-amber-950/20 border-amber-500/40'
-                  : 'bg-[#21263a] border-[#2d3348]'
-              )}>
+              <div
+                className={cn(
+                  'p-4 rounded-2xl border flex items-start gap-3 transition-all',
+                  isLocked
+                    ? 'bg-amber-500/10 dark:bg-amber-950/20 border-amber-500/40 text-amber-950 dark:text-amber-200'
+                    : 'bg-slate-50 dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300'
+                )}
+              >
                 <input
                   type="checkbox"
                   id="isLockedCheckbox"
@@ -814,25 +824,27 @@ export default function WalletsPage() {
                     setIsLocked(e.target.checked)
                     if (e.target.checked) setIsEarmarked(false)
                   }}
-                  className="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-500 focus:ring-offset-0 bg-[#131620] border-[#2d3348] cursor-pointer"
+                  className="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-500 focus:ring-offset-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 cursor-pointer"
                 />
-                <label htmlFor="isLockedCheckbox" className="cursor-pointer select-none text-xs">
-                  <span className="font-bold text-amber-400 flex items-center gap-1">
+                <label htmlFor="isLockedCheckbox" className="cursor-pointer select-none text-xs flex-1">
+                  <span className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5" /> Kunci Sebagai Kantong Beku / Simpanan
                   </span>
-                  <span className="text-slate-400 block text-[11px] mt-0.5 leading-relaxed">
-                    Saldo di kantong ini <strong>TIDAK AKAN</strong> dihitung ke dalam jatah belanja harian (*Safe-to-Spend*). Cocok untuk Dana Darurat, Deposito, atau Tabungan Khusus.
+                  <span className="text-slate-500 dark:text-slate-400 block text-[11px] mt-1 leading-relaxed">
+                    Saldo di kantong ini <strong>TIDAK AKAN</strong> dihitung ke dalam jatah belanja harian (<em>Safe-to-Spend</em>). Sangat ideal untuk Dana Darurat, Deposito, atau Tabungan Impian.
                   </span>
                 </label>
               </div>
 
               {/* Earmarked Wallet Toggle */}
-              <div className={cn(
-                'p-3.5 rounded-xl border flex items-start gap-3 transition-all',
-                isEarmarked
-                  ? 'bg-blue-950/20 border-blue-500/40'
-                  : 'bg-[#21263a] border-[#2d3348]'
-              )}>
+              <div
+                className={cn(
+                  'p-4 rounded-2xl border flex items-start gap-3 transition-all',
+                  isEarmarked
+                    ? 'bg-blue-500/10 dark:bg-blue-950/20 border-blue-500/40 text-blue-950 dark:text-blue-200'
+                    : 'bg-slate-50 dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300'
+                )}
+              >
                 <input
                   type="checkbox"
                   id="isEarmarkedCheckbox"
@@ -841,19 +853,19 @@ export default function WalletsPage() {
                     setIsEarmarked(e.target.checked)
                     if (e.target.checked) setIsLocked(false)
                   }}
-                  className="mt-1 w-4 h-4 rounded text-blue-500 focus:ring-blue-500 focus:ring-offset-0 bg-[#131620] border-[#2d3348] cursor-pointer"
+                  className="mt-1 w-4 h-4 rounded text-blue-500 focus:ring-blue-500 focus:ring-offset-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 cursor-pointer"
                 />
-                <label htmlFor="isEarmarkedCheckbox" className="cursor-pointer select-none text-xs">
-                  <span className="font-bold text-blue-400 flex items-center gap-1">
-                    🎯 Kantong Bertujuan Khusus (Earmarked)
+                <label htmlFor="isEarmarkedCheckbox" className="cursor-pointer select-none text-xs flex-1">
+                  <span className="font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5" /> Kantong Bertujuan Khusus (Pos Khusus)
                   </span>
-                  <span className="text-slate-400 block text-[11px] mt-0.5 leading-relaxed">
-                    Saldo <strong>BISA DIPAKAI</strong> seperti biasa, tapi <strong>TIDAK DIHITUNG</strong> ke jatah belanja harian. Cocok untuk: Uang Minyak, Uang Makan Rutin, Langganan Tetap, dll.
+                  <span className="text-slate-500 dark:text-slate-400 block text-[11px] mt-1 leading-relaxed">
+                    Saldo <strong>BISA DIGUNAKAN</strong> bertransaksi, tapi <strong>TIDAK MENGURANGI</strong> jatah harian belanja. Cocok untuk pos terpisah seperti Bensin, Tagihan Rutin, atau Uang Sekolah.
                   </span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2d3348] mt-1">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200/80 dark:border-white/10 mt-1">
                 <Button type="button" variant="ghost" size="md" onClick={() => setIsWalletModalOpen(false)}>
                   Batal
                 </Button>
