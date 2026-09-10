@@ -6,6 +6,7 @@ import type { Driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
 import { APP_TOURS } from '@/lib/constants/tours'
 import { useAuth } from '@/context/AuthContext'
+import { usePinLock } from '@/context/PinLockContext'
 import { db } from '@/lib/firebase/config'
 import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore'
 
@@ -29,9 +30,17 @@ export function useAppTour() {
 
 export function AppTourProvider({ children }: { children: React.ReactNode }) {
   const { user, userProfile } = useAuth()
+  const { isPinLocked } = usePinLock()
   const [completedTours, setCompletedTours] = useState<string[]>([])
   const driverRef = useRef<Driver | null>(null)
   const activeTourIdRef = useRef<string | null>(null)
+
+  // Destroy any active tour immediately if the application gets locked with PIN
+  useEffect(() => {
+    if (isPinLocked && driverRef.current?.isActive()) {
+      driverRef.current.destroy()
+    }
+  }, [isPinLocked])
 
   const storageKey = useMemo(() => {
     return user?.uid ? `saveme_completed_tours_${user.uid}` : null
@@ -132,6 +141,8 @@ export function AppTourProvider({ children }: { children: React.ReactNode }) {
 
   const startTour = useCallback(
     (tourId: string) => {
+      if (isPinLocked) return
+
       const tourConfig = APP_TOURS.find((t) => t.tourId === tourId)
       if (!tourConfig) return
 
@@ -183,7 +194,7 @@ export function AppTourProvider({ children }: { children: React.ReactNode }) {
       driverRef.current = driverObj
       driverObj.drive()
     },
-    [markTourCompleted]
+    [markTourCompleted, isPinLocked]
   )
 
   return (

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { usePinLock } from '@/context/PinLockContext'
 import { verifyPin } from '@/lib/utils/pin'
 import { BrandLogo } from '@/components/atoms/BrandLogo'
 import {
@@ -16,20 +17,13 @@ import { cn } from '@/lib/utils/cn'
 
 export function PinLockScreen() {
   const { user, userProfile, logout } = useAuth()
-  const [isUnlocked, setIsUnlocked] = useState<boolean | null>(null)
+  const { isPinLocked, unlockPin, lockPin } = usePinLock()
   const [pin, setPin] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [shake, setShake] = useState(false)
   const [failCount, setFailCount] = useState(0)
   const [cooldown, setCooldown] = useState(0)
-
-  // Initialize lock status from sessionStorage
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const unlocked = sessionStorage.getItem('saveme_pin_unlocked') === 'true'
-    setIsUnlocked(unlocked)
-  }, [])
 
   // Cooldown countdown
   useEffect(() => {
@@ -50,10 +44,7 @@ export function PinLockScreen() {
       try {
         const isValid = await verifyPin(enteredPin, userProfile.appPin)
         if (isValid) {
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('saveme_pin_unlocked', 'true')
-          }
-          setIsUnlocked(true)
+          unlockPin()
           setPin('')
           setFailCount(0)
         } else {
@@ -78,7 +69,7 @@ export function PinLockScreen() {
         setIsVerifying(false)
       }
     },
-    [userProfile?.appPin, isVerifying, cooldown, failCount]
+    [userProfile?.appPin, isVerifying, cooldown, failCount, unlockPin]
   )
 
   const handleDigit = useCallback(
@@ -102,7 +93,7 @@ export function PinLockScreen() {
 
   // Keyboard physical listener
   useEffect(() => {
-    if (isUnlocked || !userProfile?.isPinEnabled || !userProfile?.appPin) return
+    if (!isPinLocked || !userProfile?.isPinEnabled || !userProfile?.appPin) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key >= '0' && e.key <= '9') {
@@ -114,22 +105,17 @@ export function PinLockScreen() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isUnlocked, userProfile?.isPinEnabled, userProfile?.appPin, handleDigit, handleDelete])
+  }, [isPinLocked, userProfile?.isPinEnabled, userProfile?.appPin, handleDigit, handleDelete])
 
-  // If user is not logged in or PIN is not enabled, do not block
-  if (!user || !userProfile?.isPinEnabled || !userProfile?.appPin) {
-    return null
-  }
-
-  // If unlocked in current session, render nothing
-  if (isUnlocked) {
+  // If user is not logged in, PIN is not enabled, or app is unlocked, do not block
+  if (!user || !userProfile?.isPinEnabled || !userProfile?.appPin || !isPinLocked) {
     return null
   }
 
   const userName = userProfile?.name || 'Teman SaveMe'
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-[#0c0e14] text-white flex flex-col items-center justify-between p-6 sm:p-10 select-none animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[99999999] bg-[#0c0e14] text-white flex flex-col items-center justify-between p-6 sm:p-10 select-none animate-in fade-in duration-200">
       {/* Top Header */}
       <div className="flex flex-col items-center gap-2 mt-4">
         <BrandLogo />
@@ -228,7 +214,7 @@ export function PinLockScreen() {
           type="button"
           onClick={async () => {
             if (confirm('Lupa PIN? Anda akan dialihkan ke halaman login untuk masuk kembali menggunakan email & password.')) {
-              sessionStorage.removeItem('saveme_pin_unlocked')
+              lockPin()
               await logout()
               window.location.replace('/login')
             }

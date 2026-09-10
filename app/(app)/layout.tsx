@@ -17,6 +17,7 @@ import { AppTemplate } from '@/components/templates/AppTemplate'
 import { BrandLogo } from '@/components/atoms/BrandLogo'
 import { Badge } from '@/components/atoms/Badge'
 import { AppTourProvider } from '@/components/organisms/AppTour'
+import { PinLockProvider } from '@/context/PinLockContext'
 import {
   Menu,
   X,
@@ -380,9 +381,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <GroupSavingsInviteProvider>
-      <AppTourProvider>
-        <AppLayoutContent>{children}</AppLayoutContent>
-      </AppTourProvider>
+      <PinLockProvider>
+        <AppTourProvider>
+          <AppLayoutContent>{children}</AppLayoutContent>
+        </AppTourProvider>
+      </PinLockProvider>
     </GroupSavingsInviteProvider>
   )
 }

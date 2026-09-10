@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useAppTour } from '@/components/organisms/AppTour'
+import { usePinLock } from '@/context/PinLockContext'
 
 interface UsePageTourOptions {
   delay?: number
@@ -12,6 +13,7 @@ interface UsePageTourOptions {
 export function usePageTour(tourId: string, options?: UsePageTourOptions) {
   const { user, userProfile, loading } = useAuth()
   const { isTourCompleted, startTour } = useAppTour()
+  const { isPinLocked } = usePinLock()
   const isStartedRef = useRef(false)
 
   const isCompleted = isTourCompleted(tourId)
@@ -19,7 +21,7 @@ export function usePageTour(tourId: string, options?: UsePageTourOptions) {
   const delay = options?.delay ?? 600
 
   useEffect(() => {
-    if (loading || !user || !enabled || isCompleted || isStartedRef.current) {
+    if (loading || !user || !enabled || isCompleted || isStartedRef.current || isPinLocked) {
       return
     }
 
@@ -35,11 +37,12 @@ export function usePageTour(tourId: string, options?: UsePageTourOptions) {
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [loading, user, userProfile, enabled, isCompleted, tourId, delay, startTour, isTourCompleted])
+  }, [loading, user, userProfile, enabled, isCompleted, isPinLocked, tourId, delay, startTour, isTourCompleted])
 
   return {
     isCompleted,
     startTour: () => {
+      if (isPinLocked) return
       isStartedRef.current = true
       startTour(tourId)
     },

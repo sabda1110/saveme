@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/atoms/Button'
 import { hashPin } from '@/lib/utils/pin'
 import { updateUserProfile } from '@/lib/auth/firebase-auth'
+import { usePinLock } from '@/context/PinLockContext'
 import { cn } from '@/lib/utils/cn'
 
 interface SetPinModalProps {
@@ -29,6 +30,7 @@ export function SetPinModal({
   onClose,
   onSuccess,
 }: SetPinModalProps) {
+  const { unlockPin } = usePinLock()
   const [step, setStep] = useState<'enter' | 'confirm'>('enter')
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -67,9 +69,7 @@ export function SetPinModal({
         })
 
         // Also set unlocked in current session
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('saveme_pin_unlocked', 'true')
-        }
+        unlockPin()
 
         setSuccess(true)
         setTimeout(() => {
