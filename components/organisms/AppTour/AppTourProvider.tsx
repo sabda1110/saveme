@@ -1,9 +1,10 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
-import { NextStepProvider, NextStep, useNextStep } from 'nextstepjs'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { driver } from 'driver.js'
+import type { Driver } from 'driver.js'
+import 'driver.js/dist/driver.css'
 import { APP_TOURS } from '@/lib/constants/tours'
-import { CustomTourCard } from './CustomTourCard'
 import { useAuth } from '@/context/AuthContext'
 import { db } from '@/lib/firebase/config'
 import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore'
@@ -26,10 +27,11 @@ export function useAppTour() {
   return context
 }
 
-function AppTourInner({ children }: { children: React.ReactNode }) {
+export function AppTourProvider({ children }: { children: React.ReactNode }) {
   const { user, userProfile } = useAuth()
-  const { startNextStep } = useNextStep()
   const [completedTours, setCompletedTours] = useState<string[]>([])
+  const driverRef = useRef<Driver | null>(null)
+  const activeTourIdRef = useRef<string | null>(null)
 
   const storageKey = useMemo(() => {
     return user?.uid ? `saveme_completed_tours_${user.uid}` : null
@@ -57,6 +59,15 @@ function AppTourInner({ children }: { children: React.ReactNode }) {
       // ignore
     }
   }, [storageKey, userProfile?.completedTours])
+
+  // Cleanup driver on unmount
+  useEffect(() => {
+    return () => {
+      if (driverRef.current?.isActive()) {
+        driverRef.current.destroy()
+      }
+    }
+  }, [])
 
   const markTourCompleted = useCallback(
     async (tourId: string) => {
@@ -121,16 +132,56 @@ function AppTourInner({ children }: { children: React.ReactNode }) {
 
   const startTour = useCallback(
     (tourId: string) => {
-      startNextStep(tourId)
-    },
-    [startNextStep]
-  )
+      const tourConfig = APP_TOURS.find((t) => t.tourId === tourId)
+      if (!tourConfig) return
 
-  const handleTourFinish = useCallback(
-    (tourName: string | null) => {
-      if (tourName) {
-        markTourCompleted(tourName)
+      // Destroy any existing driver instance
+      if (driverRef.current?.isActive()) {
+        driverRef.current.destroy()
       }
+
+      activeTourIdRef.current = tourId
+
+      const isDark = document.documentElement.classList.contains('dark')
+
+      const driverObj = driver({
+        animate: true,
+        smoothScroll: true,
+        allowClose: true,
+        allowScroll: false,
+        overlayOpacity: 0.7,
+        stagePadding: 10,
+        stageRadius: 12,
+        waitForElement: 2000,
+        overlayColor: isDark ? '#0f1117' : '#0f172a',
+        popoverClass: isDark ? 'saveme-tour-popover dark' : 'saveme-tour-popover',
+        nextBtnText: 'Lanjut',
+        prevBtnText: 'Sebelumnya',
+        doneBtnText: 'Selesai',
+        showProgress: true,
+        progressText: '{{current}} dari {{total}}',
+        steps: tourConfig.steps,
+        onPopoverRender: (popoverDOM) => {
+          let badge = popoverDOM.wrapper.querySelector('.saveme-tour-page-badge')
+          if (!badge) {
+            badge = document.createElement('div')
+            badge.className = 'saveme-tour-page-badge'
+            popoverDOM.wrapper.insertBefore(badge, popoverDOM.title)
+          }
+          badge.textContent = `Panduan ${tourConfig.pageName}`
+        },
+        onDestroyed: () => {
+          const id = activeTourIdRef.current
+          if (id) {
+            markTourCompleted(id)
+            activeTourIdRef.current = null
+          }
+          driverRef.current = null
+        },
+      })
+
+      driverRef.current = driverObj
+      driverObj.drive()
     },
     [markTourCompleted]
   )
@@ -145,26 +196,7 @@ function AppTourInner({ children }: { children: React.ReactNode }) {
         startTour,
       }}
     >
-      <NextStep
-        steps={APP_TOURS}
-        cardComponent={CustomTourCard}
-        onComplete={handleTourFinish}
-        onSkip={(_step, tourName) => handleTourFinish(tourName)}
-        disableConsoleLogs={process.env.NODE_ENV === 'production'}
-        overlayZIndex={99999}
-        shadowRgb="15, 23, 42"
-        shadowOpacity="0.7"
-      >
-        {children}
-      </NextStep>
+      {children}
     </AppTourContext.Provider>
-  )
-}
-
-export function AppTourProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <NextStepProvider>
-      <AppTourInner>{children}</AppTourInner>
-    </NextStepProvider>
   )
 }
