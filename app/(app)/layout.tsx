@@ -149,7 +149,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       title: 'Aktivitas & Alat',
       items: [
         { label: 'Daftar Transaksi', href: '/transactions', icon: <ReceiptText className="w-4 h-4" /> },
-        { label: 'Template Cepat', href: '/templates', icon: <Zap className="w-4 h-4" /> },
+        { label: 'Template & Kategori', href: '/templates', icon: <Zap className="w-4 h-4" /> },
         { label: 'Profil Akun', href: '/profile', icon: <User className="w-4 h-4" /> },
       ],
     },

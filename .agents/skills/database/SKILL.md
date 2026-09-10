@@ -80,14 +80,14 @@ export const db = getFirestore(app)
 **Every query on `transactions` MUST include `where('userId', '==', user.uid)`.**
 
 ```typescript
-// ✅ CORRECT — userId constraint enforced
+// [CORRECT] — userId constraint enforced
 const q = query(
   collection(db, 'transactions'),
   where('userId', '==', userId),
   orderBy('transactionDate', 'desc')
 )
 
-// ❌ FORBIDDEN — queries without userId filter!
+// [FORBIDDEN] — queries without userId filter!
 const q = query(collection(db, 'transactions'))
 ```
 
@@ -164,3 +164,10 @@ export const DEFAULT_CATEGORIES = [
 | Read services | `view_file lib/services/transaction.firebase.ts` |
 | Research Firestore SDK | `search_web` |
 | Update rules/docs | `write_to_file` |
+
+---
+
+## Clean Code and Documentation Standards
+
+1. NO EMOJIS: Do not use emojis in database models, queries, commit messages, or documentation.
+2. MINIMAL COMMENTS: Write clean and self-explanatory database services without redundant comments.

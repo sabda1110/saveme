@@ -103,14 +103,14 @@ components/
 - **Contoh:** `Button`, `Input`, `Label`, `Badge`, `Spinner`, `Skeleton`, `Avatar`
 
 ```typescript
-// ✅ Atom — domain-agnostic
+// [ATOM] - domain-agnostic
 interface BadgeProps {
   variant: 'success' | 'danger' | 'neutral'
   children: React.ReactNode
 }
 export function Badge({ variant, children }: BadgeProps) { ... }
 
-// ❌ Bukan atom — terlalu domain-specific
+// [NOT ATOM] - too domain-specific
 export function IncomeBadge() { ... }
 ```
 
@@ -145,7 +145,7 @@ export function FormField({ id, label, error, children }: FormFieldProps) {
 - **Contoh:** `TransactionForm`, `TransactionCard`, `Sidebar`
 
 ```typescript
-// ✅ Organism — menerima data dari parent (page/template)
+// [ORGANISM] - menerima data dari parent (page/template)
 interface TransactionListProps {
   transactions: Transaction[]
   onDelete: (id: string) => void
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
 **Strategi:** Dorong `'use client'` serendah mungkin dalam hierarki.
 
 ```typescript
-// ✅ BENAR — hanya organism yg butuh interaktivitas jadi client
+// [CORRECT] - hanya organism yg butuh interaktivitas jadi client
 // page.tsx = Server Component
 export default async function TransactionPage() {
   const data = await transactionService.findMany({ userId })
@@ -469,3 +469,10 @@ export function TransactionCard({ transaction, onDelete }: TransactionCardProps)
 - `saveme-project/REQUIREMENTS.md` — feature requirements
 - `node_modules/next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md`
 - `node_modules/next/dist/docs/01-app/01-getting-started/06-fetching-data.md`
+
+---
+
+## Clean Code and Documentation Standards
+
+1. NO EMOJIS: Do not use emojis in UI text, code, commit messages, or documentation.
+2. MINIMAL COMMENTS: Write clean, self-documenting code. Avoid redundant comments that explain obvious code.

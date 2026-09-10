@@ -49,11 +49,11 @@ Do not assume the skill contents — always read the actual file.
 **userId must ALWAYS come from the authenticated Firebase Auth session (`user.uid`) — NEVER from unverified client inputs.**
 
 ```typescript
-// ✅ CORRECT
+// [CORRECT]
 const { user } = useAuth()
 const data = await getUserTransactions(user.uid)
 
-// ❌ FORBIDDEN
+// [FORBIDDEN]
 const userId = request.nextUrl.searchParams.get('userId')
 ```
 
@@ -145,7 +145,7 @@ The agent uses built-in tools mapped to these responsibilities:
 The following require **explicit user confirmation** — agent must NOT run these automatically:
 
 ```
-❌ Never auto-run:
+[NEVER AUTO-RUN]:
   git commit / git push / git push --force
   Deleting production database collections
   Any production deployment
@@ -154,13 +154,18 @@ The following require **explicit user confirmation** — agent must NOT run thes
 ```
 
 ```
-✅ Safe to run automatically (during implementation, after plan approval):
+[SAFE TO AUTO-RUN] (during implementation, after plan approval):
   Reading files and searching code
   Creating / editing files
   npm install (development only)
   npm run dev
   git status / git diff (read-only)
 ```
+
+## Clean Code and Documentation Standards
+
+1. **NO EMOJIS**: Strictly avoid emojis and emoticons in documentation, skills, playbooks, commit messages, agent responses, and code. Maintain clean, professional, and readable text.
+2. **MINIMAL CODE COMMENTS**: Avoid redundant or obvious code comments. Write self-explanatory code with descriptive variable and function names. Only use comments for non-obvious business rules or edge-case handling.
 
 ## Development Workflow
 

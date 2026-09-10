@@ -123,3 +123,4 @@ Setelah implementasi selesai, jalankan `finish-feature.md`.
 - [ ] Sudah inspect kode yang ada
 - [ ] Sudah buat plan
 - [ ] Sudah dapat approval user
+- [ ] Menjaga kode bersih tanpa komentar berlebih dan tanpa emoji

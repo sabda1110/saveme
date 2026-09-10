@@ -161,3 +161,10 @@ export type TransactionInput = z.infer<typeof transactionSchema>
 ## Critical Security Rule
 
 **`userId` MUST ALWAYS be retrieved from the authenticated Firebase user (`user.uid`). NEVER accept unverified user ID from client requests.**
+
+---
+
+## Clean Code and Documentation Standards
+
+1. NO EMOJIS: Do not use emojis in code, responses, commit messages, or documentation.
+2. MINIMAL COMMENTS: Write self-documenting code. Avoid redundant comments in services and endpoints.

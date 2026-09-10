@@ -106,7 +106,7 @@ export function Sidebar() {
           icon: <ReceiptText className="w-4 h-4" />,
         },
         {
-          label: 'Template Cepat',
+          label: 'Template & Kategori',
           href: '/templates',
           icon: <Zap className="w-4 h-4" />,
         },

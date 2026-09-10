@@ -64,6 +64,8 @@ export interface Category {
   name: string
   icon: string
   type: CategoryType
+  isCustom?: boolean
+  userId?: string
 }
 
 export interface Wallet {

@@ -48,12 +48,12 @@ Ini adalah checklist paling kritis untuk SaveMe.
   - Apapun yang datang dari client
 
 ```typescript
-// ✅ WAJIB
+// [WAJIB]
 const session = await getSession(request)
 if (!session) return apiUnauthorized()
 const { userId } = session
 
-// ❌ DILARANG
+// [DILARANG]
 const userId = body.userId
 const userId = searchParams.get('userId')
 ```
@@ -67,7 +67,7 @@ Untuk setiap query pada tabel `transactions`, cek:
 - [ ] `WHERE id = :id AND userId = session.userId` ada di `delete`
 
 ```typescript
-// ✅ BENAR — ownership check di findById
+// [BENAR] — ownership check di findById
 const tx = await prisma.transaction.findFirst({
   where: { id, userId }  // kedua kondisi wajib ada
 })
@@ -112,10 +112,10 @@ if (!tx) return apiNotFound()  // 404, bukan 403 (hindari reveal existence)
 - [ ] Error di-log sebagai `console.error` dengan pesan safe (bukan seluruh object user)
 
 ```typescript
-// ✅ Safe logging
+// [SAFE] Safe logging
 console.error('[service:auth] Login failed for email:', email.substring(0,3) + '***')
 
-// ❌ Unsafe
+// [UNSAFE]
 console.log('User data:', user) // bisa include passwordHash!
 console.log('Token:', token)
 ```
@@ -144,10 +144,10 @@ Prisma menggunakan parameterized queries secara otomatis — risiko SQL injectio
 - [ ] Jika menggunakan raw query, gunakan tagged template: `prisma.$executeRaw`
 
 ```typescript
-// ✅ Safe (Prisma handles parameterization)
+// [SAFE] (Prisma handles parameterization)
 await prisma.$executeRaw`DELETE FROM users WHERE id = ${userId}`
 
-// ❌ Unsafe
+// [UNSAFE]
 await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = '${userId}'`)
 ```
 

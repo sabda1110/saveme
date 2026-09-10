@@ -22,6 +22,7 @@ import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal'
 import { NotificationPromptModal } from '@/components/organisms/NotificationPromptModal'
 import { notificationService } from '@/lib/services/notification.firebase'
+import { ManageCategoryModal } from '@/components/organisms/ManageCategoryModal'
 import {
   Wallet as WalletIcon,
   PlusCircle,
@@ -135,6 +136,7 @@ export default function DashboardPage() {
     new Date().toISOString().split('T')[0]
   )
   const [formError, setFormError] = useState<string | null>(null)
+  const [isQuickCategoryModalOpen, setIsQuickCategoryModalOpen] = useState(false)
 
   // Delete Transaction Modal State
   const [txToDelete, setTxToDelete] = useState<string | null>(null)
@@ -175,7 +177,7 @@ export default function DashboardPage() {
           dissolvedNoticesList,
         ] = await Promise.all([
           transactionService.getDashboardSummary(user.uid, dateFrom),
-          categoryService.getCategories(),
+          categoryService.getCategories(user.uid),
           recurringService.getUserRecurringBills(user.uid),
           savingsService.getUserGoals(user.uid),
           walletService.getUserWallets(user.uid),
@@ -1561,7 +1563,19 @@ export default function DashboardPage() {
               </FormField>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FormField label="Kategori" required>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Kategori <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsQuickCategoryModalOpen(true)}
+                      className="text-[11px] font-semibold text-green-600 dark:text-green-400 hover:underline cursor-pointer"
+                    >
+                      + Kategori Baru
+                    </button>
+                  </div>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
@@ -1571,11 +1585,11 @@ export default function DashboardPage() {
                       .filter((c) => c.type === type || c.type === 'BOTH')
                       .map((c) => (
                         <option key={c.id} value={c.id} className="bg-white dark:bg-[#1a1d27]">
-                          {c.icon} {c.name}
+                          {c.icon} {c.name} {c.isCustom ? '(Kustom)' : ''}
                         </option>
                       ))}
                   </select>
-                </FormField>
+                </div>
 
                 <FormField label="Kantong / Rekening" required>
                   <select
@@ -1667,6 +1681,22 @@ export default function DashboardPage() {
               await refreshProfile()
             }
             setRefreshTrigger((p) => p + 1)
+          }}
+        />
+      )}
+
+      {/* Quick Add Custom Category Modal */}
+      {user?.uid && (
+        <ManageCategoryModal
+          isOpen={isQuickCategoryModalOpen}
+          userId={user.uid}
+          defaultType={type}
+          onClose={() => setIsQuickCategoryModalOpen(false)}
+          onSuccess={(newCat) => {
+            if (newCat) {
+              setCategories((prev) => [newCat, ...prev])
+              setCategoryId(newCat.id)
+            }
           }}
         />
       )}

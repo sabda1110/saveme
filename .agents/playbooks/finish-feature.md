@@ -71,7 +71,7 @@ Tandai apa yang berubah:
 
 Buka `saveme-project/ROADMAP.md`:
 
-- [ ] Tandai task yang sudah selesai dengan `✅`
+- [ ] Tandai task yang sudah selesai dengan `[x]`
 - [ ] Update status phase jika semua task dalam phase sudah selesai
 - [ ] Update `Last Updated` date
 
@@ -115,7 +115,7 @@ git diff --stat
 Berikan ringkasan ke user lengkap dengan **rekomendasi commit untuk GitHub Desktop** (Conventional Commits):
 
 ```markdown
-✅ Feature: [Nama Feature]
+Feature Selesai: [Nama Feature]
 
 ### Yang Dikerjakan
 - File baru: ...
@@ -126,7 +126,7 @@ Berikan ringkasan ke user lengkap dengan **rekomendasi commit untuk GitHub Deskt
 1. ...
 2. ...
 
-### 💡 Rekomendasi Commit (GitHub Desktop)
+### Rekomendasi Commit (GitHub Desktop)
 
 **Summary (Judul Commit):**
 ```
@@ -159,3 +159,4 @@ Feature dianggap selesai jika:
 - [ ] Roadmap diupdate
 - [ ] Rekomendasi Commit Message & Deskripsi sudah diberikan
 - [ ] User sudah di-inform
+- [ ] Aturan bebas emoji dan kode tanpa komentar berlebih telah dipatuhi

@@ -345,3 +345,10 @@ Chart container must be wrapped in `ResponsiveContainer width="100%" height={300
 
 - `saveme-project/DESIGN.md` — complete design system specification
 - `saveme-project/DECISIONS.md` — design decisions (ADR-005, 006, 007)
+
+---
+
+## Clean Code and Documentation Standards
+
+1. NO EMOJIS: Avoid emojis in UI designs, labels, icons, commit messages, and documentation.
+2. MINIMAL COMMENTS: Keep styling and component implementations clean and self-explanatory without redundant comments.

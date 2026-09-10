@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { quickTemplateService } from '@/lib/services/quick-template.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
@@ -11,31 +11,38 @@ import { Input } from '@/components/atoms/Input'
 import { FormField } from '@/components/molecules/FormField'
 import { ConfirmModal } from '@/components/molecules/ConfirmModal'
 import { ManageTemplatesModal } from '@/components/organisms/ManageTemplatesModal'
-import type { QuickTemplate, Category, Wallet } from '@/types'
+import { ManageCategoryModal } from '@/components/organisms/ManageCategoryModal'
+import type { QuickTemplate, Category, Wallet, CategoryType } from '@/types'
 import {
   Zap,
+  Tag,
   PlusCircle,
   Trash2,
+  Edit2,
   RefreshCw,
   ArrowRight,
   X,
   CheckCircle2,
+  Layers,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+
+type TabType = 'templates' | 'categories'
+type CategoryFilter = 'ALL' | 'EXPENSE' | 'INCOME' | 'CUSTOM'
 
 export default function TemplatesPage() {
   const { user } = useAuth()
 
+  const [activeTab, setActiveTab] = useState<TabType>('templates')
   const [templates, setTemplates] = useState<QuickTemplate[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  // Manage Templates Modal State
   const [isManageModalOpen, setIsManageModalOpen] = useState(false)
 
-  // Use Template (Record Transaction) Modal State
   const [selectedTemplateForTx, setSelectedTemplateForTx] = useState<QuickTemplate | null>(null)
   const [txAmount, setTxAmount] = useState('')
   const [txDescription, setTxDescription] = useState('')
@@ -46,9 +53,14 @@ export default function TemplatesPage() {
   const [submittingTx, setSubmittingTx] = useState(false)
   const [txError, setTxError] = useState<string | null>(null)
 
-  // Delete Template Confirm State
   const [templateToDelete, setTemplateToDelete] = useState<QuickTemplate | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [deletingTemplate, setDeletingTemplate] = useState(false)
+
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL')
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null)
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
+  const [deletingCategory, setDeletingCategory] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -60,7 +72,7 @@ export default function TemplatesPage() {
       try {
         const [tpls, cats, userWallets] = await Promise.all([
           quickTemplateService.getUserTemplates(user.uid),
-          categoryService.getCategories(),
+          categoryService.getCategories(user.uid),
           walletService.getUserWallets(user.uid),
         ])
 
@@ -93,7 +105,15 @@ export default function TemplatesPage() {
     }).format(val)
   }
 
-  // Open Record Transaction Modal with Pre-filled values from Template
+  const filteredCategories = useMemo(() => {
+    return categories.filter((cat) => {
+      if (categoryFilter === 'CUSTOM') return Boolean(cat.isCustom)
+      if (categoryFilter === 'EXPENSE') return cat.type === 'EXPENSE' || cat.type === 'BOTH'
+      if (categoryFilter === 'INCOME') return cat.type === 'INCOME' || cat.type === 'BOTH'
+      return true
+    })
+  }, [categories, categoryFilter])
+
   const handleUseTemplate = (tpl: QuickTemplate) => {
     setSelectedTemplateForTx(tpl)
     setTxAmount(tpl.amount.toString())
@@ -105,7 +125,6 @@ export default function TemplatesPage() {
     setIsTxModalOpen(true)
   }
 
-  // Submit Transaction from Template
   const handleSubmitTransaction = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user?.uid) return
@@ -152,9 +171,9 @@ export default function TemplatesPage() {
     }
   }
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDeleteTemplate = async () => {
     if (!templateToDelete || !user?.uid) return
-    setDeleting(true)
+    setDeletingTemplate(true)
     try {
       await quickTemplateService.deleteTemplate(user.uid, templateToDelete.id)
       setTemplateToDelete(null)
@@ -162,7 +181,21 @@ export default function TemplatesPage() {
     } catch (err) {
       console.error('[templates] Error deleting template:', err)
     } finally {
-      setDeleting(false)
+      setDeletingTemplate(false)
+    }
+  }
+
+  const handleConfirmDeleteCategory = async () => {
+    if (!categoryToDelete || !user?.uid) return
+    setDeletingCategory(true)
+    try {
+      await categoryService.deleteCustomCategory(user.uid, categoryToDelete.id)
+      setCategoryToDelete(null)
+      setRefreshTrigger((p) => p + 1)
+    } catch (err) {
+      console.error('[templates] Error deleting category:', err)
+    } finally {
+      setDeletingCategory(false)
     }
   }
 
@@ -173,14 +206,14 @@ export default function TemplatesPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <Zap className="w-4 h-4" />
+              <Layers className="w-4 h-4" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Template Pengeluaran
+              Template & Kategori
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Simpan pengeluaran rutin Anda (seperti rokok/vape, parkir, kopi, bensin) agar form catatan transaksi otomatis terisi.
+            Kelola template transaksi cepat dan kategori kustom untuk mempercepat pencatatan keuangan Anda.
           </p>
         </div>
 
@@ -196,116 +229,284 @@ export default function TemplatesPage() {
             Refresh
           </Button>
 
-          <Button
-            variant="glow"
-            size="sm"
-            onClick={() => setIsManageModalOpen(true)}
-            leftIcon={<PlusCircle className="w-4 h-4" />}
-            className="text-xs sm:text-sm"
-          >
-            Tambah Template Baru
-          </Button>
+          {activeTab === 'templates' ? (
+            <Button
+              variant="glow"
+              size="sm"
+              onClick={() => setIsManageModalOpen(true)}
+              leftIcon={<PlusCircle className="w-4 h-4" />}
+              className="text-xs sm:text-sm"
+            >
+              Tambah Template Baru
+            </Button>
+          ) : (
+            <Button
+              variant="glow"
+              size="sm"
+              onClick={() => {
+                setCategoryToEdit(null)
+                setIsCategoryModalOpen(true)
+              }}
+              leftIcon={<PlusCircle className="w-4 h-4" />}
+              className="text-xs sm:text-sm"
+            >
+              Tambah Kategori Baru
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Main Content */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] animate-pulse border border-slate-200 dark:border-[#2d3348]" />
-          ))}
-        </div>
-      ) : templates.length === 0 ? (
-        /* Empty State */
-        <div className="p-8 sm:p-12 text-center bg-white dark:bg-[#1a1d27] rounded-3xl border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center max-w-lg mx-auto mt-6 shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 dark:text-amber-400 flex items-center justify-center text-3xl mb-4">
-            ⚡
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">
-            Belum Ada Template Pengeluaran
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-            Buat template untuk pengeluaran yang sering Anda beli (misalnya: rokok/vape, parkir harian, kopi pagi, atau makan warteg) agar saat mencatat pengeluaran Anda tinggal 1 kali klik!
-          </p>
-          <Button
-            variant="glow"
-            size="md"
-            onClick={() => setIsManageModalOpen(true)}
-            leftIcon={<PlusCircle className="w-4 h-4" />}
-          >
-            Buat Template Pertama
-          </Button>
-        </div>
-      ) : (
-        /* Template Cards Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((tpl) => (
-            <div
-              key={tpl.id}
-              className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] hover:border-amber-500/50 flex flex-col justify-between transition-all duration-200 shadow-sm dark:shadow-lg hover:shadow-amber-500/5 group text-slate-900 dark:text-white"
-            >
-              <div>
-                {/* Card Top */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center shrink-0">
-                      {tpl.icon}
-                    </span>
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
-                        {tpl.name}
-                      </h3>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {tpl.categoryName || 'Pengeluaran'}
+      {/* Tab Segmented Control */}
+      <div className="flex items-center p-1 bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('templates')}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer',
+            activeTab === 'templates'
+              ? 'bg-white dark:bg-[#21263a] text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          )}
+        >
+          <Zap className="w-4 h-4 text-amber-500" />
+          Template Cepat
+          <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-slate-200 dark:bg-[#2d3348] font-mono">
+            {templates.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('categories')}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer',
+            activeTab === 'categories'
+              ? 'bg-white dark:bg-[#21263a] text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          )}
+        >
+          <Tag className="w-4 h-4 text-green-500" />
+          Kategori Transaksi
+          <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-slate-200 dark:bg-[#2d3348] font-mono">
+            {categories.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Tab 1: Template Cepat */}
+      {activeTab === 'templates' && (
+        <>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-44 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] animate-pulse border border-slate-200 dark:border-[#2d3348]"
+                />
+              ))}
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="p-8 sm:p-12 text-center bg-white dark:bg-[#1a1d27] rounded-3xl border border-slate-200 dark:border-[#2d3348] flex flex-col items-center justify-center max-w-lg mx-auto mt-4 shadow-sm dark:shadow-xl text-slate-900 dark:text-white">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 dark:text-amber-400 flex items-center justify-center text-3xl mb-4">
+                <Zap className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">
+                Belum Ada Template Pengeluaran
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                Buat template untuk pengeluaran rutin harian (seperti bensin, parkir, kopi, atau makan siang) agar pencatatan transaksi tinggal 1 kali klik.
+              </p>
+              <Button
+                variant="glow"
+                size="md"
+                onClick={() => setIsManageModalOpen(true)}
+                leftIcon={<PlusCircle className="w-4 h-4" />}
+              >
+                Buat Template Pertama
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map((tpl) => (
+                <div
+                  key={tpl.id}
+                  className="p-5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] hover:border-amber-500/50 flex flex-col justify-between transition-all duration-200 shadow-sm dark:shadow-lg hover:shadow-amber-500/5 group text-slate-900 dark:text-white"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center shrink-0">
+                          {tpl.icon}
+                        </span>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
+                            {tpl.name}
+                          </h3>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {tpl.categoryName || 'Pengeluaran'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setTemplateToDelete(tpl)}
+                          title="Hapus template"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="my-3 p-3 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Nominal:</span>
+                      <span className="text-lg font-extrabold font-mono text-amber-600 dark:text-amber-400 tabular-nums">
+                        {formatRupiah(tpl.amount)}
                       </span>
                     </div>
+
+                    {tpl.walletName && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 mb-2">
+                        <span className="text-slate-500 dark:text-slate-400">Kantong default:</span>
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] font-medium text-slate-700 dark:text-slate-200">
+                          {tpl.walletName}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setTemplateToDelete(tpl)}
-                      title="Hapus template"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#21263a] transition-colors"
+                  <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] mt-2">
+                    <Button
+                      variant="glow"
+                      size="sm"
+                      onClick={() => handleUseTemplate(tpl)}
+                      className="w-full justify-center text-xs"
+                      rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      Gunakan Template Ini
+                    </Button>
                   </div>
                 </div>
-
-                {/* Amount */}
-                <div className="my-3 p-3 rounded-xl bg-slate-50 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Nominal:</span>
-                  <span className="text-lg font-extrabold font-mono text-amber-600 dark:text-amber-400 tabular-nums">
-                    {formatRupiah(tpl.amount)}
-                  </span>
-                </div>
-
-                {/* Wallet Badge if set */}
-                {tpl.walletName && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 mb-2">
-                    <span className="text-slate-500 dark:text-slate-400">Kantong default:</span>
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] font-medium text-slate-700 dark:text-slate-200">
-                      {tpl.walletName}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Button */}
-              <div className="pt-3 border-t border-slate-200 dark:border-[#2d3348] mt-2">
-                <Button
-                  variant="glow"
-                  size="sm"
-                  onClick={() => handleUseTemplate(tpl)}
-                  className="w-full justify-center text-xs"
-                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                >
-                  Gunakan Template Ini
-                </Button>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+        </>
+      )}
+
+      {/* Tab 2: Kategori Transaksi */}
+      {activeTab === 'categories' && (
+        <div className="flex flex-col gap-4">
+          {/* Filter Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { id: 'ALL', label: 'Semua Kategori' },
+                { id: 'EXPENSE', label: 'Pengeluaran' },
+                { id: 'INCOME', label: 'Pemasukan' },
+                { id: 'CUSTOM', label: 'Kustom Saya' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setCategoryFilter(f.id as CategoryFilter)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer',
+                    categoryFilter === f.id
+                      ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-white'
+                      : 'bg-white dark:bg-[#1a1d27] border-slate-200 dark:border-[#2d3348] text-slate-600 dark:text-slate-300 hover:border-slate-400'
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Menampilkan {filteredCategories.length} dari {categories.length} kategori
+            </span>
+          </div>
+
+          {/* Categories Grid */}
+          {filteredCategories.length === 0 ? (
+            <div className="p-8 text-center bg-white dark:bg-[#1a1d27] rounded-2xl border border-slate-200 dark:border-[#2d3348] text-slate-500 dark:text-slate-400">
+              Tidak ada kategori yang sesuai dengan filter ini.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {filteredCategories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="p-3.5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col justify-between gap-2 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center text-xl shrink-0">
+                      {cat.icon || '📦'}
+                    </span>
+
+                    {cat.isCustom ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryToEdit(cat)
+                            setIsCategoryModalOpen(true)
+                          }}
+                          title="Edit kategori"
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#21263a]"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCategoryToDelete(cat)}
+                          title="Hapus kategori"
+                          className="p-1 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#21263a]"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#21263a] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#2d3348]">
+                        Bawaan
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      {cat.name}
+                    </h4>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span
+                        className={cn(
+                          'text-[10px] font-medium px-1.5 py-0.5 rounded-md border',
+                          cat.type === 'EXPENSE'
+                            ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                            : cat.type === 'INCOME'
+                            ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400'
+                            : 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
+                        )}
+                      >
+                        {cat.type === 'EXPENSE'
+                          ? 'Pengeluaran'
+                          : cat.type === 'INCOME'
+                          ? 'Pemasukan'
+                          : 'Keduanya'}
+                      </span>
+
+                      {cat.isCustom && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
+                          Kustom
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -370,7 +571,7 @@ export default function TemplatesPage() {
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.icon} {c.name}
+                        {c.icon} {c.name} {c.isCustom ? '(Kustom)' : ''}
                       </option>
                     ))}
                   </select>
@@ -442,7 +643,7 @@ export default function TemplatesPage() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Template Confirmation Modal */}
       <ConfirmModal
         isOpen={Boolean(templateToDelete)}
         title="Hapus Template?"
@@ -454,9 +655,42 @@ export default function TemplatesPage() {
         confirmText="Hapus Template"
         cancelText="Batal"
         variant="danger"
-        loading={deleting}
-        onConfirm={handleConfirmDelete}
+        loading={deletingTemplate}
+        onConfirm={handleConfirmDeleteTemplate}
         onClose={() => setTemplateToDelete(null)}
+      />
+
+      {/* Manage / Add / Edit Category Modal */}
+      {user?.uid && (
+        <ManageCategoryModal
+          isOpen={isCategoryModalOpen}
+          userId={user.uid}
+          categoryToEdit={categoryToEdit}
+          onClose={() => {
+            setIsCategoryModalOpen(false)
+            setCategoryToEdit(null)
+          }}
+          onSuccess={() => {
+            setRefreshTrigger((p) => p + 1)
+          }}
+        />
+      )}
+
+      {/* Delete Category Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(categoryToDelete)}
+        title="Hapus Kategori Kustom?"
+        description={
+          categoryToDelete
+            ? `Apakah Anda yakin ingin menghapus kategori "${categoryToDelete.name}"? Transaksi yang sudah menggunakan kategori ini tidak akan terhapus.`
+            : ''
+        }
+        confirmText="Hapus Kategori"
+        cancelText="Batal"
+        variant="danger"
+        loading={deletingCategory}
+        onConfirm={handleConfirmDeleteCategory}
+        onClose={() => setCategoryToDelete(null)}
       />
     </div>
   )

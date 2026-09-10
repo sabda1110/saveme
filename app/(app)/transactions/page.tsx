@@ -19,6 +19,7 @@ import { TransactionCalendar } from '@/components/organisms/TransactionCalendar'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { normalizeDateToYYYYMMDD } from '@/lib/utils/date'
 import { savingsService } from '@/lib/services/savings.firebase'
+import { ManageCategoryModal } from '@/components/organisms/ManageCategoryModal'
 import {
   ReceiptText,
   Search,
@@ -78,6 +79,7 @@ export default function TransactionsPage() {
   const [bulkDeleteSuccessInfo, setBulkDeleteSuccessInfo] = useState<string | null>(null)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [isQuickCategoryModalOpen, setIsQuickCategoryModalOpen] = useState(false)
 
   // Form State
   const [formType, setFormType] = useState<TransactionType>('EXPENSE')
@@ -110,7 +112,7 @@ export default function TransactionsPage() {
       try {
         const [txs, cats, userWallets, userTemplates, goals] = await Promise.all([
           transactionService.getUserTransactions(user.uid),
-          categoryService.getCategories(),
+          categoryService.getCategories(user.uid),
           walletService.getUserWallets(user.uid),
           quickTemplateService.getUserTemplates(user.uid),
           savingsService.getUserGoals(user.uid),
@@ -1054,28 +1056,46 @@ export default function TransactionsPage() {
               </FormField>
 
               {/* Category Selector */}
-              <FormField label="Kategori" required>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-slate-200 dark:border-[#2d3348]/40 rounded-xl bg-slate-50 dark:bg-[#131620]/50">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setFormCategoryId(cat.id)}
-                      className={cn(
-                        'flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-medium transition-all cursor-pointer',
-                        formCategoryId === cat.id
-                          ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-white font-bold shadow-xs'
-                          : 'bg-white dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500'
-                      )}
-                    >
-                      <span className="text-xl">{cat.icon}</span>
-                      <span className="truncate w-full text-center text-[10px]">
-                        {cat.name}
-                      </span>
-                    </button>
-                  ))}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Kategori <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsQuickCategoryModalOpen(true)}
+                    className="text-[11px] font-semibold text-green-600 dark:text-green-400 hover:underline cursor-pointer"
+                  >
+                    + Kategori Baru
+                  </button>
                 </div>
-              </FormField>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-slate-200 dark:border-[#2d3348]/40 rounded-xl bg-slate-50 dark:bg-[#131620]/50">
+                  {categories
+                    .filter((cat) =>
+                      formType === 'EXPENSE'
+                        ? cat.type === 'EXPENSE' || cat.type === 'BOTH'
+                        : cat.type === 'INCOME' || cat.type === 'BOTH'
+                    )
+                    .map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setFormCategoryId(cat.id)}
+                        className={cn(
+                          'flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-medium transition-all cursor-pointer',
+                          formCategoryId === cat.id
+                            ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-white font-bold shadow-xs'
+                            : 'bg-white dark:bg-[#21263a] border-slate-200 dark:border-[#2d3348] text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500'
+                        )}
+                      >
+                        <span className="text-xl">{cat.icon}</span>
+                        <span className="truncate w-full text-center text-[10px]">
+                          {cat.name}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
 
               {/* Wallet / Source Account Selector */}
               {wallets.length > 0 && (
@@ -1228,6 +1248,22 @@ export default function TransactionsPage() {
         wallets={wallets}
         formatRupiah={formatRupiah}
       />
+
+      {/* Quick Add Custom Category Modal */}
+      {user?.uid && (
+        <ManageCategoryModal
+          isOpen={isQuickCategoryModalOpen}
+          userId={user.uid}
+          defaultType={formType}
+          onClose={() => setIsQuickCategoryModalOpen(false)}
+          onSuccess={(newCat) => {
+            if (newCat) {
+              setCategories((prev) => [newCat, ...prev])
+              setFormCategoryId(newCat.id)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }
