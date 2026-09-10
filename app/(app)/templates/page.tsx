@@ -24,12 +24,13 @@ import {
   X,
   CheckCircle2,
   Layers,
-  Sparkles,
+  EyeOff,
+  RotateCcw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 type TabType = 'templates' | 'categories'
-type CategoryFilter = 'ALL' | 'EXPENSE' | 'INCOME' | 'CUSTOM'
+type CategoryFilter = 'ALL' | 'EXPENSE' | 'INCOME' | 'CUSTOM' | 'HIDDEN'
 
 export default function TemplatesPage() {
   const { user } = useAuth()
@@ -62,6 +63,11 @@ export default function TemplatesPage() {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
   const [deletingCategory, setDeletingCategory] = useState(false)
 
+  const [categoryToHide, setCategoryToHide] = useState<Category | null>(null)
+  const [hidingCategory, setHidingCategory] = useState(false)
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+  const [resettingHidden, setResettingHidden] = useState(false)
+
   useEffect(() => {
     let isMounted = true
 
@@ -72,7 +78,7 @@ export default function TemplatesPage() {
       try {
         const [tpls, cats, userWallets] = await Promise.all([
           quickTemplateService.getUserTemplates(user.uid),
-          categoryService.getCategories(user.uid),
+          categoryService.getCategories(user.uid, { includeHidden: true }),
           walletService.getUserWallets(user.uid),
         ])
 
@@ -105,8 +111,20 @@ export default function TemplatesPage() {
     }).format(val)
   }
 
+  const hiddenCount = useMemo(
+    () => categories.filter((c) => Boolean(c.isHidden)).length,
+    [categories]
+  )
+
+  const activeCount = useMemo(
+    () => categories.filter((c) => !c.isHidden).length,
+    [categories]
+  )
+
   const filteredCategories = useMemo(() => {
     return categories.filter((cat) => {
+      if (categoryFilter === 'HIDDEN') return Boolean(cat.isHidden)
+      if (cat.isHidden) return false
       if (categoryFilter === 'CUSTOM') return Boolean(cat.isCustom)
       if (categoryFilter === 'EXPENSE') return cat.type === 'EXPENSE' || cat.type === 'BOTH'
       if (categoryFilter === 'INCOME') return cat.type === 'INCOME' || cat.type === 'BOTH'
@@ -118,7 +136,7 @@ export default function TemplatesPage() {
     setSelectedTemplateForTx(tpl)
     setTxAmount(tpl.amount.toString())
     setTxDescription(tpl.name)
-    setTxCategoryId(tpl.categoryId || categories[0]?.id || 'other')
+    setTxCategoryId(tpl.categoryId || categories.find((c) => !c.isHidden)?.id || 'other')
     setTxWalletId(tpl.walletId || wallets[0]?.id || '')
     setTxDate(new Date().toISOString().split('T')[0])
     setTxError(null)
@@ -193,9 +211,48 @@ export default function TemplatesPage() {
       setCategoryToDelete(null)
       setRefreshTrigger((p) => p + 1)
     } catch (err) {
-      console.error('[templates] Error deleting category:', err)
+      console.error('[templates] Error deleting custom category:', err)
     } finally {
       setDeletingCategory(false)
+    }
+  }
+
+  const handleConfirmHideCategory = async () => {
+    if (!categoryToHide || !user?.uid) return
+    setHidingCategory(true)
+    try {
+      await categoryService.hideDefaultCategory(user.uid, categoryToHide.id)
+      setCategoryToHide(null)
+      setRefreshTrigger((p) => p + 1)
+    } catch (err) {
+      console.error('[templates] Error hiding default category:', err)
+    } finally {
+      setHidingCategory(false)
+    }
+  }
+
+  const handleUnhideCategory = async (cat: Category) => {
+    if (!user?.uid) return
+    try {
+      await categoryService.unhideDefaultCategory(user.uid, cat.id)
+      setRefreshTrigger((p) => p + 1)
+    } catch (err) {
+      console.error('[templates] Error unhiding default category:', err)
+    }
+  }
+
+  const handleConfirmResetHidden = async () => {
+    if (!user?.uid) return
+    setResettingHidden(true)
+    try {
+      await categoryService.resetHiddenCategories(user.uid)
+      setIsResetConfirmOpen(false)
+      setCategoryFilter('ALL')
+      setRefreshTrigger((p) => p + 1)
+    } catch (err) {
+      console.error('[templates] Error resetting hidden categories:', err)
+    } finally {
+      setResettingHidden(false)
     }
   }
 
@@ -213,7 +270,7 @@ export default function TemplatesPage() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Kelola template transaksi cepat dan kategori kustom untuk mempercepat pencatatan keuangan Anda.
+            Kelola template transaksi cepat dan atur kategori aktif sesuai kebutuhan finansial Anda.
           </p>
         </div>
 
@@ -288,7 +345,7 @@ export default function TemplatesPage() {
           <Tag className="w-4 h-4 text-green-500" />
           Kategori Transaksi
           <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] bg-slate-200 dark:bg-[#2d3348] font-mono">
-            {categories.length}
+            {activeCount}
           </span>
         </button>
       </div>
@@ -402,10 +459,13 @@ export default function TemplatesPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
               {[
-                { id: 'ALL', label: 'Semua Kategori' },
+                { id: 'ALL', label: `Semua Aktif (${activeCount})` },
                 { id: 'EXPENSE', label: 'Pengeluaran' },
                 { id: 'INCOME', label: 'Pemasukan' },
                 { id: 'CUSTOM', label: 'Kustom Saya' },
+                ...(hiddenCount > 0
+                  ? [{ id: 'HIDDEN', label: `Dinonaktifkan (${hiddenCount})` }]
+                  : []),
               ].map((f) => (
                 <button
                   key={f.id}
@@ -423,22 +483,42 @@ export default function TemplatesPage() {
               ))}
             </div>
 
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              Menampilkan {filteredCategories.length} dari {categories.length} kategori
-            </span>
+            <div className="flex items-center gap-2">
+              {hiddenCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsResetConfirmOpen(true)}
+                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Pulihkan Semua Kategori Bawaan
+                </button>
+              )}
+
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Menampilkan {filteredCategories.length} kategori
+              </span>
+            </div>
           </div>
 
           {/* Categories Grid */}
           {filteredCategories.length === 0 ? (
             <div className="p-8 text-center bg-white dark:bg-[#1a1d27] rounded-2xl border border-slate-200 dark:border-[#2d3348] text-slate-500 dark:text-slate-400">
-              Tidak ada kategori yang sesuai dengan filter ini.
+              {categoryFilter === 'HIDDEN'
+                ? 'Tidak ada kategori bawaan yang dinonaktifkan.'
+                : 'Tidak ada kategori yang sesuai dengan filter ini.'}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {filteredCategories.map((cat) => (
                 <div
                   key={cat.id}
-                  className="p-3.5 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col justify-between gap-2 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                  className={cn(
+                    'p-3.5 rounded-2xl bg-white dark:bg-[#1a1d27] border flex flex-col justify-between gap-2 shadow-xs transition-colors',
+                    cat.isHidden
+                      ? 'border-dashed border-slate-300 dark:border-slate-700 opacity-75'
+                      : 'border-slate-200 dark:border-[#2d3348] hover:border-slate-300 dark:hover:border-slate-600'
+                  )}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#21263a] border border-slate-200 dark:border-[#2d3348] flex items-center justify-center text-xl shrink-0">
@@ -461,16 +541,36 @@ export default function TemplatesPage() {
                         <button
                           type="button"
                           onClick={() => setCategoryToDelete(cat)}
-                          title="Hapus kategori"
+                          title="Hapus kategori kustom"
                           className="p-1 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#21263a]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
+                    ) : cat.isHidden ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUnhideCategory(cat)}
+                        title="Pulihkan kategori ini"
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-lg bg-green-500/15 text-green-700 dark:text-green-300 hover:bg-green-500/25 transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Pulihkan
+                      </button>
                     ) : (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#21263a] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#2d3348]">
-                        Bawaan
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#21263a] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#2d3348]">
+                          Bawaan
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setCategoryToHide(cat)}
+                          title="Nonaktifkan kategori ini dari akun Anda"
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#21263a]"
+                        >
+                          <EyeOff className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -496,11 +596,15 @@ export default function TemplatesPage() {
                           : 'Keduanya'}
                       </span>
 
-                      {cat.isCustom && (
+                      {cat.isCustom ? (
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
                           Kustom
                         </span>
-                      )}
+                      ) : cat.isHidden ? (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-slate-500/10 border border-slate-500/20 text-slate-500 dark:text-slate-400">
+                          Nonaktif
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -569,11 +673,13 @@ export default function TemplatesPage() {
                     onChange={(e) => setTxCategoryId(e.target.value)}
                     className="w-full bg-white dark:bg-[#21263a] text-slate-900 dark:text-slate-100 rounded-xl px-3.5 py-3 text-sm border border-slate-200 dark:border-[#2d3348] focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.icon} {c.name} {c.isCustom ? '(Kustom)' : ''}
-                      </option>
-                    ))}
+                    {categories
+                      .filter((c) => !c.isHidden)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon} {c.name} {c.isCustom ? '(Kustom)' : ''}
+                        </option>
+                      ))}
                   </select>
                 </FormField>
 
@@ -633,7 +739,7 @@ export default function TemplatesPage() {
           isOpen={isManageModalOpen}
           userId={user.uid}
           templates={templates}
-          categories={categories}
+          categories={categories.filter((c) => !c.isHidden)}
           wallets={wallets}
           onClose={() => setIsManageModalOpen(false)}
           onSuccess={() => {
@@ -660,7 +766,7 @@ export default function TemplatesPage() {
         onClose={() => setTemplateToDelete(null)}
       />
 
-      {/* Manage / Add / Edit Category Modal */}
+      {/* Manage / Add / Edit Custom Category Modal */}
       {user?.uid && (
         <ManageCategoryModal
           isOpen={isCategoryModalOpen}
@@ -676,13 +782,13 @@ export default function TemplatesPage() {
         />
       )}
 
-      {/* Delete Category Confirmation Modal */}
+      {/* Delete Custom Category Confirmation Modal */}
       <ConfirmModal
         isOpen={Boolean(categoryToDelete)}
         title="Hapus Kategori Kustom?"
         description={
           categoryToDelete
-            ? `Apakah Anda yakin ingin menghapus kategori "${categoryToDelete.name}"? Transaksi yang sudah menggunakan kategori ini tidak akan terhapus.`
+            ? `Apakah Anda yakin ingin menghapus kategori "${categoryToDelete.name}"? Kategori ini akan dihapus secara permanen.`
             : ''
         }
         confirmText="Hapus Kategori"
@@ -691,6 +797,36 @@ export default function TemplatesPage() {
         loading={deletingCategory}
         onConfirm={handleConfirmDeleteCategory}
         onClose={() => setCategoryToDelete(null)}
+      />
+
+      {/* Hide / Deactivate Default Category Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(categoryToHide)}
+        title="Nonaktifkan Kategori Bawaan?"
+        description={
+          categoryToHide
+            ? `Kategori "${categoryToHide.name}" akan disembunyikan dari daftar kategori dan form transaksi akun Anda. Tindakan ini tidak memengaruhi pengguna lain, dan Anda dapat memulihkannya kembali kapan saja.`
+            : ''
+        }
+        confirmText="Nonaktifkan Kategori"
+        cancelText="Batal"
+        variant="danger"
+        loading={hidingCategory}
+        onConfirm={handleConfirmHideCategory}
+        onClose={() => setCategoryToHide(null)}
+      />
+
+      {/* Reset Hidden Categories Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isResetConfirmOpen}
+        title="Pulihkan Semua Kategori Bawaan?"
+        description={`Apakah Anda ingin mengaktifkan kembali seluruh ${hiddenCount} kategori bawaan yang sebelumnya dinonaktifkan?`}
+        confirmText="Pulihkan Semua"
+        cancelText="Batal"
+        variant="info"
+        loading={resettingHidden}
+        onConfirm={handleConfirmResetHidden}
+        onClose={() => setIsResetConfirmOpen(false)}
       />
     </div>
   )

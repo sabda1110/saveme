@@ -2,12 +2,15 @@ import { db } from '@/lib/firebase/config'
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore'
 import type { Category, CategoryType } from '@/types'
 
@@ -15,6 +18,10 @@ export interface CustomCategoryInput {
   name: string
   icon: string
   type: CategoryType
+}
+
+export interface GetCategoriesOptions {
+  includeHidden?: boolean
 }
 
 export const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
@@ -48,7 +55,7 @@ export const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
 ]
 
 export const categoryService = {
-  async getCategories(userId?: string): Promise<Category[]> {
+  async getCategories(userId?: string, options?: GetCategoriesOptions): Promise<Category[]> {
     try {
       const snapshot = await getDocs(collection(db, 'categories'))
       let baseCategories: Category[] = []
@@ -82,8 +89,28 @@ export const categoryService = {
         return baseCategories
       }
 
+      let hiddenCategoryIds: string[] = []
+      try {
+        const userSnap = await getDoc(doc(db, 'users', userId))
+        if (userSnap.exists()) {
+          hiddenCategoryIds = userSnap.data()?.hiddenCategoryIds || []
+        }
+      } catch (err) {
+        console.error('[categoryService] Error fetching user hidden categories:', err)
+      }
+
       const customCategories = await this.getCustomCategories(userId)
-      return [...customCategories, ...baseCategories]
+
+      if (options?.includeHidden) {
+        const mappedBase = baseCategories.map((cat) => ({
+          ...cat,
+          isHidden: hiddenCategoryIds.includes(cat.id),
+        }))
+        return [...customCategories, ...mappedBase]
+      }
+
+      const activeBase = baseCategories.filter((cat) => !hiddenCategoryIds.includes(cat.id))
+      return [...customCategories, ...activeBase]
     } catch (error) {
       console.error('[categoryService] Error fetching categories:', error)
       return DEFAULT_CATEGORIES.map((cat, i) => ({
@@ -163,6 +190,38 @@ export const categoryService = {
 
     const docRef = doc(db, 'users', userId, 'custom_categories', categoryId)
     await deleteDoc(docRef)
+  },
+
+  async hideDefaultCategory(userId: string, categoryId: string): Promise<void> {
+    if (!userId) throw new Error('Unauthorized: User ID is required')
+    if (!categoryId) throw new Error('Category ID is required')
+
+    const userRef = doc(db, 'users', userId)
+    await updateDoc(userRef, {
+      hiddenCategoryIds: arrayUnion(categoryId),
+      updatedAt: serverTimestamp(),
+    })
+  },
+
+  async unhideDefaultCategory(userId: string, categoryId: string): Promise<void> {
+    if (!userId) throw new Error('Unauthorized: User ID is required')
+    if (!categoryId) throw new Error('Category ID is required')
+
+    const userRef = doc(db, 'users', userId)
+    await updateDoc(userRef, {
+      hiddenCategoryIds: arrayRemove(categoryId),
+      updatedAt: serverTimestamp(),
+    })
+  },
+
+  async resetHiddenCategories(userId: string): Promise<void> {
+    if (!userId) throw new Error('Unauthorized: User ID is required')
+
+    const userRef = doc(db, 'users', userId)
+    await updateDoc(userRef, {
+      hiddenCategoryIds: [],
+      updatedAt: serverTimestamp(),
+    })
   },
 
   async seedCategories(): Promise<void> {

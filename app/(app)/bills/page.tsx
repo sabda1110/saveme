@@ -99,7 +99,7 @@ export default function BillsPage() {
       try {
         const [billsData, cats, wList] = await Promise.all([
           recurringService.getUserRecurringBills(user.uid),
-          categoryService.getCategories(),
+          categoryService.getCategories(user.uid),
           walletService.getUserWallets(user.uid),
         ])
 

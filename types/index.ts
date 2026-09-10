@@ -31,10 +31,10 @@ export interface UserProfile {
   lastAllocatedMonth?: string // e.g. "2026-08" to guard against double allocation in a single month
   monthlyBudget?: number // Quick budget set by user for the month (Rp)
   monthlyBudgetMonth?: string // e.g. "2026-08" — which month this budget applies to
-  deductBillsFromDaily?: boolean // true if daily safe-to-spend deducts unpaid recurring bills. Default: true
-  // Security & App Lock
-  appPin?: string // Hashed 6-digit PIN (SHA-256)
-  isPinEnabled?: boolean // Toggle for PIN security lock
+  deductBillsFromDaily?: boolean
+  hiddenCategoryIds?: string[]
+  appPin?: string
+  isPinEnabled?: boolean
   createdAt?: unknown
   updatedAt?: unknown
 }
@@ -42,8 +42,8 @@ export interface UserProfile {
 export interface SalaryAllocationRecord {
   id: string
   userId: string
-  monthStr: string // e.g. "2026-08"
-  monthName: string // e.g. "Agustus 2026"
+  monthStr: string
+  monthName: string
   incomeType: IncomeType
   totalSalary: number
   operatingAmount: number
@@ -55,7 +55,7 @@ export interface SalaryAllocationRecord {
   lockedWalletName?: string
   goalsAllocation?: { goalId: string; goalName: string; amount: number }[]
   notes?: string
-  allocatedAt: string // ISO date string
+  allocatedAt: string
   createdAt?: unknown
 }
 
@@ -66,6 +66,7 @@ export interface Category {
   type: CategoryType
   isCustom?: boolean
   userId?: string
+  isHidden?: boolean
 }
 
 export interface Wallet {
