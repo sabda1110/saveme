@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import type { SavingsGoal, Wallet, GroupSavings, GroupSavingsMember } from '@/types'
 import { cn } from '@/lib/utils/cn'
+import { usePageTour } from '@/hooks/usePageTour'
 
 type SavingsTab = 'pribadi' | 'bersama' | 'undangan'
 
@@ -56,6 +57,8 @@ export interface MultiInviteeRow {
 export default function SavingsPage() {
   const { user, userProfile } = useAuth()
   const { toast } = useToast()
+
+  usePageTour('savingsTour')
 
   const [activeTab, setActiveTab] = useState<SavingsTab>('pribadi')
 
@@ -933,7 +936,7 @@ export default function SavingsPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="savings-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
@@ -964,6 +967,7 @@ export default function SavingsPage() {
 
           {activeTab === 'pribadi' && (
             <Button
+              id="savings-add-button"
               variant="glow"
               size="sm"
               onClick={() => {
@@ -985,6 +989,7 @@ export default function SavingsPage() {
 
           {activeTab === 'bersama' && (
             <Button
+              id="savings-add-button"
               variant="glow"
               size="sm"
               onClick={() => {
@@ -1010,7 +1015,7 @@ export default function SavingsPage() {
       </div>
 
       {/* Tab Navigation Switcher — Responsive Segmented Control (1 Row on Mobile) */}
-      <div className="grid grid-cols-3 sm:flex sm:items-center gap-1 sm:gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] w-full sm:w-auto self-start">
+      <div id="savings-tabs-section" className="grid grid-cols-3 sm:flex sm:items-center gap-1 sm:gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#131620] border border-slate-200 dark:border-[#2d3348] w-full sm:w-auto self-start">
         <button
           onClick={() => setActiveTab('pribadi')}
           className={cn(
@@ -1139,7 +1144,7 @@ export default function SavingsPage() {
           ) : (
             <>
               {/* 4 Summary KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div id="savings-feasibility-calc" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-5 rounded-2xl bg-white dark:bg-gradient-to-b dark:from-[#1e2333] dark:to-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm dark:shadow-xl flex items-center justify-between">
                   <div>
                     <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">

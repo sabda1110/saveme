@@ -16,6 +16,7 @@ import { ThemeToggle } from '@/components/molecules/ThemeToggle'
 import { AppTemplate } from '@/components/templates/AppTemplate'
 import { BrandLogo } from '@/components/atoms/BrandLogo'
 import { Badge } from '@/components/atoms/Badge'
+import { AppTourProvider } from '@/components/organisms/AppTour'
 import {
   Menu,
   X,
@@ -379,7 +380,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <GroupSavingsInviteProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
+      <AppTourProvider>
+        <AppLayoutContent>{children}</AppLayoutContent>
+      </AppTourProvider>
     </GroupSavingsInviteProvider>
   )
 }

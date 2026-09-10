@@ -172,6 +172,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       monthlyBudgetMonth: data.monthlyBudgetMonth,
       appPin: data.appPin,
       isPinEnabled: data.isPinEnabled ?? false,
+      completedTours: data.completedTours || [],
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     } as UserProfile

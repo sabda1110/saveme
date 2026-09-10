@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
+import { usePageTour } from '@/hooks/usePageTour'
 import { debtService } from '@/lib/services/debt.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { Badge } from '@/components/atoms/Badge'
@@ -41,6 +42,7 @@ import { cn } from '@/lib/utils/cn'
 export default function DebtsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
+  usePageTour('debtsTour')
 
   // Data States
   const [debts, setDebts] = useState<Debt[]>([])
@@ -497,7 +499,7 @@ export default function DebtsPage() {
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#141824] border border-slate-200/80 dark:border-white/10 shadow-xs relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+        <div id="debts-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
@@ -521,6 +523,7 @@ export default function DebtsPage() {
 
           <div className="flex items-center gap-2 shrink-0">
             <Button
+              id="debts-add-button"
               variant="glow"
               size="md"
               leftIcon={<Plus className="w-4 h-4" />}
@@ -627,7 +630,7 @@ export default function DebtsPage() {
       {/* 3. Filter Controls & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#141824] p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs">
         {/* Segmented Type Switcher */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#0e1118] p-1 rounded-xl border border-slate-200/60 dark:border-white/6 overflow-x-auto shrink-0">
+        <div id="debts-tabs-toggle" className="flex items-center gap-1 bg-slate-100 dark:bg-[#0e1118] p-1 rounded-xl border border-slate-200/60 dark:border-white/6 overflow-x-auto shrink-0">
           <button
             type="button"
             onClick={() => setTypeFilter('ALL')}

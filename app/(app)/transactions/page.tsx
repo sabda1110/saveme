@@ -50,10 +50,13 @@ import type {
   SavingsGoal,
 } from '@/types'
 import { cn } from '@/lib/utils/cn'
+import { usePageTour } from '@/hooks/usePageTour'
 
 export default function TransactionsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
+
+  usePageTour('transactionsTour')
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -471,7 +474,7 @@ export default function TransactionsPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="tx-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400">
@@ -488,7 +491,7 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div id="tx-action-buttons" className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Button
             variant="ghost"
             size="sm"
@@ -559,7 +562,7 @@ export default function TransactionsPage() {
       )}
 
       {/* View Mode Switcher (List vs Calendar) */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348]">
+      <div id="tx-view-mode-toggle" className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348]">
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -699,7 +702,7 @@ export default function TransactionsPage() {
           </div>
 
           {/* Filter & Search Bar (Responsive Stack) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-sm">
+          <div id="tx-filters-bar" className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-sm">
             {/* Search Input */}
             <div className="w-full md:w-80">
               <Input

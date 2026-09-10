@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* ☀️ Pure Light Mode Tokens */
+  /* Pure Light Mode Tokens */
   --color-bg-base: #f8fafc;
   --color-bg-surface: #ffffff;
   --color-bg-elevated: #f1f5f9;
@@ -31,7 +31,7 @@
 }
 
 .dark, [data-theme="dark"] {
-  /* 🌙 Luxury Dark Navy Tokens */
+  /* Luxury Dark Navy Tokens */
   --color-bg-base: #0f1117;
   --color-bg-surface: #1a1d27;
   --color-bg-elevated: #21263a;
@@ -147,6 +147,29 @@ html:not(.dark) {
   }
   to {
     width: 0%;
+  }
+}
+
+/* NextStep Tour Card Overrides & Viewport Clamping */
+[data-name="nextstep-card"] {
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  width: max-content !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 639px) {
+  [data-name="nextstep-card"] {
+    position: fixed !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 24px !important;
+    top: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    z-index: 99999 !important;
   }
 }
 

@@ -27,6 +27,7 @@ import {
   Wallet as WalletIcon,
   PlusCircle,
   PiggyBank,
+  ReceiptText,
   Trash2,
   Calendar,
   X,
@@ -58,12 +59,15 @@ import type {
   GroupSavingsMember,
 } from '@/types'
 import { cn } from '@/lib/utils/cn'
+import { usePageTour } from '@/hooks/usePageTour'
 
 type PeriodFilter = 'today' | 'week' | 'month' | 'all'
 
 export default function DashboardPage() {
   const { user, userProfile, refreshProfile } = useAuth()
   const { toast } = useToast()
+
+  usePageTour('dashboardTour')
 
   const [summary, setSummary] = useState<DashboardSummary>({
     balance: 0,
@@ -561,7 +565,7 @@ export default function DashboardPage() {
       await groupSavingsService.respondToInvite(inviteId, user.uid, response)
       toast.success(
         response === 'ACCEPTED'
-          ? 'Berhasil bergabung dengan Celengan Bersama! 🎉'
+          ? 'Berhasil bergabung dengan Celengan Bersama!'
           : 'Undangan Celengan Bersama ditolak.'
       )
       setRefreshTrigger((prev) => prev + 1)
@@ -675,12 +679,12 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6 pb-16 max-w-7xl mx-auto">
       {/* 1. Header Bar & Quick Actions Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="dashboard-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* User Greeting & Date */}
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Halo, {userProfile?.name?.split(' ')[0] || 'Pengguna'} 👋
+              Halo, {userProfile?.name?.split(' ')[0] || 'Pengguna'}
             </h1>
 
             {/* Income Mode / Payday Status Pill */}
@@ -696,7 +700,7 @@ export default function DashboardPage() {
                 >
                   <DollarSign className="w-3.5 h-3.5" />
                   {isPaydayToday
-                    ? 'Gajian Hari Ini! 🎉'
+                    ? 'Gajian Hari Ini!'
                     : `Gajian ${isEndOfMonth ? 'Akhir Bulan' : `Tgl ${effectivePayday}`} (${daysUntilPayday} hari lagi)`}
                 </span>
               </Link>
@@ -715,7 +719,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div id="dashboard-quick-actions" className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Button
             variant="glow"
             size="md"
@@ -743,7 +747,7 @@ export default function DashboardPage() {
         <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-blue-500/10 to-teal-500/15 border border-emerald-500/30 text-slate-900 dark:text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in">
           <div className="flex items-start gap-3.5">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
-              ✨
+              <Sparkles className="w-5 h-5 text-slate-950" />
             </div>
             <div>
               <h4 className="font-extrabold text-sm sm:text-base tracking-tight">
@@ -1020,7 +1024,7 @@ export default function DashboardPage() {
       )}
 
       {/* 3. Unified Financial Hero Card (All-in-One Net Worth + Safe-to-Spend) */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 dark:from-[#151822] dark:via-[#131620] dark:to-[#0a1810] border border-slate-200 dark:border-white/10 shadow-xs relative overflow-hidden">
+      <div id="dashboard-daily-limit" className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 dark:from-[#151822] dark:via-[#131620] dark:to-[#0a1810] border border-slate-200 dark:border-white/10 shadow-xs relative overflow-hidden">
         {/* Background glow accent */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
 
@@ -1117,7 +1121,7 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {isOverToday ? '⚠️ Lewat Batas Hari Ini' : 'Jatah Belanja Aman Hari Ini:'}
+                    {isOverToday ? 'Lewat Batas Hari Ini' : 'Jatah Belanja Aman Hari Ini:'}
                   </span>
                   <span
                     className={cn(
@@ -1137,8 +1141,8 @@ export default function DashboardPage() {
                       )}
                     >
                       {deductBills
-                        ? `🛡️ Cicilan ${formatRupiah(unpaidBillsThisMonth)} diamankan`
-                        : `⚡ Tanpa cicilan (Ada ${formatRupiah(unpaidBillsThisMonth)} belum bayar)`}
+                        ? `Cicilan ${formatRupiah(unpaidBillsThisMonth)} diamankan`
+                        : `Tanpa cicilan (Ada ${formatRupiah(unpaidBillsThisMonth)} belum bayar)`}
                     </span>
                   )}
                 </div>
@@ -1150,7 +1154,7 @@ export default function DashboardPage() {
                     : unpaidBillsThisMonth > 0 && deductBills
                     ? `Saran aman: dipotong cicilan ${formatRupiah(unpaidBillsThisMonth)} & tabungan ${formatRupiah(totalDailySavingsRequired)}/hari (tanpa cicilan: ${formatRupiah(dailyLimitWithoutBills)}/hari)`
                     : unpaidBillsThisMonth > 0 && !deductBills
-                    ? `⚠️ Belum diamankan untuk cicilan ${formatRupiah(unpaidBillsThisMonth)} (saran aman: ${formatRupiah(dailyLimitWithBills)}/hari)`
+                    ? `Belum diamankan untuk cicilan ${formatRupiah(unpaidBillsThisMonth)} (saran aman: ${formatRupiah(dailyLimitWithBills)}/hari)`
                     : totalDailySavingsRequired > 0
                     ? `Bersih setelah disisihkan untuk tabungan impian ${formatRupiah(totalDailySavingsRequired)}/hari (${daysRemainingInMonth} hari tersisa)`
                     : `Dihitung dari sisa kas aktif ÷ ${daysRemainingInMonth} hari · Belum ada belanja hari ini`}
@@ -1215,8 +1219,8 @@ export default function DashboardPage() {
             {/* Transactions List */}
             {summary.transactions.length === 0 ? (
               <div className="py-14 flex flex-col items-center justify-center text-center">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-2xl mb-3">
-                  📝
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3 text-slate-400">
+                  <ReceiptText className="w-6 h-6" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Belum ada transaksi di periode ini
@@ -1414,7 +1418,7 @@ export default function DashboardPage() {
 
           {/* Wallets & Accounts Quick Glance */}
           {wallets.length > 0 && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/10 shadow-xs">
+            <div id="dashboard-wallets-overview" className="p-6 rounded-3xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/10 shadow-xs">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/8">
                 <div className="flex items-center gap-2">
                   <WalletIcon className="w-4 h-4 text-blue-500" />

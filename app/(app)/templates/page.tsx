@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { usePageTour } from '@/hooks/usePageTour'
 import { quickTemplateService } from '@/lib/services/quick-template.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
@@ -34,6 +35,7 @@ type CategoryFilter = 'ALL' | 'EXPENSE' | 'INCOME' | 'CUSTOM' | 'HIDDEN'
 
 export default function TemplatesPage() {
   const { user } = useAuth()
+  usePageTour('templatesTour')
 
   const [activeTab, setActiveTab] = useState<TabType>('templates')
   const [templates, setTemplates] = useState<QuickTemplate[]>([])
@@ -259,7 +261,7 @@ export default function TemplatesPage() {
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="templates-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -274,7 +276,7 @@ export default function TemplatesPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div id="templates-action-section" className="flex items-center gap-2.5">
           <Button
             variant="ghost"
             size="sm"
@@ -314,7 +316,7 @@ export default function TemplatesPage() {
       </div>
 
       {/* Tab Segmented Control */}
-      <div className="flex items-center p-1 bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl w-fit">
+      <div id="templates-tabs-toggle" className="flex items-center p-1 bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] rounded-2xl w-fit">
         <button
           type="button"
           onClick={() => setActiveTab('templates')}

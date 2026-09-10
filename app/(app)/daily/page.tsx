@@ -39,11 +39,14 @@ import {
 } from 'lucide-react'
 import type { RecurringBill, SavingsGoal, Transaction, Wallet, GroupSavings, GroupSavingsMember } from '@/types'
 import { cn } from '@/lib/utils/cn'
+import { usePageTour } from '@/hooks/usePageTour'
 
 type BudgetViewMode = 'daily' | 'weekly' | 'monthly'
 
 export default function DailyBudgetPage() {
   const { user, userProfile } = useAuth()
+
+  usePageTour('dailyTour')
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurringBills, setRecurringBills] = useState<RecurringBill[]>([])
@@ -505,7 +508,7 @@ export default function DailyBudgetPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="daily-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <div className="p-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400">
@@ -569,10 +572,13 @@ export default function DailyBudgetPage() {
         <>
           {/* Multi-Wallet Segregation Status Bar */}
           {wallets.length > 0 && (
-            <div className={cn(
-              'grid gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm',
-              earmarkedWallets.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
-            )}>
+            <div
+              id="daily-details-breakdown"
+              className={cn(
+                'grid gap-3 p-4 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-sm',
+                earmarkedWallets.length > 0 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+              )}
+            >
           <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#21263a]/60 border border-green-500/20">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center">
@@ -596,7 +602,7 @@ export default function DailyBudgetPage() {
             <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/20">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <span className="text-sm">🎯</span>
+                  <Target className="w-4 h-4" />
                 </div>
                 <div>
                   <span className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-400 block">
@@ -745,8 +751,8 @@ export default function DailyBudgetPage() {
         </div>
       </div>
 
-      {/* 🤖 SAVE ME AI FINANCIAL COACH CARD (ON-DEMAND) 🤖 */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xs flex flex-col gap-4">
+      {/* SAVE ME AI FINANCIAL COACH CARD */}
+      <div id="daily-ai-coach" className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xs flex flex-col gap-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -876,8 +882,8 @@ export default function DailyBudgetPage() {
         </div>
       )}
 
-      {/* 🛡️ Ambang Batas Cerdas & Perlindungan Tabungan Breakdown */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 border border-blue-500/30 dark:border-blue-400/30 shadow-sm flex flex-col gap-4">
+      {/* Ambang Batas Cerdas & Perlindungan Tabungan Breakdown */}
+      <div id="daily-smart-threshold" className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 border border-blue-500/30 dark:border-blue-400/30 shadow-sm flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -973,7 +979,7 @@ export default function DailyBudgetPage() {
       </div>
 
       {/* Main Budget Card with Live Meter */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1e2333] dark:via-[#1a1d27] dark:to-[#161822] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-2xl relative overflow-hidden flex flex-col gap-6 text-slate-900 dark:text-white">
+      <div id="daily-status-card" className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1e2333] dark:via-[#1a1d27] dark:to-[#161822] border border-slate-200 dark:border-[#2d3348] shadow-md dark:shadow-2xl relative overflow-hidden flex flex-col gap-6 text-slate-900 dark:text-white">
         {/* Glow ambient */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-green-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
+import { usePageTour } from '@/hooks/usePageTour'
 import { recurringService, type CreateRecurringBillDto } from '@/lib/services/recurring.firebase'
 import { categoryService } from '@/lib/services/category.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
@@ -42,6 +43,7 @@ type FilterTab = 'ALL' | 'INSTALLMENT' | 'RECURRING' | 'UNPAID' | 'PAID'
 export default function BillsPage() {
   const { user, userProfile } = useAuth()
   const { toast } = useToast()
+  usePageTour('billsTour')
 
   const [bills, setBills] = useState<RecurringBill[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -209,7 +211,7 @@ export default function BillsPage() {
     }
     if (dsrRatio <= 20) {
       return {
-        label: 'Sangat Aman (< 20%) 🟢',
+        label: 'Sangat Aman (< 20%)',
         desc: 'Beban cicilan sangat sehat! Berada jauh di bawah batas maksimal 30% dari penghasilan.',
         badge: 'brand' as const,
         color: 'text-green-400',
@@ -219,7 +221,7 @@ export default function BillsPage() {
     }
     if (dsrRatio <= 30) {
       return {
-        label: 'Waspada (20% - 30%) 🟡',
+        label: 'Waspada (20% - 30%)',
         desc: 'Beban cicilan mendekati batas ideal maksimal 30%. Hindari mengambil pinjaman atau paylater baru!',
         badge: 'warning' as const,
         color: 'text-amber-400',
@@ -228,7 +230,7 @@ export default function BillsPage() {
       }
     }
     return {
-      label: 'Bahaya / Overleveraged (> 30%) 🔴',
+      label: 'Bahaya / Overleveraged (> 30%)',
       desc: 'Beban cicilan melampaui 30% gaji! Risiko tinggi mengganggu kebutuhan harian dan dana darurat.',
       badge: 'expense' as const,
       color: 'text-red-400',
@@ -467,7 +469,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-10">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="bills-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400">
@@ -497,6 +499,7 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
           </Button>
 
           <Button
+            id="bills-add-button"
             variant="glow"
             size="sm"
             onClick={handleOpenAdd}
@@ -572,8 +575,8 @@ Berikan evaluasi kesehatan DSR, deteksi apakah ada langganan yang boros/mubazir,
         </div>
       ) : (
         <>
-          {/* 🛡️ 1. DSR (Debt Service Ratio) Meter & Sisa Pokok Hutang Banner */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* 1. DSR (Debt Service Ratio) Meter & Sisa Pokok Hutang Banner */}
+          <div id="bills-status-summary" className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* DSR Meter Card */}
             <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-white dark:from-[#1a1d27] dark:via-[#1f2038] dark:to-[#1a1d27] border border-purple-500/30 shadow-sm dark:shadow-2xl flex flex-col justify-between text-slate-900 dark:text-white">
               <div>

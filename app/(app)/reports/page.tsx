@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { usePageTour } from '@/hooks/usePageTour'
 import { transactionService } from '@/lib/services/transaction.firebase'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { Badge } from '@/components/atoms/Badge'
@@ -38,6 +39,7 @@ type ReportPeriod = 'month' | 'last_month' | 'last_3_months' | 'year' | 'all'
 
 export default function ReportsPage() {
   const { user, userProfile } = useAuth()
+  usePageTour('reportsTour')
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [wallets, setWallets] = useState<Wallet[]>([])
@@ -475,7 +477,7 @@ ${categoryBreakdown
   .map((c, i) => `${i + 1}. ${c.icon} ${c.name}: ${formatRupiah(c.amount)} (${c.percentage}%)`)
   .join('\n')}
 
-${aiAnalysis ? `\n🤖 KESIMPULAN DIAGNOSIS AI:\n${aiAnalysis}\n` : ''}
+${aiAnalysis ? `\nKESIMPULAN DIAGNOSIS AI:\n${aiAnalysis}\n` : ''}
 _Dihasilkan otomatis oleh SaveMe App_`
 
     navigator.clipboard.writeText(text)
@@ -486,7 +488,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="reports-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400">
@@ -516,6 +518,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
           </Button>
 
           <Button
+            id="reports-export-buttons"
             variant="secondary"
             size="sm"
             onClick={handleCopyReport}
@@ -528,7 +531,7 @@ _Dihasilkan otomatis oleh SaveMe App_`
       </div>
 
       {/* Period Filter Tabs */}
-      <div className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
+      <div id="reports-period-selector" className="flex items-center justify-between p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] overflow-x-auto max-w-full no-scrollbar">
         <div className="flex items-center gap-1 min-w-max">
           {(['month', 'last_month', 'last_3_months', 'year', 'all'] as ReportPeriod[]).map((p) => (
             <button

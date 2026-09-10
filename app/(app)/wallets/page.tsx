@@ -29,6 +29,7 @@ import {
   Search,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { usePageTour } from '@/hooks/usePageTour'
 
 const WALLET_TYPE_OPTIONS: { type: WalletType; label: string; icon: string; defaultColor: string }[] = [
   { type: 'BANK', label: 'Rekening Bank', icon: '🏦', defaultColor: '#3b82f6' },
@@ -42,6 +43,8 @@ type FilterTab = 'ALL' | 'OPERATIONAL' | 'EARMARKED' | 'LOCKED'
 export default function WalletsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
+
+  usePageTour('walletsTour')
 
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [loading, setLoading] = useState(true)
@@ -375,7 +378,7 @@ export default function WalletsPage() {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div id="wallets-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs">
             <WalletIcon className="w-6 h-6" />
@@ -426,6 +429,7 @@ export default function WalletsPage() {
 
           {wallets.length >= 2 && (
             <Button
+              id="wallets-transfer-button"
               variant="secondary"
               size="sm"
               onClick={() => setIsTransferModalOpen(true)}
@@ -437,6 +441,7 @@ export default function WalletsPage() {
           )}
 
           <Button
+            id="wallets-add-button"
             variant="glow"
             size="sm"
             onClick={handleOpenAdd}
@@ -681,8 +686,8 @@ export default function WalletsPage() {
         </div>
       ) : wallets.length === 0 ? (
         <div className="p-12 sm:p-16 rounded-3xl bg-white dark:bg-[#141824] border border-slate-200/90 dark:border-white/10 flex flex-col items-center justify-center text-center shadow-xs">
-          <div className="w-16 h-16 rounded-3xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-3xl mb-4 shadow-inner">
-            💳
+          <div className="w-16 h-16 rounded-3xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 shadow-inner">
+            <WalletIcon className="w-7 h-7" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">Belum Ada Kantong Rekening</h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
@@ -705,7 +710,7 @@ export default function WalletsPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div id="wallets-list-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredWallets.map((w) => (
             <WalletCard
               key={w.id}

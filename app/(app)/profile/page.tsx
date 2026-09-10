@@ -32,8 +32,13 @@ import {
   AlertTriangle,
   Sparkles,
   Smartphone,
+  Compass,
+  RotateCcw,
 } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
+import { usePageTour } from '@/hooks/usePageTour'
+import { useAppTour } from '@/components/organisms/AppTour'
+import { APP_TOURS } from '@/lib/constants/tours'
 import {
   detectUserTimezone,
   requestNotificationPermission,
@@ -50,6 +55,8 @@ export default function ProfilePage() {
   const { user, userProfile, sessionInfo, refreshProfile, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
+  usePageTour('profileTour')
+  const { completedTours, resetAllTours, startTour } = useAppTour()
 
   // Form State
   const [name, setName] = useState(userProfile?.name || '')
@@ -424,7 +431,7 @@ export default function ProfilePage() {
       )}
 
       {/* Profile Overview Card */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 sm:gap-5">
+      <div id="profile-header" className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 sm:gap-5">
         <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 border border-green-400/40 text-white flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-xl">
             {userProfile?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
@@ -501,7 +508,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  ☀️ Mode Terang (Light Mode)
+                  Mode Terang (Light Mode)
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   Nuansa putih bersih, segar &amp; elegan
@@ -527,7 +534,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  🌙 Mode Gelap (Dark Mode)
+                  Mode Gelap (Dark Mode)
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   Nuansa navy luxury &amp; nyaman di malam hari
@@ -597,7 +604,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Section 2.5: Preferensi Anggaran & Jatah Belanja (Global) */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl space-y-4 text-slate-900 dark:text-white">
+        <div id="profile-budget-pref-card" className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl space-y-4 text-slate-900 dark:text-white">
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
@@ -628,11 +635,11 @@ export default function ProfilePage() {
                 <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
                   {deductBills ? (
                     <span className="text-emerald-700 dark:text-emerald-400 font-medium">
-                      🛡️ <strong>Aktif (Disarankan):</strong> Tagihan dan cicilan yang belum lunas bulan ini otomatis disisihkan dari kas belanja. Kamu terlindungi dari risiko tekor saat tagihan jatuh tempo.
+                      <strong>Aktif (Disarankan):</strong> Tagihan dan cicilan yang belum lunas bulan ini otomatis disisihkan dari kas belanja. Kamu terlindungi dari risiko tekor saat tagihan jatuh tempo.
                     </span>
                   ) : (
                     <span className="text-amber-700 dark:text-amber-400 font-medium">
-                      ⚡ <strong>Nonaktif:</strong> Seluruh saldo kas aktif dihitung bebas untuk belanja harian tanpa menyisihkan cicilan. Cocok jika kamu memiliki dana terpisah untuk tagihan.
+                      <strong>Nonaktif:</strong> Seluruh saldo kas aktif dihitung bebas untuk belanja harian tanpa menyisihkan cicilan. Cocok jika kamu memiliki dana terpisah untuk tagihan.
                     </span>
                   )}
                 </p>
@@ -908,7 +915,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Section 4: Kunci PIN Keamanan Aplikasi */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex flex-col gap-4">
+        <div id="profile-pin-card" className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex flex-col gap-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -976,6 +983,62 @@ export default function ProfilePage() {
                 leftIcon={<KeyRound className="w-3.5 h-3.5" />}
               >
                 {userProfile?.appPin ? 'Ubah PIN 6-Digit' : 'Buat PIN 6-Digit'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4.5: Pengaturan Panduan & Tutorial */}
+        <div id="profile-tour-card" className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1a1d27] border border-slate-200 dark:border-[#2d3348] shadow-xl flex flex-col gap-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#2d3348]">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                <Compass className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Panduan &amp; Tutorial Interaktif
+                </h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Pelajari alur fitur di setiap halaman aplikasi langkah demi langkah
+                </span>
+              </div>
+            </div>
+
+            <Badge variant="neutral" size="sm">
+              {completedTours.length} / {APP_TOURS.length} Selesai
+            </Badge>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed">
+              Panduan interaktif otomatis muncul saat pertama kali mengunjungi halaman. Anda dapat mengulang panduan halaman ini atau mereset seluruh panduan kapan saja.
+            </p>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => startTour('profileTour')}
+                className="text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
+                leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+              >
+                Ulangi Panduan Ini
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={async () => {
+                  await resetAllTours()
+                  toast.success('Seluruh panduan berhasil direset. Panduan akan muncul kembali di setiap halaman.')
+                }}
+                className="text-xs"
+                leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+              >
+                Reset Semua Panduan
               </Button>
             </div>
           </div>

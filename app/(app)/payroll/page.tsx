@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
+import { usePageTour } from '@/hooks/usePageTour'
 import { updateUserProfile } from '@/lib/auth/firebase-auth'
 import { walletService } from '@/lib/services/wallet.firebase'
 import { savingsService } from '@/lib/services/savings.firebase'
@@ -52,6 +53,7 @@ type AllocationPreset = '50_30_20' | '60_30_10' | '100_0_0' | 'CUSTOM'
 export default function PayrollPage() {
   const { user, userProfile, refreshProfile } = useAuth()
   const { toast } = useToast()
+  usePageTour('payrollTour')
 
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
@@ -424,7 +426,7 @@ export default function PayrollPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 max-w-4xl mx-auto">
       {/* 1. Header Halaman yang Ramah */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="payroll-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 shrink-0">
             <DollarSign className="w-6 h-6" />
@@ -458,7 +460,7 @@ export default function PayrollPage() {
       </div>
 
       {/* 2. Toggle Tipe Pemasukan: Gajian Rutin vs Pemasukan Fleksibel */}
-      <div className="p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-white/8 flex items-center gap-1.5">
+      <div id="payroll-mode-selector" className="p-1.5 rounded-2xl bg-slate-100 dark:bg-[#1a1d27] border border-slate-200 dark:border-white/8 flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => setIncomeMode('SALARIED')}
@@ -470,7 +472,7 @@ export default function PayrollPage() {
           )}
         >
           <Briefcase className="w-4 h-4" />
-          <span>💼 Gajian Rutin Bulanan</span>
+          <span>Gajian Rutin Bulanan</span>
           <span className="hidden sm:inline text-[10px] opacity-75">(Karyawan / Pegawai)</span>
         </button>
 
@@ -485,7 +487,7 @@ export default function PayrollPage() {
           )}
         >
           <Zap className="w-4 h-4 text-emerald-500 dark:text-emerald-300" />
-          <span>⚡ Pemasukan Bebas / Fleksibel</span>
+          <span>Pemasukan Bebas / Fleksibel</span>
           <span className="hidden sm:inline text-[10px] opacity-75">(Freelance, Mahasiswa, Proyek)</span>
         </button>
       </div>
@@ -688,7 +690,7 @@ export default function PayrollPage() {
               <hr className="border-slate-100 dark:border-white/6" />
 
               {/* LANGKAH 2: Mau Dibagi Seperti Apa? */}
-              <div className="space-y-3.5">
+              <div id="payroll-sliders-section" className="space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center justify-center">
@@ -712,7 +714,7 @@ export default function PayrollPage() {
                         : 'bg-slate-50 dark:bg-[#1a1d27] border-slate-200 dark:border-white/8 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                     )}
                   >
-                    <span className="text-base">🟢</span>
+                    <span className="w-3 h-3 rounded-full bg-green-500 inline-block mb-1" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
                       100% Kas Belanja
                     </span>
@@ -731,7 +733,7 @@ export default function PayrollPage() {
                         : 'bg-slate-50 dark:bg-[#1a1d27] border-slate-200 dark:border-white/8 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                     )}
                   >
-                    <span className="text-base">🟣</span>
+                    <span className="w-3 h-3 rounded-full bg-purple-500 inline-block mb-1" />
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-900 dark:text-white">
                         Ideal 50 / 30 / 20
@@ -752,7 +754,7 @@ export default function PayrollPage() {
                         : 'bg-slate-50 dark:bg-[#1a1d27] border-slate-200 dark:border-white/8 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                     )}
                   >
-                    <span className="text-base">🟡</span>
+                    <span className="w-3 h-3 rounded-full bg-amber-400 inline-block mb-1" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
                       Pelajar 60 / 30 / 10
                     </span>
@@ -771,7 +773,7 @@ export default function PayrollPage() {
                         : 'bg-slate-50 dark:bg-[#1a1d27] border-slate-200 dark:border-white/8 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                     )}
                   >
-                    <span className="text-base">⚙️</span>
+                    <span className="w-3 h-3 rounded-full bg-slate-400 inline-block mb-1" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
                       Atur Sendiri
                     </span>
@@ -859,7 +861,7 @@ export default function PayrollPage() {
                     </span>
                     {preset === 'CUSTOM' && (
                       <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-                        💡 Geser slider tabungan, belanja otomatis menyesuaikan sisa
+                        Geser slider tabungan, belanja otomatis menyesuaikan sisa
                       </span>
                     )}
                   </div>

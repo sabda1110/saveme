@@ -33,6 +33,7 @@ export interface UserProfile {
   monthlyBudgetMonth?: string // e.g. "2026-08" — which month this budget applies to
   deductBillsFromDaily?: boolean
   hiddenCategoryIds?: string[]
+  completedTours?: string[]
   appPin?: string
   isPinEnabled?: boolean
   createdAt?: unknown
