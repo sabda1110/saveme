@@ -514,8 +514,8 @@ export default function TransactionsPage() {
             variant="secondary"
             size="sm"
             onClick={() => setIsScanModalOpen(true)}
-            className="text-xs sm:text-sm text-purple-300 border-purple-500/30 hover:bg-purple-500/10"
-            leftIcon={<Camera className="w-4 h-4 text-purple-400" />}
+            className="text-xs sm:text-sm font-semibold cursor-pointer shadow-xs"
+            leftIcon={<Camera className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
           >
             Scan Struk AI
           </Button>
